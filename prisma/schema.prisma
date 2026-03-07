@@ -1,0 +1,398 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  STAFF
+  STUDENT
+}
+
+enum MembershipPlanCode {
+  HOBBY
+  BIZ
+  PRO
+}
+
+enum PlanCycleBasis {
+  CALENDAR_MONTH
+  CONTRACT_DATE
+}
+
+enum MemberStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum LessonType {
+  VIDEO
+  ARTICLE
+  PODCAST
+}
+
+enum OfferingType {
+  BOOKING
+  EVENT
+}
+
+enum CreditConsumptionMode {
+  ON_CONFIRM
+  ON_ATTEND
+}
+
+enum CreditLedgerType {
+  MONTHLY_GRANT
+  BONUS_GRANT
+  BALANCE_ADJUSTMENT
+  PLAN_CHANGE_GRANT
+  CONSUMED
+  REFUNDED
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  WAITLISTED
+  CANCELLED
+  ATTENDED
+  NO_SHOW
+}
+
+enum AssetType {
+  IMAGE
+  DOCUMENT
+  AUDIO
+}
+
+enum EmailCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+}
+
+model User {
+  id               String           @id @default(cuid())
+  clerkId          String?          @unique
+  email            String           @unique
+  name             String
+  title            String?
+  company          String?
+  avatarLabel      String?
+  role             UserRole
+  status           MemberStatus     @default(ACTIVE)
+  contractStartAt  DateTime         @default(now())
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  planAssignments  PlanAssignment[]
+  segments         UserSegment[]
+  wallet           CreditWallet?
+  creditEntries    CreditLedger[]
+  reservations     Reservation[]
+  waitlistEntries  WaitlistEntry[]
+  lessonProgress   LessonProgress[]
+  auditLogs        AuditLog[]
+}
+
+model MembershipPlan {
+  id                 String             @id @default(cuid())
+  code               MembershipPlanCode @unique
+  name               String
+  heroLabel          String?
+  description        String?
+  monthlyCreditGrant Int                @default(0)
+  rolloverCap        Int                @default(10)
+  unlimitedCredits   Boolean            @default(false)
+  cycleBasis         PlanCycleBasis     @default(CALENDAR_MONTH)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  assignments        PlanAssignment[]
+}
+
+model PlanAssignment {
+  id        String         @id @default(cuid())
+  userId    String
+  planId    String
+  startedAt DateTime
+  endedAt   DateTime?
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      MembershipPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive])
+}
+
+model SegmentTag {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  label       String
+  description String?
+  isSystem    Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  members     UserSegment[]
+}
+
+model UserSegment {
+  id         String     @id @default(cuid())
+  userId     String
+  segmentId  String
+  assignedAt DateTime   @default(now())
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  segment    SegmentTag @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, segmentId])
+}
+
+model CreditWallet {
+  id             String         @id @default(cuid())
+  userId         String         @unique
+  currentBalance Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ledger         CreditLedger[]
+}
+
+model CreditLedger {
+  id               String           @id @default(cuid())
+  walletId         String
+  userId           String
+  type             CreditLedgerType
+  amount           Int
+  note             String?
+  offeringId       String?
+  reservationId    String?
+  adjustmentReason String?
+  createdAt        DateTime         @default(now())
+  wallet           CreditWallet     @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([userId])
+}
+
+model Banner {
+  id            String        @id @default(cuid())
+  eyebrow       String?
+  title         String
+  subtitle      String?
+  accent        String?
+  ctaLabel      String?
+  ctaHref       String?
+  publishStatus PublishStatus @default(PUBLISHED)
+  sortOrder     Int           @default(0)
+  audience      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Announcement {
+  id            String        @id @default(cuid())
+  title         String
+  summary       String
+  body          String
+  publishStatus PublishStatus @default(PUBLISHED)
+  publishAt     DateTime?
+  audience      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Deal {
+  id            String        @id @default(cuid())
+  title         String
+  summary       String
+  body          String
+  badge         String?
+  offer         String?
+  ctaLabel      String?
+  ctaHref       String?
+  publishStatus PublishStatus @default(PUBLISHED)
+  audience      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model ToolItem {
+  id            String        @id @default(cuid())
+  title         String
+  summary       String
+  body          String
+  href          String?
+  publishStatus PublishStatus @default(PUBLISHED)
+  audience      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model FaqItem {
+  id            String        @id @default(cuid())
+  question      String
+  answer        String
+  category      String
+  publishStatus PublishStatus @default(PUBLISHED)
+  audience      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Course {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  title         String
+  summary       String
+  heroNote      String?
+  estimatedHours String?
+  publishStatus PublishStatus @default(PUBLISHED)
+  audience      Json?
+  modules       Module[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Module {
+  id        String   @id @default(cuid())
+  courseId  String
+  title     String
+  sortOrder Int      @default(0)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons   Lesson[]
+}
+
+model Lesson {
+  id         String     @id @default(cuid())
+  moduleId   String
+  slug       String
+  title      String
+  summary    String
+  lessonType LessonType
+  duration   String?
+  sortOrder  Int        @default(0)
+  body       Json
+  module     Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress   LessonProgress[]
+
+  @@unique([moduleId, slug])
+}
+
+model ReservableOffering {
+  id               String                @id @default(cuid())
+  slug             String                @unique
+  title            String
+  summary          String
+  description      String?
+  offeringType     OfferingType
+  startsAt         DateTime
+  endsAt           DateTime
+  capacity         Int
+  waitlistEnabled  Boolean               @default(true)
+  creditRequired   Int                   @default(1)
+  consumptionMode  CreditConsumptionMode @default(ON_CONFIRM)
+  refundDeadline   DateTime?
+  priceLabel       String?
+  locationLabel    String?
+  host             String?
+  featured         Boolean               @default(false)
+  externalJoinUrl  String?
+  audience         Json?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  reservations     Reservation[]
+  waitlistEntries  WaitlistEntry[]
+}
+
+model LessonProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model Reservation {
+  id         String             @id @default(cuid())
+  offeringId String
+  userId     String
+  status     ReservationStatus  @default(CONFIRMED)
+  createdAt  DateTime           @default(now())
+  offering   ReservableOffering @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([offeringId, userId])
+  @@index([userId])
+}
+
+model WaitlistEntry {
+  id         String             @id @default(cuid())
+  offeringId String
+  userId     String
+  createdAt  DateTime           @default(now())
+  offering   ReservableOffering @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([offeringId, userId])
+  @@index([offeringId])
+}
+
+model ThemeSettings {
+  id           String   @id @default(cuid())
+  brandName    String
+  heroHeadline String
+  primaryColor String
+  accentColor  String
+  surfaceColor String
+  logoWordmark String
+  supportEmail String
+  termsNotice  String
+  updatedAt    DateTime @updatedAt
+}
+
+model Asset {
+  id        String    @id @default(cuid())
+  fileName  String
+  fileType  AssetType
+  url       String
+  alt       String?
+  createdAt DateTime  @default(now())
+}
+
+model EmailCampaign {
+  id          String              @id @default(cuid())
+  title       String
+  subject     String
+  previewText String?
+  targetJson  Json
+  status      EmailCampaignStatus @default(DRAFT)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
