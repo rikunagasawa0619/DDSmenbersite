@@ -5,7 +5,7 @@ import { DemoLoginForm } from "@/components/auth/demo-login-form";
 import { BrandMark } from "@/components/brand-mark";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { isClerkConfigured } from "@/lib/config";
+import { isClerkConfigured, isDemoAuthEnabled } from "@/lib/config";
 
 export default function LoginPage() {
   return (
@@ -65,7 +65,7 @@ export default function LoginPage() {
                 },
               }}
             />
-          ) : (
+          ) : isDemoAuthEnabled ? (
             <div className="space-y-6">
               <DemoLoginForm />
               <div className="rounded-[24px] border border-dashed border-black/10 bg-black/[0.02] p-5 text-sm leading-7 text-slate-600">
@@ -75,6 +75,10 @@ export default function LoginPage() {
                 <div>受講生: hobby@dds.example / student-demo</div>
                 <div>Pro会員: pro@dds.example / student-demo</div>
               </div>
+            </div>
+          ) : (
+            <div className="rounded-[24px] border border-dashed border-amber-300 bg-amber-50 p-5 text-sm leading-7 text-amber-950">
+              現在、本番認証の設定中です。Clerk の本番キーを登録すると、この画面が通常ログインに切り替わります。
             </div>
           )}
 

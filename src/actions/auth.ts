@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { createDemoSession, destroyDemoSession } from "@/lib/auth";
+import { isDemoAuthEnabled } from "@/lib/config";
 import { RateLimitError, assertRateLimit } from "@/lib/rate-limit";
 
 export interface LoginActionState {
@@ -13,6 +14,10 @@ export async function demoLoginAction(
   _prevState: LoginActionState,
   formData: FormData,
 ): Promise<LoginActionState> {
+  if (!isDemoAuthEnabled) {
+    return { error: "本番環境ではデモログインを無効化しています。" };
+  }
+
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -42,6 +47,10 @@ export async function demoLoginAction(
 }
 
 export async function demoLogoutAction() {
+  if (!isDemoAuthEnabled) {
+    redirect("/login");
+  }
+
   await destroyDemoSession();
   redirect("/login");
 }

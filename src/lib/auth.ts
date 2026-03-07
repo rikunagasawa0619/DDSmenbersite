@@ -2,7 +2,7 @@ import { currentUser as clerkCurrentUser } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { demoAuthCookieName, isClerkServerReady } from "@/lib/config";
+import { demoAuthCookieName, isClerkServerReady, isDemoAuthEnabled } from "@/lib/config";
 import { sampleUsers } from "@/lib/sample-data";
 import {
   getMemberByEmail,
@@ -32,6 +32,13 @@ export async function getCurrentUserContext(): Promise<CurrentUserContext> {
     return {
       member: await getMemberByEmail(email),
       hasAuthenticatedSession: Boolean(user),
+    };
+  }
+
+  if (!isDemoAuthEnabled) {
+    return {
+      member: null,
+      hasAuthenticatedSession: false,
     };
   }
 
@@ -80,6 +87,10 @@ export async function requireAdmin() {
 }
 
 export async function createDemoSession(email: string, password: string) {
+  if (!isDemoAuthEnabled) {
+    return null;
+  }
+
   const matched = sampleUsers.find(
     (user) => user.email === email && user.demoPassword === password,
   );
@@ -101,6 +112,10 @@ export async function createDemoSession(email: string, password: string) {
 }
 
 export async function destroyDemoSession() {
+  if (!isDemoAuthEnabled) {
+    return;
+  }
+
   const cookieStore = await cookies();
   cookieStore.delete(demoAuthCookieName);
 }

@@ -7,6 +7,9 @@ export const isClerkConfigured = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
 );
 
+export const isDemoAuthEnabled =
+  !isClerkConfigured && process.env.NODE_ENV !== "production";
+
 /** Server-only: true when both publishable key and secret key are set. */
 export const isClerkServerReady =
   typeof process !== "undefined" &&
