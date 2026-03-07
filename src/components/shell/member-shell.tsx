@@ -7,6 +7,7 @@ import { ExternalLink, Home, CalendarDays, HelpCircle, LayoutGrid, Settings, Spa
 import { BrandMark } from "@/components/brand-mark";
 import { LogoutButton } from "@/components/logout-button";
 import { Badge } from "@/components/ui/badge";
+import { labelPlan } from "@/lib/admin-display";
 import type { MemberProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +43,7 @@ export function MemberShell({
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Badge tone="brand">{user.planCode}</Badge>
+              <Badge tone="brand">{labelPlan(user.planCode)}</Badge>
               <Badge tone="neutral">{user.title}</Badge>
               {["super_admin", "staff"].includes(user.role) ? (
                 <Link
@@ -75,10 +76,10 @@ export function MemberShell({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition",
+                    "inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition",
                     active
-                      ? "bg-[var(--color-primary)] text-white shadow-[0_18px_45px_rgba(18,56,198,0.24)]"
-                      : "bg-black/4 text-slate-600 hover:bg-black/8 hover:text-slate-900",
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white shadow-[0_18px_45px_rgba(18,56,198,0.24)]"
+                      : "border-transparent bg-black/4 text-slate-600 hover:border-black/8 hover:bg-black/8 hover:text-slate-900",
                   )}
                 >
                   <Icon className="h-4 w-4" />

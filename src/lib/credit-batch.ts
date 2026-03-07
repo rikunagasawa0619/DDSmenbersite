@@ -81,7 +81,12 @@ export async function processMonthlyCreditGrants(
         },
       }));
 
-    const { start, end } = getCycleRange(plan, now, user.contractStartAt.toISOString());
+    const { start, end } = getCycleRange(
+      plan,
+      now,
+      user.contractStartAt.toISOString(),
+      user.creditGrantDay ?? undefined,
+    );
     const alreadyGranted = await prisma.creditLedger.findFirst({
       where: {
         walletId: wallet.id,

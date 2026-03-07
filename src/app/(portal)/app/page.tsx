@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { ArrowRight, Bell, CalendarDays, Ticket, TrendingUp } from "lucide-react";
 
@@ -30,7 +31,7 @@ export default async function AppHomePage() {
               </p>
             </div>
             <div className="grid gap-3 rounded-[28px] bg-white/85 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-              <div className="text-sm font-semibold text-slate-500">Credit summary</div>
+              <div className="text-sm font-semibold text-slate-500">クレジット残高</div>
               <div className="font-display text-5xl font-bold text-[var(--color-primary)]">
                 {snapshot.plan.unlimitedCredits ? "∞" : snapshot.wallet.currentBalance}
               </div>
@@ -47,29 +48,46 @@ export default async function AppHomePage() {
         <Card className="bg-[#111b2f] text-white">
           <div className="flex items-center gap-2 text-sm text-white/65">
             <TrendingUp className="h-4 w-4" />
-            Progress
+            学習進捗
           </div>
-          <h2 className="mt-4 font-display text-2xl font-bold">{primaryCourse.title}</h2>
-          <p className="mt-3 text-white/74">{primaryCourse.summary}</p>
-          <ProgressBar
-            value={snapshot.courseProgress[primaryCourse.id] ?? 0}
-            className="mt-6 bg-white/10"
-          />
-          <div className="mt-3 text-sm text-white/72">
-            {snapshot.courseProgress[primaryCourse.id] ?? 0}% 完了
-          </div>
-          <Link href={`/app/courses/${primaryCourse.slug}`} className="mt-6 inline-flex">
-            <Button className="bg-white text-[#111b2f] hover:bg-white/90">続きを見る</Button>
-          </Link>
+          {primaryCourse ? (
+            <>
+              <h2 className="mt-4 font-display text-2xl font-bold">{primaryCourse.title}</h2>
+              <p className="mt-3 text-white/74">{primaryCourse.summary}</p>
+              <ProgressBar
+                value={snapshot.courseProgress[primaryCourse.id] ?? 0}
+                className="mt-6 bg-white/10"
+              />
+              <div className="mt-3 text-sm text-white/72">
+                {snapshot.courseProgress[primaryCourse.id] ?? 0}% 完了
+              </div>
+              <Link href={`/app/courses/${primaryCourse.slug}`} className="mt-6 inline-flex">
+                <Button className="bg-white text-[#111b2f] hover:bg-white/90">続きを見る</Button>
+              </Link>
+            </>
+          ) : (
+            <div className="mt-4 rounded-[24px] bg-white/8 p-5 text-sm leading-7 text-white/78">
+              まだ公開中の教材がありません。運営がコースを追加すると、ここに学習進捗が表示されます。
+            </div>
+          )}
         </Card>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-3">
-        {snapshot.banners.map((banner) => (
+        {snapshot.banners.length === 0 ? (
+          <Card className="lg:col-span-3">
+            <div className="text-sm leading-7 text-slate-500">
+              現在表示中のバナーはありません。管理画面から追加するとここに表示されます。
+            </div>
+          </Card>
+        ) : snapshot.banners.map((banner) => (
           <Card
             key={banner.id}
             className={`overflow-hidden bg-gradient-to-br ${banner.accent}`}
           >
+            {banner.imageUrl ? (
+              <img src={banner.imageUrl} alt={banner.title} className="mb-5 h-48 w-full rounded-[24px] object-cover" />
+            ) : null}
             <Badge tone="brand">{banner.eyebrow}</Badge>
             <h2 className="mt-4 font-display text-2xl font-bold text-slate-950">{banner.title}</h2>
             <p className="mt-3 text-sm leading-7 text-slate-700">{banner.subtitle}</p>
@@ -110,7 +128,11 @@ export default async function AppHomePage() {
             直近のイベントと予約
           </div>
           <div className="mt-5 space-y-4">
-            {snapshot.offerings.slice(0, 3).map((offering) => (
+            {snapshot.offerings.length === 0 ? (
+              <div className="rounded-[24px] border border-dashed border-black/10 p-6 text-sm text-slate-500">
+                現在受付中の募集枠はありません。
+              </div>
+            ) : snapshot.offerings.slice(0, 3).map((offering) => (
               <div key={offering.id} className="rounded-[24px] border border-black/6 bg-black/[0.02] p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div>
@@ -162,8 +184,8 @@ export default async function AppHomePage() {
           <div className="text-sm font-semibold text-slate-500">利用規約メモ</div>
           <h2 className="mt-3 font-display text-2xl font-bold text-slate-950">クレジット運用ポリシー</h2>
           <ul className="mt-5 space-y-3 text-sm leading-7 text-slate-600">
-            <li>Hobby / Biz は月4回付与、未使用分は上限まで繰越。</li>
-            <li>Pro は全講義・全予約に無制限でアクセス可能。</li>
+            <li>DDS Hobby / DDS Biz は月4回付与、未使用分は上限まで繰越。</li>
+            <li>DDS Pro は全講義・全予約に無制限でアクセス可能。</li>
             <li>返却期限内キャンセルのみクレジット返却対象。</li>
             <li>{snapshot.theme.termsNotice}</li>
           </ul>

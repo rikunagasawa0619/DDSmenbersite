@@ -9,8 +9,8 @@ export default async function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-          Profile
+        <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
+          プロフィール
         </div>
         <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">プロフィール設定</h1>
       </div>

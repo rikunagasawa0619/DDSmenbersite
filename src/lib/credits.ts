@@ -16,7 +16,12 @@ import type {
   ReservationStatus,
 } from "@/lib/types";
 
-export function getNextGrantDate(plan: MembershipPlan, contractStartAt: string, now: Date) {
+export function getNextGrantDate(
+  plan: MembershipPlan,
+  contractStartAt: string,
+  now: Date,
+  grantDayOverride?: number,
+) {
   if (plan.unlimitedCredits) {
     return "常時";
   }
@@ -27,7 +32,7 @@ export function getNextGrantDate(plan: MembershipPlan, contractStartAt: string, 
     return formatIsoInAppZone(nextMonthStart);
   }
 
-  return formatIsoInAppZone(getNextContractGrantDate(now, contractStartAt));
+  return formatIsoInAppZone(getNextContractGrantDate(now, contractStartAt, grantDayOverride));
 }
 
 export function calculateBalance(entries: CreditLedgerEntry[]) {
@@ -174,7 +179,12 @@ export function canRefundCredit(refundDeadline: string, now: Date) {
   return isBefore(now, new Date(refundDeadline));
 }
 
-export function getCycleRange(plan: MembershipPlan, referenceDate: Date, contractStartAt: string) {
+export function getCycleRange(
+  plan: MembershipPlan,
+  referenceDate: Date,
+  contractStartAt: string,
+  grantDayOverride?: number,
+) {
   if (plan.cycleBasis === "calendar_month") {
     return {
       start: startOfMonthInAppZone(referenceDate),
@@ -183,8 +193,8 @@ export function getCycleRange(plan: MembershipPlan, referenceDate: Date, contrac
   }
 
   return {
-    start: getContractCycleStart(referenceDate, contractStartAt),
-    end: getContractCycleEnd(referenceDate, contractStartAt),
+    start: getContractCycleStart(referenceDate, contractStartAt, grantDayOverride),
+    end: getContractCycleEnd(referenceDate, contractStartAt, grantDayOverride),
   };
 }
 
@@ -197,7 +207,7 @@ export function summarizeWallet(
     userId: user.id,
     isUnlimited: plan.unlimitedCredits,
     availableCredits: plan.unlimitedCredits ? "無制限" : wallet.currentBalance,
-    nextGrantAt: getNextGrantDate(plan, user.contractStartAt, new Date()),
+    nextGrantAt: getNextGrantDate(plan, user.contractStartAt, new Date(), user.creditGrantDay),
     thisCycleConsumed: wallet.thisCycleConsumed,
     carriedOver: wallet.carriedOver,
   };

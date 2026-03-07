@@ -183,6 +183,7 @@ function mapMemberRow(
     segmentSlugs: row.segments.map((item) => item.segment.slug),
     joinedAt: row.createdAt.toISOString(),
     contractStartAt: row.contractStartAt.toISOString(),
+    creditGrantDay: row.creditGrantDay ?? undefined,
     title: row.title ?? "DDS Member",
     company: row.company ?? undefined,
     avatarLabel: row.avatarLabel ?? row.name.slice(0, 2).toUpperCase(),
@@ -194,6 +195,7 @@ function mapBannerRow(row: {
   eyebrow: string | null;
   title: string;
   subtitle: string | null;
+  imageUrl: string | null;
   ctaLabel: string | null;
   ctaHref: string | null;
   accent: string | null;
@@ -204,6 +206,7 @@ function mapBannerRow(row: {
     eyebrow: row.eyebrow ?? "Latest",
     title: row.title,
     subtitle: row.subtitle ?? "",
+    imageUrl: row.imageUrl ?? undefined,
     ctaLabel: row.ctaLabel ?? "詳しく見る",
     ctaHref: row.ctaHref ?? "#",
     accent: row.accent ?? "from-sky-200 via-blue-100 to-indigo-200",
@@ -299,6 +302,7 @@ function mapCourseRow(
     summary: row.summary,
     heroNote: row.heroNote ?? "",
     estimatedHours: row.estimatedHours ?? "",
+    thumbnailUrl: row.thumbnailUrl ?? undefined,
     audience: mapAudience(row.audience),
     modules: row.modules.map((module) => ({
       id: module.id,
@@ -324,6 +328,7 @@ function mapOfferingRow(row: {
   title: string;
   summary: string;
   description: string | null;
+  thumbnailUrl: string | null;
   offeringType: OfferingType;
   startsAt: Date;
   endsAt: Date;
@@ -345,6 +350,7 @@ function mapOfferingRow(row: {
     title: row.title,
     summary: row.summary,
     description: row.description ?? row.summary,
+    thumbnailUrl: row.thumbnailUrl ?? undefined,
     offeringType: toOfferingType(row.offeringType),
     startsAt: row.startsAt.toISOString(),
     endsAt: row.endsAt.toISOString(),
@@ -535,6 +541,7 @@ export async function getWalletByUserId(
   userId: string,
   plan: MembershipPlan,
   contractStartAt: string,
+  creditGrantDay?: number,
 ): Promise<CreditWallet> {
   const fallback =
     sampleWallets.find((wallet) => wallet.userId === userId) ?? {
@@ -572,7 +579,7 @@ export async function getWalletByUserId(
         offeringId: entry.offeringId ?? undefined,
       }));
 
-      const { start, end } = getCycleRange(plan, new Date(), contractStartAt);
+      const { start, end } = getCycleRange(plan, new Date(), contractStartAt, creditGrantDay);
       const cycleEntries = wallet.ledger.filter(
         (entry) => entry.createdAt >= start && entry.createdAt <= end,
       );
@@ -594,7 +601,7 @@ export async function getWalletByUserId(
         thisCycleGranted,
         thisCycleConsumed,
         carriedOver,
-        nextGrantAt: getNextGrantDate(plan, contractStartAt, new Date()),
+        nextGrantAt: getNextGrantDate(plan, contractStartAt, new Date(), creditGrantDay),
         ledger,
       };
     },
@@ -614,11 +621,11 @@ export async function getThemeSettings(): Promise<ThemeSettings> {
   );
 }
 
-export async function listBanners(): Promise<Banner[]> {
+export async function listBanners(includeAll = false): Promise<Banner[]> {
   return safeQuery(
     async () =>
       (await prisma!.banner.findMany({
-        where: { publishStatus: "PUBLISHED" },
+        where: includeAll ? undefined : { publishStatus: "PUBLISHED" },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
       })).map(mapBannerRow),
     sampleBanners,
@@ -636,44 +643,44 @@ export async function listAnnouncements(includeAll = false): Promise<Announcemen
   );
 }
 
-export async function listDeals(): Promise<Deal[]> {
+export async function listDeals(includeAll = false): Promise<Deal[]> {
   return safeQuery(
     async () =>
       (await prisma!.deal.findMany({
-        where: { publishStatus: "PUBLISHED" },
+        where: includeAll ? undefined : { publishStatus: "PUBLISHED" },
         orderBy: { createdAt: "desc" },
       })).map(mapDealRow),
     sampleDeals,
   );
 }
 
-export async function listTools(): Promise<ToolItem[]> {
+export async function listTools(includeAll = false): Promise<ToolItem[]> {
   return safeQuery(
     async () =>
       (await prisma!.toolItem.findMany({
-        where: { publishStatus: "PUBLISHED" },
+        where: includeAll ? undefined : { publishStatus: "PUBLISHED" },
         orderBy: { createdAt: "desc" },
       })).map(mapToolRow),
     sampleTools,
   );
 }
 
-export async function listFaqs(): Promise<FaqItem[]> {
+export async function listFaqs(includeAll = false): Promise<FaqItem[]> {
   return safeQuery(
     async () =>
       (await prisma!.faqItem.findMany({
-        where: { publishStatus: "PUBLISHED" },
+        where: includeAll ? undefined : { publishStatus: "PUBLISHED" },
         orderBy: [{ category: "asc" }, { createdAt: "desc" }],
       })).map(mapFaqRow),
     sampleFaqs,
   );
 }
 
-export async function listCourses(): Promise<Course[]> {
+export async function listCourses(includeAll = false): Promise<Course[]> {
   return safeQuery(
     async () =>
       (await prisma!.course.findMany({
-        where: { publishStatus: "PUBLISHED" },
+        where: includeAll ? undefined : { publishStatus: "PUBLISHED" },
         include: {
           modules: {
             include: { lessons: true },

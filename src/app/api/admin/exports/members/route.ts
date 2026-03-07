@@ -23,6 +23,7 @@ export async function GET() {
     company: member.company ?? "",
     segments: member.segmentSlugs.join("|"),
     contractStartAt: member.contractStartAt,
+    creditGrantDay: member.creditGrantDay ?? "",
     joinedAt: member.joinedAt,
   }));
 

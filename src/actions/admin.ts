@@ -1,7 +1,7 @@
 "use server";
 
 import { clerkClient } from "@clerk/nextjs/server";
-import { MembershipPlanCode, UserRole } from "@prisma/client";
+import { Prisma, MemberStatus, MembershipPlanCode, PublishStatus, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -14,6 +14,7 @@ import { isClerkServerReady } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
 import { RateLimitError, assertRateLimit } from "@/lib/rate-limit";
 import { getMembershipPlanByCode } from "@/lib/repository";
+import type { LessonBlock, MembershipPlanCode as MembershipPlanCodeType } from "@/lib/types";
 
 function slugify(input: string) {
   return input
@@ -21,6 +22,114 @@ function slugify(input: string) {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function normalizeOptionalText(value: FormDataEntryValue | null) {
+  const text = value?.toString().trim();
+  return text ? text : undefined;
+}
+
+function expandMinimumPlanCode(
+  minimumPlanCode?: MembershipPlanCodeType | null,
+): MembershipPlanCode[] | undefined {
+  if (!minimumPlanCode) {
+    return undefined;
+  }
+
+  if (minimumPlanCode === "HOBBY") {
+    return ["HOBBY", "BIZ", "PRO"];
+  }
+
+  if (minimumPlanCode === "BIZ") {
+    return ["BIZ", "PRO"];
+  }
+
+  return ["PRO"];
+}
+
+function parseAudienceFromForm(
+  formData: FormData,
+): { planCodes?: MembershipPlanCode[] } | undefined {
+  const minimumPlanCode = normalizeOptionalText(
+    formData.get("minimumPlanCode"),
+  ) as MembershipPlanCodeType | undefined;
+  const planCodes = expandMinimumPlanCode(minimumPlanCode);
+  return planCodes ? { planCodes } : undefined;
+}
+
+function buildLessonBlocksFromForm(values: {
+  title: string;
+  summary: string;
+  lessonType: "VIDEO" | "ARTICLE" | "PODCAST";
+  mediaUrl?: string;
+  duration?: string;
+  body?: string;
+  checklist?: string;
+  ctaLabel?: string;
+  ctaHref?: string;
+  ctaBody?: string;
+}) {
+  const blocks: LessonBlock[] = [
+    {
+      id: `hero-${Date.now()}`,
+      type: "hero",
+      eyebrow:
+        values.lessonType === "VIDEO"
+          ? "動画講義"
+          : values.lessonType === "PODCAST"
+            ? "ポッドキャスト"
+            : "記事講義",
+      title: values.title,
+      body: values.summary,
+    },
+  ];
+
+  if (values.mediaUrl) {
+    blocks.push({
+      id: `media-${Date.now() + 1}`,
+      type: values.lessonType === "PODCAST" ? "embed_audio" : "embed_video",
+      title: values.title,
+      url: values.mediaUrl,
+      duration: values.duration || "約10分",
+    });
+  }
+
+  if (values.body) {
+    blocks.push({
+      id: `body-${Date.now() + 2}`,
+      type: "rich_text",
+      title: "講義内容",
+      body: values.body,
+    });
+  }
+
+  if (values.checklist) {
+    const items = values.checklist
+      .split("\n")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    if (items.length > 0) {
+      blocks.push({
+        id: `checklist-${Date.now() + 3}`,
+        type: "checklist",
+        title: "確認ポイント",
+        items,
+      });
+    }
+  }
+
+  if (values.ctaLabel && values.ctaHref) {
+    blocks.push({
+      id: `cta-${Date.now() + 4}`,
+      type: "cta",
+      title: "次のアクション",
+      body: values.ctaBody || "講義を終えたら次のアクションへ進んでください。",
+      label: values.ctaLabel,
+      href: values.ctaHref,
+    });
+  }
+
+  return blocks;
 }
 
 async function getAdminActorId() {
@@ -151,6 +260,7 @@ export async function createAnnouncementAction(formData: FormData) {
     summary: z.string().min(2),
     body: z.string().min(2),
     publishAt: z.string().optional(),
+    publishStatus: z.nativeEnum(PublishStatus).optional(),
   });
 
   const values = schema.parse({
@@ -158,21 +268,18 @@ export async function createAnnouncementAction(formData: FormData) {
     summary: formData.get("summary"),
     body: formData.get("body"),
     publishAt: formData.get("publishAt")?.toString() || undefined,
+    publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
   });
-
-  const planCodes = formData
-    .getAll("planCodes")
-    .map((value) => value.toString())
-    .filter(Boolean) as MembershipPlanCode[];
+  const audience = parseAudienceFromForm(formData);
 
   const created = await db.announcement.create({
     data: {
       title: values.title,
       summary: values.summary,
       body: values.body,
-      publishStatus: "PUBLISHED",
+      publishStatus: values.publishStatus ?? "PUBLISHED",
       publishAt: values.publishAt ? new Date(values.publishAt) : new Date(),
-      audience: planCodes.length > 0 ? { planCodes } : undefined,
+      audience,
     },
   });
 
@@ -182,7 +289,7 @@ export async function createAnnouncementAction(formData: FormData) {
       action: "announcement.create",
       targetType: "Announcement",
       targetId: created.id,
-      metadata: { planCodes },
+      metadata: audience ?? {},
     },
   });
 
@@ -204,30 +311,36 @@ export async function createBannerAction(formData: FormData) {
     eyebrow: z.string().min(1),
     title: z.string().min(2),
     subtitle: z.string().min(2),
+    imageUrl: z.string().optional(),
     ctaLabel: z.string().min(1),
     ctaHref: z.string().min(1),
     accent: z.string().min(4),
+    publishStatus: z.nativeEnum(PublishStatus).optional(),
   });
 
   const values = schema.parse({
     eyebrow: formData.get("eyebrow"),
     title: formData.get("title"),
     subtitle: formData.get("subtitle"),
+    imageUrl: formData.get("imageUrl")?.toString() || undefined,
     ctaLabel: formData.get("ctaLabel"),
     ctaHref: formData.get("ctaHref"),
     accent: formData.get("accent"),
+    publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
   });
-
-  const planCodes = formData
-    .getAll("planCodes")
-    .map((value) => value.toString())
-    .filter(Boolean) as MembershipPlanCode[];
+  const audience = parseAudienceFromForm(formData);
 
   const created = await db.banner.create({
     data: {
-      ...values,
-      publishStatus: "PUBLISHED",
-      audience: planCodes.length > 0 ? { planCodes } : undefined,
+      eyebrow: values.eyebrow,
+      title: values.title,
+      subtitle: values.subtitle,
+      imageUrl: values.imageUrl,
+      ctaLabel: values.ctaLabel,
+      ctaHref: values.ctaHref,
+      accent: values.accent,
+      publishStatus: values.publishStatus ?? "PUBLISHED",
+      audience,
     },
   });
 
@@ -237,7 +350,7 @@ export async function createBannerAction(formData: FormData) {
       action: "banner.create",
       targetType: "Banner",
       targetId: created.id,
-      metadata: { planCodes },
+      metadata: audience ?? {},
     },
   });
 
@@ -259,14 +372,15 @@ export async function createOfferingAction(formData: FormData) {
     title: z.string().min(2),
     summary: z.string().min(2),
     description: z.string().min(2),
+    thumbnailUrl: z.string().optional(),
     offeringType: z.enum(["BOOKING", "EVENT"]),
     startsAt: z.string().min(1),
-    endsAt: z.string().min(1),
+    endsAt: z.string().optional(),
     locationLabel: z.string().min(1),
     capacity: z.coerce.number().int().positive(),
     creditRequired: z.coerce.number().int().nonnegative(),
     consumptionMode: z.enum(["ON_CONFIRM", "ON_ATTEND"]),
-    refundDeadline: z.string().min(1),
+    refundDeadline: z.string().optional(),
     priceLabel: z.string().min(1),
     host: z.string().min(1),
     externalJoinUrl: z.string().optional(),
@@ -276,23 +390,23 @@ export async function createOfferingAction(formData: FormData) {
     title: formData.get("title"),
     summary: formData.get("summary"),
     description: formData.get("description"),
+    thumbnailUrl: formData.get("thumbnailUrl")?.toString() || undefined,
     offeringType: formData.get("offeringType"),
     startsAt: formData.get("startsAt"),
-    endsAt: formData.get("endsAt"),
+    endsAt: formData.get("endsAt")?.toString() || undefined,
     locationLabel: formData.get("locationLabel"),
     capacity: formData.get("capacity"),
     creditRequired: formData.get("creditRequired"),
     consumptionMode: formData.get("consumptionMode"),
-    refundDeadline: formData.get("refundDeadline"),
+    refundDeadline: formData.get("refundDeadline")?.toString() || undefined,
     priceLabel: formData.get("priceLabel"),
     host: formData.get("host"),
     externalJoinUrl: formData.get("externalJoinUrl")?.toString() || undefined,
   });
-
-  const planCodes = formData
-    .getAll("planCodes")
-    .map((value) => value.toString())
-    .filter(Boolean) as MembershipPlanCode[];
+  const audience = parseAudienceFromForm(formData);
+  const startsAt = new Date(values.startsAt);
+  const endsAt = values.endsAt ? new Date(values.endsAt) : new Date(startsAt.getTime() + 60 * 60 * 1000);
+  const refundDeadline = values.refundDeadline ? new Date(values.refundDeadline) : startsAt;
 
   const created = await db.reservableOffering.create({
     data: {
@@ -300,18 +414,19 @@ export async function createOfferingAction(formData: FormData) {
       title: values.title,
       summary: values.summary,
       description: values.description,
+      thumbnailUrl: values.thumbnailUrl || null,
       offeringType: values.offeringType,
-      startsAt: new Date(values.startsAt),
-      endsAt: new Date(values.endsAt),
+      startsAt,
+      endsAt,
       locationLabel: values.locationLabel,
       capacity: values.capacity,
       creditRequired: values.creditRequired,
       consumptionMode: values.consumptionMode,
-      refundDeadline: new Date(values.refundDeadline),
+      refundDeadline,
       priceLabel: values.priceLabel,
       host: values.host,
       externalJoinUrl: values.externalJoinUrl || null,
-      audience: planCodes.length > 0 ? { planCodes } : undefined,
+      audience,
       waitlistEnabled: formData.get("waitlistEnabled") === "on",
       featured: formData.get("featured") === "on",
     },
@@ -323,7 +438,7 @@ export async function createOfferingAction(formData: FormData) {
       action: "offering.create",
       targetType: "ReservableOffering",
       targetId: created.id,
-      metadata: { planCodes },
+      metadata: audience ?? {},
     },
   });
 
@@ -347,9 +462,11 @@ export async function createMemberAction(formData: FormData) {
     name: z.string().min(2),
     email: z.string().email(),
     title: z.string().min(1),
+    company: z.string().optional(),
     role: z.enum(["SUPER_ADMIN", "STAFF", "STUDENT"]),
     planCode: z.nativeEnum(MembershipPlanCode),
-    status: z.enum(["ACTIVE", "INVITED", "SUSPENDED"]).default("INVITED"),
+    status: z.enum(["ACTIVE", "INVITED", "PAUSED", "WITHDRAWN", "SUSPENDED"]).default("INVITED"),
+    creditGrantBaseDate: z.string().optional(),
     segmentSlugs: z.string().optional(),
   });
 
@@ -357,9 +474,11 @@ export async function createMemberAction(formData: FormData) {
     name: formData.get("name"),
     email: formData.get("email"),
     title: formData.get("title"),
+    company: formData.get("company")?.toString() || undefined,
     role: formData.get("role"),
     planCode: formData.get("planCode"),
     status: formData.get("status") || "INVITED",
+    creditGrantBaseDate: formData.get("creditGrantBaseDate")?.toString() || undefined,
     segmentSlugs: formData.get("segmentSlugs")?.toString() || "",
   });
 
@@ -380,6 +499,10 @@ export async function createMemberAction(formData: FormData) {
   );
 
   const segments = await Promise.all(segmentSlugs.map((slug) => upsertSegmentBySlug(slug)));
+  const creditGrantDay =
+    values.creditGrantBaseDate && !Number.isNaN(new Date(values.creditGrantBaseDate).getTime())
+      ? new Date(values.creditGrantBaseDate).getDate()
+      : null;
 
   let invitationId: string | undefined;
 
@@ -405,9 +528,11 @@ export async function createMemberAction(formData: FormData) {
           name: values.name,
           email: values.email,
           title: values.title,
+          company: values.company || null,
           role: values.role as UserRole,
-          status: values.status,
+          status: values.status as MemberStatus,
           avatarLabel: values.name.slice(0, 2).toUpperCase(),
+          creditGrantDay,
           planAssignments: {
             create: {
               startedAt: new Date(),
@@ -417,7 +542,10 @@ export async function createMemberAction(formData: FormData) {
           },
           wallet: {
             create: {
-              currentBalance: plan.unlimitedCredits ? 0 : plan.monthlyCreditGrant,
+              currentBalance:
+                !plan.unlimitedCredits && ["ACTIVE", "INVITED"].includes(values.status)
+                  ? plan.monthlyCreditGrant
+                  : 0,
             },
           },
           segments: {
@@ -428,7 +556,7 @@ export async function createMemberAction(formData: FormData) {
         },
       });
 
-      if (!plan.unlimitedCredits) {
+      if (!plan.unlimitedCredits && ["ACTIVE", "INVITED"].includes(values.status)) {
         const wallet = await tx.creditWallet.findUniqueOrThrow({
           where: { userId: user.id },
         });
@@ -486,6 +614,533 @@ export async function createMemberAction(formData: FormData) {
     }
     throw error;
   }
+}
+
+export async function updateMemberSettingsAction(formData: FormData) {
+  if (!prisma) {
+    await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/members");
+  }
+  const db = prisma!;
+
+  const actorId = await getAdminActorId();
+  await assertAdminMutationLimit(actorId, "update-member-settings");
+
+  const values = z
+    .object({
+      userId: z.string().min(1),
+      name: z.string().min(2),
+      title: z.string().min(1),
+      company: z.string().optional(),
+      role: z.enum(["SUPER_ADMIN", "STAFF", "STUDENT"]),
+      status: z.enum(["ACTIVE", "INVITED", "PAUSED", "WITHDRAWN", "SUSPENDED"]),
+      creditGrantBaseDate: z.string().optional(),
+    })
+    .parse({
+      userId: formData.get("userId"),
+      name: formData.get("name"),
+      title: formData.get("title"),
+      company: formData.get("company")?.toString() || undefined,
+      role: formData.get("role"),
+      status: formData.get("status"),
+      creditGrantBaseDate: formData.get("creditGrantBaseDate")?.toString() || undefined,
+    });
+
+  const creditGrantDay =
+    values.creditGrantBaseDate && !Number.isNaN(new Date(values.creditGrantBaseDate).getTime())
+      ? new Date(values.creditGrantBaseDate).getDate()
+      : null;
+
+  const updated = await db.user.update({
+    where: { id: values.userId },
+    data: {
+      name: values.name,
+      title: values.title,
+      company: values.company || null,
+      role: values.role as UserRole,
+      status: values.status as MemberStatus,
+      creditGrantDay,
+      avatarLabel: values.name.slice(0, 2).toUpperCase(),
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      userId: actorId,
+      action: "member.settings.update",
+      targetType: "User",
+      targetId: updated.id,
+      metadata: {
+        role: values.role,
+        status: values.status,
+        creditGrantDay,
+      },
+    },
+  });
+
+  revalidatePath("/admin/members");
+  revalidatePath("/admin/plans");
+  revalidatePath("/app");
+
+  await redirectWithFlash("会員設定を更新しました。", "success", "/admin/members");
+}
+
+export async function savePlanSettingsAction(formData: FormData) {
+  if (!prisma) {
+    await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/plans");
+  }
+  const db = prisma!;
+
+  const actorId = await getAdminActorId();
+  await assertAdminMutationLimit(actorId, "save-plan-settings");
+
+  const values = z
+    .object({
+      planCode: z.nativeEnum(MembershipPlanCode),
+      name: z.string().min(2),
+      heroLabel: z.string().min(2),
+      description: z.string().min(5),
+      monthlyCreditGrant: z.coerce.number().int().nonnegative(),
+      rolloverCap: z.coerce.number().int().nonnegative(),
+      cycleBasis: z.enum(["CALENDAR_MONTH", "CONTRACT_DATE"]),
+    })
+    .parse({
+      planCode: formData.get("planCode"),
+      name: formData.get("name"),
+      heroLabel: formData.get("heroLabel"),
+      description: formData.get("description"),
+      monthlyCreditGrant: formData.get("monthlyCreditGrant"),
+      rolloverCap: formData.get("rolloverCap"),
+      cycleBasis: formData.get("cycleBasis"),
+    });
+
+  const updated = await db.membershipPlan.update({
+    where: { code: values.planCode },
+    data: {
+      name: values.name,
+      heroLabel: values.heroLabel,
+      description: values.description,
+      monthlyCreditGrant: values.monthlyCreditGrant,
+      rolloverCap: values.rolloverCap,
+      cycleBasis: values.cycleBasis,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      userId: actorId,
+      action: "plan.update",
+      targetType: "MembershipPlan",
+      targetId: updated.id,
+      metadata: {
+        code: updated.code,
+        monthlyCreditGrant: updated.monthlyCreditGrant,
+        rolloverCap: updated.rolloverCap,
+        cycleBasis: updated.cycleBasis,
+      },
+    },
+  });
+
+  revalidatePath("/admin/plans");
+  revalidatePath("/admin/members");
+  revalidatePath("/app");
+
+  await redirectWithFlash("プラン設定を更新しました。", "success", "/admin/plans");
+}
+
+export async function createDealAction(formData: FormData) {
+  if (!prisma) {
+    await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/content");
+  }
+  const db = prisma!;
+
+  const actorId = await getAdminActorId();
+  await assertAdminMutationLimit(actorId, "create-deal");
+
+  const values = z
+    .object({
+      title: z.string().min(2),
+      summary: z.string().min(2),
+      body: z.string().min(2),
+      badge: z.string().optional(),
+      offer: z.string().optional(),
+      ctaLabel: z.string().optional(),
+      ctaHref: z.string().optional(),
+      publishStatus: z.nativeEnum(PublishStatus).optional(),
+    })
+    .parse({
+      title: formData.get("title"),
+      summary: formData.get("summary"),
+      body: formData.get("body"),
+      badge: formData.get("badge")?.toString() || undefined,
+      offer: formData.get("offer")?.toString() || undefined,
+      ctaLabel: formData.get("ctaLabel")?.toString() || undefined,
+      ctaHref: formData.get("ctaHref")?.toString() || undefined,
+      publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
+    });
+
+  const audience = parseAudienceFromForm(formData);
+  const created = await db.deal.create({
+    data: {
+      title: values.title,
+      summary: values.summary,
+      body: values.body,
+      badge: values.badge || null,
+      offer: values.offer || null,
+      ctaLabel: values.ctaLabel || null,
+      ctaHref: values.ctaHref || null,
+      publishStatus: values.publishStatus ?? "PUBLISHED",
+      audience,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      userId: actorId,
+      action: "deal.create",
+      targetType: "Deal",
+      targetId: created.id,
+      metadata: audience ?? {},
+    },
+  });
+
+  revalidatePath("/admin/content");
+  revalidatePath("/app/deals");
+  revalidatePath("/app");
+
+  await redirectWithFlash("お得情報を追加しました。", "success", "/admin/content");
+}
+
+export async function createToolItemAction(formData: FormData) {
+  if (!prisma) {
+    await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/content");
+  }
+  const db = prisma!;
+
+  const actorId = await getAdminActorId();
+  await assertAdminMutationLimit(actorId, "create-tool");
+
+  const values = z
+    .object({
+      title: z.string().min(2),
+      summary: z.string().min(2),
+      body: z.string().min(2),
+      href: z.string().optional(),
+      publishStatus: z.nativeEnum(PublishStatus).optional(),
+    })
+    .parse({
+      title: formData.get("title"),
+      summary: formData.get("summary"),
+      body: formData.get("body"),
+      href: formData.get("href")?.toString() || undefined,
+      publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
+    });
+
+  const audience = parseAudienceFromForm(formData);
+  const created = await db.toolItem.create({
+    data: {
+      title: values.title,
+      summary: values.summary,
+      body: values.body,
+      href: values.href || null,
+      publishStatus: values.publishStatus ?? "PUBLISHED",
+      audience,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      userId: actorId,
+      action: "tool.create",
+      targetType: "ToolItem",
+      targetId: created.id,
+      metadata: audience ?? {},
+    },
+  });
+
+  revalidatePath("/admin/content");
+  revalidatePath("/app/tools");
+  revalidatePath("/app");
+
+  await redirectWithFlash("ツール情報を追加しました。", "success", "/admin/content");
+}
+
+export async function createFaqAction(formData: FormData) {
+  if (!prisma) {
+    await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/content");
+  }
+  const db = prisma!;
+
+  const actorId = await getAdminActorId();
+  await assertAdminMutationLimit(actorId, "create-faq");
+
+  const values = z
+    .object({
+      category: z.string().min(1),
+      question: z.string().min(2),
+      answer: z.string().min(2),
+      publishStatus: z.nativeEnum(PublishStatus).optional(),
+    })
+    .parse({
+      category: formData.get("category"),
+      question: formData.get("question"),
+      answer: formData.get("answer"),
+      publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
+    });
+
+  const audience = parseAudienceFromForm(formData);
+  const created = await db.faqItem.create({
+    data: {
+      category: values.category,
+      question: values.question,
+      answer: values.answer,
+      publishStatus: values.publishStatus ?? "PUBLISHED",
+      audience,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      userId: actorId,
+      action: "faq.create",
+      targetType: "FaqItem",
+      targetId: created.id,
+      metadata: audience ?? {},
+    },
+  });
+
+  revalidatePath("/admin/content");
+  revalidatePath("/app/faq");
+  revalidatePath("/app");
+
+  await redirectWithFlash("FAQ を追加しました。", "success", "/admin/content");
+}
+
+export async function createCourseAction(formData: FormData) {
+  if (!prisma) {
+    await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/content");
+  }
+  const db = prisma!;
+
+  const actorId = await getAdminActorId();
+  await assertAdminMutationLimit(actorId, "create-course");
+
+  const values = z
+    .object({
+      title: z.string().min(2),
+      slug: z.string().optional(),
+      summary: z.string().min(2),
+      heroNote: z.string().min(1),
+      estimatedHours: z.string().min(1),
+      thumbnailUrl: z.string().optional(),
+      publishStatus: z.nativeEnum(PublishStatus).optional(),
+    })
+    .parse({
+      title: formData.get("title"),
+      slug: formData.get("slug")?.toString() || undefined,
+      summary: formData.get("summary"),
+      heroNote: formData.get("heroNote"),
+      estimatedHours: formData.get("estimatedHours"),
+      thumbnailUrl: formData.get("thumbnailUrl")?.toString() || undefined,
+      publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
+    });
+
+  const audience = parseAudienceFromForm(formData);
+  const created = await db.course.create({
+    data: {
+      slug: slugify(values.slug || values.title),
+      title: values.title,
+      summary: values.summary,
+      heroNote: values.heroNote,
+      estimatedHours: values.estimatedHours,
+      thumbnailUrl: values.thumbnailUrl || null,
+      publishStatus: values.publishStatus ?? "PUBLISHED",
+      audience,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      userId: actorId,
+      action: "course.create",
+      targetType: "Course",
+      targetId: created.id,
+      metadata: audience ?? {},
+    },
+  });
+
+  revalidatePath("/admin/content");
+  revalidatePath("/app/courses");
+  revalidatePath("/app");
+
+  await redirectWithFlash("教材コースを追加しました。", "success", "/admin/content");
+}
+
+export async function createCourseModuleAction(formData: FormData) {
+  if (!prisma) {
+    await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/content");
+  }
+  const db = prisma!;
+
+  const actorId = await getAdminActorId();
+  await assertAdminMutationLimit(actorId, "create-course-module");
+
+  const values = z
+    .object({
+      courseId: z.string().min(1),
+      title: z.string().min(2),
+      sortOrder: z.coerce.number().int().nonnegative().optional(),
+    })
+    .parse({
+      courseId: formData.get("courseId"),
+      title: formData.get("title"),
+      sortOrder: formData.get("sortOrder")?.toString() || undefined,
+    });
+
+  const created = await db.module.create({
+    data: {
+      courseId: values.courseId,
+      title: values.title,
+      sortOrder: values.sortOrder ?? 0,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      userId: actorId,
+      action: "course.module.create",
+      targetType: "Module",
+      targetId: created.id,
+    },
+  });
+
+  revalidatePath("/admin/content");
+  revalidatePath("/app/courses");
+
+  await redirectWithFlash("章を追加しました。", "success", "/admin/content");
+}
+
+export async function createCourseLessonAction(formData: FormData) {
+  if (!prisma) {
+    await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/content");
+  }
+  const db = prisma!;
+
+  const actorId = await getAdminActorId();
+  await assertAdminMutationLimit(actorId, "create-course-lesson");
+
+  const values = z
+    .object({
+      moduleId: z.string().min(1),
+      title: z.string().min(2),
+      slug: z.string().optional(),
+      summary: z.string().min(2),
+      lessonType: z.enum(["VIDEO", "ARTICLE", "PODCAST"]),
+      duration: z.string().optional(),
+      mediaUrl: z.string().optional(),
+      body: z.string().optional(),
+      checklist: z.string().optional(),
+      ctaLabel: z.string().optional(),
+      ctaHref: z.string().optional(),
+      ctaBody: z.string().optional(),
+      sortOrder: z.coerce.number().int().nonnegative().optional(),
+    })
+    .parse({
+      moduleId: formData.get("moduleId"),
+      title: formData.get("title"),
+      slug: formData.get("slug")?.toString() || undefined,
+      summary: formData.get("summary"),
+      lessonType: formData.get("lessonType"),
+      duration: formData.get("duration")?.toString() || undefined,
+      mediaUrl: formData.get("mediaUrl")?.toString() || undefined,
+      body: formData.get("body")?.toString() || undefined,
+      checklist: formData.get("checklist")?.toString() || undefined,
+      ctaLabel: formData.get("ctaLabel")?.toString() || undefined,
+      ctaHref: formData.get("ctaHref")?.toString() || undefined,
+      ctaBody: formData.get("ctaBody")?.toString() || undefined,
+      sortOrder: formData.get("sortOrder")?.toString() || undefined,
+    });
+
+  const blocks = buildLessonBlocksFromForm(values);
+
+  const created = await db.lesson.create({
+    data: {
+      moduleId: values.moduleId,
+      slug: slugify(values.slug || values.title),
+      title: values.title,
+      summary: values.summary,
+      lessonType: values.lessonType,
+      duration: values.duration || null,
+      sortOrder: values.sortOrder ?? 0,
+      body: blocks as unknown as Prisma.InputJsonValue,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      userId: actorId,
+      action: "course.lesson.create",
+      targetType: "Lesson",
+      targetId: created.id,
+      metadata: {
+        lessonType: values.lessonType,
+      },
+    },
+  });
+
+  revalidatePath("/admin/content");
+  revalidatePath("/app/courses");
+
+  await redirectWithFlash("講義を追加しました。", "success", "/admin/content");
+}
+
+export async function createCampaignAction(formData: FormData) {
+  if (!prisma) {
+    await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/campaigns");
+  }
+  const db = prisma!;
+
+  const actorId = await getAdminActorId();
+  await assertAdminMutationLimit(actorId, "create-campaign");
+
+  const values = z
+    .object({
+      title: z.string().min(2),
+      subject: z.string().min(2),
+      previewText: z.string().optional(),
+      scheduledAt: z.string().optional(),
+    })
+    .parse({
+      title: formData.get("title"),
+      subject: formData.get("subject"),
+      previewText: formData.get("previewText")?.toString() || undefined,
+      scheduledAt: formData.get("scheduledAt")?.toString() || undefined,
+    });
+
+  const targetJson = parseAudienceFromForm(formData) ?? {};
+  const created = await db.emailCampaign.create({
+    data: {
+      title: values.title,
+      subject: values.subject,
+      previewText: values.previewText || null,
+      targetJson,
+      status: values.scheduledAt ? "SCHEDULED" : "DRAFT",
+      scheduledAt: values.scheduledAt ? new Date(values.scheduledAt) : null,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      userId: actorId,
+      action: "campaign.create",
+      targetType: "EmailCampaign",
+      targetId: created.id,
+      metadata: targetJson,
+    },
+  });
+
+  revalidatePath("/admin/campaigns");
+
+  await redirectWithFlash("配信設定を保存しました。", "success", "/admin/campaigns");
 }
 
 export async function updateMemberPlanAction(formData: FormData) {
@@ -648,7 +1303,7 @@ export async function adjustMemberCreditsAction(formData: FormData) {
   });
 
   if (values.mode === "bonus" && values.amount <= 0) {
-    await redirectWithFlash("bonus grant は 1 以上で入力してください。", "error", "/admin/members");
+    await redirectWithFlash("手動付与は 1 以上で入力してください。", "error", "/admin/members");
   }
 
   const wallet = await ensureWallet(values.userId);

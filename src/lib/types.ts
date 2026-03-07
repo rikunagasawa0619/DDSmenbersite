@@ -4,7 +4,12 @@ export type MembershipPlanCode = "HOBBY" | "BIZ" | "PRO";
 
 export type PlanCycleBasis = "calendar_month" | "contract_date";
 
-export type MemberStatus = "active" | "invited" | "suspended";
+export type MemberStatus =
+  | "active"
+  | "invited"
+  | "paused"
+  | "withdrawn"
+  | "suspended";
 
 export type PublishStatus = "draft" | "published" | "archived";
 
@@ -75,6 +80,7 @@ export interface MemberProfile {
   segmentSlugs: string[];
   joinedAt: string;
   contractStartAt: string;
+  creditGrantDay?: number;
   title: string;
   company?: string;
   avatarLabel: string;
@@ -86,6 +92,7 @@ export interface Banner {
   title: string;
   subtitle: string;
   eyebrow: string;
+  imageUrl?: string;
   ctaLabel: string;
   ctaHref: string;
   accent: string;
@@ -218,6 +225,7 @@ export interface Course {
   summary: string;
   heroNote: string;
   estimatedHours: string;
+  thumbnailUrl?: string;
   audience?: AudienceRule;
   modules: CourseModule[];
 }
@@ -248,6 +256,7 @@ export interface ReservableOffering {
   title: string;
   summary: string;
   description: string;
+  thumbnailUrl?: string;
   offeringType: OfferingType;
   startsAt: string;
   endsAt: string;

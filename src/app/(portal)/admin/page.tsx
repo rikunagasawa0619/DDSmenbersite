@@ -10,8 +10,8 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-          Overview
+        <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
+          ダッシュボード
         </div>
         <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">運営ダッシュボード</h1>
       </div>
@@ -30,7 +30,7 @@ export default async function AdminDashboardPage() {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-semibold text-slate-500">Recent announcements</div>
+              <div className="text-sm font-semibold text-slate-500">最新のお知らせ</div>
               <h2 className="mt-2 font-display text-2xl font-bold text-slate-950">公開中のお知らせ</h2>
             </div>
             <Badge tone="brand">{snapshot.announcements.length}件</Badge>
@@ -45,15 +45,15 @@ export default async function AdminDashboardPage() {
           </div>
         </Card>
         <Card className="bg-[#111b2f] text-white">
-          <div className="text-sm font-semibold text-white/65">Theme</div>
+          <div className="text-sm font-semibold text-white/65">テーマ設定</div>
           <h2 className="mt-3 font-display text-3xl font-bold">{snapshot.theme.brandName}</h2>
           <div className="mt-6 grid gap-3">
             <div className="rounded-[22px] bg-white/8 p-4">
-              <div className="text-xs uppercase tracking-[0.18em] text-white/50">Primary</div>
+              <div className="text-xs uppercase tracking-[0.18em] text-white/50">メインカラー</div>
               <div className="mt-2 text-lg font-bold">{snapshot.theme.primaryColor}</div>
             </div>
             <div className="rounded-[22px] bg-white/8 p-4">
-              <div className="text-xs uppercase tracking-[0.18em] text-white/50">Accent</div>
+              <div className="text-xs uppercase tracking-[0.18em] text-white/50">アクセント</div>
               <div className="mt-2 text-lg font-bold">{snapshot.theme.accentColor}</div>
             </div>
           </div>

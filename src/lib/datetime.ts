@@ -36,9 +36,22 @@ export function endOfMonthInAppZone(date: Date) {
   );
 }
 
-function getCycleAnchorDate(contractStartAt: string, targetYear: number, targetMonthIndex: number) {
+function getResolvedGrantDay(contractStartAt: string, grantDayOverride?: number) {
+  if (grantDayOverride) {
+    return Math.min(Math.max(grantDayOverride, 1), 31);
+  }
+
   const contractDate = new Date(contractStartAt);
-  const contractDay = getZonedNumber(contractDate, "dd");
+  return getZonedNumber(contractDate, "dd");
+}
+
+function getCycleAnchorDateForDay(
+  contractStartAt: string,
+  targetYear: number,
+  targetMonthIndex: number,
+  grantDayOverride?: number,
+) {
+  const contractDay = getResolvedGrantDay(contractStartAt, grantDayOverride);
 
   const base = setMonth(setYear(new Date(), targetYear), targetMonthIndex);
   const maxDay = getDaysInMonth(base);
@@ -50,43 +63,57 @@ function getCycleAnchorDate(contractStartAt: string, targetYear: number, targetM
   );
 }
 
-export function getContractCycleStart(referenceDate: Date, contractStartAt: string) {
-  const contractDate = new Date(contractStartAt);
-  const contractDay = getZonedNumber(contractDate, "dd");
+export function getContractCycleStart(
+  referenceDate: Date,
+  contractStartAt: string,
+  grantDayOverride?: number,
+) {
+  const contractDay = getResolvedGrantDay(contractStartAt, grantDayOverride);
   const refYear = getZonedNumber(referenceDate, "yyyy");
   const refMonth = getZonedNumber(referenceDate, "MM") - 1;
   const refDay = getZonedNumber(referenceDate, "dd");
 
   const startMonthDate =
     refDay >= contractDay
-      ? getCycleAnchorDate(contractStartAt, refYear, refMonth)
-      : getCycleAnchorDate(
+      ? getCycleAnchorDateForDay(contractStartAt, refYear, refMonth, grantDayOverride)
+      : getCycleAnchorDateForDay(
           contractStartAt,
           getZonedNumber(subMonths(referenceDate, 1), "yyyy"),
           getZonedNumber(subMonths(referenceDate, 1), "MM") - 1,
+          grantDayOverride,
         );
 
   return startMonthDate;
 }
 
-export function getContractCycleEnd(referenceDate: Date, contractStartAt: string) {
-  const start = getContractCycleStart(referenceDate, contractStartAt);
+export function getContractCycleEnd(
+  referenceDate: Date,
+  contractStartAt: string,
+  grantDayOverride?: number,
+) {
+  const start = getContractCycleStart(referenceDate, contractStartAt, grantDayOverride);
   const nextMonth = subMonths(start, -1);
-  const nextStart = getCycleAnchorDate(
+  const nextStart = getCycleAnchorDateForDay(
     contractStartAt,
     getZonedNumber(nextMonth, "yyyy"),
     getZonedNumber(nextMonth, "MM") - 1,
+    grantDayOverride,
   );
   return new Date(nextStart.getTime() - 1);
 }
 
-export function getNextContractGrantDate(referenceDate: Date, contractStartAt: string) {
-  const start = getContractCycleStart(referenceDate, contractStartAt);
+export function getNextContractGrantDate(
+  referenceDate: Date,
+  contractStartAt: string,
+  grantDayOverride?: number,
+) {
+  const start = getContractCycleStart(referenceDate, contractStartAt, grantDayOverride);
   const nextMonth = subMonths(start, -1);
-  return getCycleAnchorDate(
+  return getCycleAnchorDateForDay(
     contractStartAt,
     getZonedNumber(nextMonth, "yyyy"),
     getZonedNumber(nextMonth, "MM") - 1,
+    grantDayOverride,
   );
 }
 

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -14,15 +15,24 @@ export default async function CoursesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-          Courses
+        <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
+          オンライン教材
         </div>
         <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">オンライン教材</h1>
       </div>
       <div className="grid gap-5 xl:grid-cols-3">
-        {snapshot.courses.map((course) => (
+        {snapshot.courses.length === 0 ? (
+          <Card className="xl:col-span-3">
+            <div className="text-sm leading-7 text-slate-500">
+              まだ公開中のオンライン教材はありません。運営側でコースが公開されると、この一覧に表示されます。
+            </div>
+          </Card>
+        ) : snapshot.courses.map((course) => (
           <Card key={course.id} className="flex h-full flex-col">
             <div className="rounded-[24px] bg-[linear-gradient(135deg,#dbe5ff,#ffffff)] p-5">
+              {course.thumbnailUrl ? (
+                <img src={course.thumbnailUrl} alt={course.title} className="mb-4 h-44 w-full rounded-[20px] object-cover" />
+              ) : null}
               <Badge tone="brand">{course.heroNote}</Badge>
               <h2 className="mt-4 font-display text-2xl font-bold text-slate-950">{course.title}</h2>
               <p className="mt-3 text-sm leading-7 text-slate-600">{course.summary}</p>

@@ -9,8 +9,8 @@ export default async function PostLoginPage() {
     redirect(hasAuthenticatedSession ? "/access-denied?reason=not-provisioned" : "/login");
   }
 
-  if (member.status === "suspended") {
-    redirect("/access-denied?reason=suspended");
+  if (["paused", "withdrawn", "suspended"].includes(member.status)) {
+    redirect(`/access-denied?reason=${member.status}`);
   }
 
   if (member.role === "super_admin" || member.role === "staff") {

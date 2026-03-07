@@ -81,8 +81,8 @@ export async function requireUser() {
     redirect(hasAuthenticatedSession ? "/access-denied?reason=not-provisioned" : "/login");
   }
 
-  if (member.status === "suspended") {
-    redirect("/access-denied?reason=suspended");
+  if (["paused", "withdrawn", "suspended"].includes(member.status)) {
+    redirect(`/access-denied?reason=${member.status}`);
   }
 
   return member;
@@ -141,5 +141,5 @@ export async function getWalletForUser(
   plan?: MembershipPlan,
 ): Promise<CreditWallet> {
   const resolvedPlan = plan ?? (await getPlanForUser(user));
-  return getWalletByUserId(user.id, resolvedPlan, user.contractStartAt);
+  return getWalletByUserId(user.id, resolvedPlan, user.contractStartAt, user.creditGrantDay);
 }

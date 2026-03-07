@@ -1,8 +1,11 @@
+/* eslint-disable @next/next/no-img-element */
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
 import { getPortalSnapshot } from "@/lib/portal";
 import { formatDate } from "@/lib/utils";
+import Link from "next/link";
 
 export default async function EventsPage() {
   const user = await requireUser();
@@ -12,13 +15,19 @@ export default async function EventsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-          Events
+        <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
+          イベント
         </div>
         <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">イベント</h1>
       </div>
       <div className="grid gap-5">
-        {events.map((event) => (
+        {events.length === 0 ? (
+          <Card>
+            <div className="text-sm leading-7 text-slate-500">
+              現在募集中のイベントはありません。最新の予約状況は講義予約タブのカレンダーでも確認できます。
+            </div>
+          </Card>
+        ) : events.map((event) => (
           <Card key={event.id}>
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div>
@@ -28,6 +37,9 @@ export default async function EventsPage() {
                     残{event.counts.remaining}
                   </Badge>
                 </div>
+                {event.thumbnailUrl ? (
+                  <img src={event.thumbnailUrl} alt={event.title} className="mt-4 h-52 w-full rounded-[24px] object-cover" />
+                ) : null}
                 <h2 className="mt-4 font-display text-2xl font-bold text-slate-950">{event.title}</h2>
                 <p className="mt-3 text-sm leading-7 text-slate-600">{event.description}</p>
               </div>
@@ -43,6 +55,9 @@ export default async function EventsPage() {
                       : "申込可能"
                     : event.eligibility.reason}
                 </div>
+                <Link href="/app/bookings" className="mt-4 inline-flex">
+                  <Button>予約カレンダーを見る</Button>
+                </Link>
               </div>
             </div>
           </Card>

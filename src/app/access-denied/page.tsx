@@ -17,6 +17,16 @@ const messages = {
     description:
       "この会員アカウントは現在停止中です。契約状況や再開可否について、運営へお問い合わせください。",
   },
+  paused: {
+    title: "現在は休会中です",
+    description:
+      "この会員アカウントは休会設定のため、予約・教材・会員機能の利用を停止しています。再開希望の場合は運営へご連絡ください。",
+  },
+  withdrawn: {
+    title: "退会済みアカウントです",
+    description:
+      "この会員アカウントは退会済みとして処理されています。再利用が必要な場合は、運営側で再登録またはステータス変更が必要です。",
+  },
   "not-provisioned": {
     title: "会員データの準備が完了していません",
     description:
@@ -29,7 +39,12 @@ export default async function AccessDeniedPage({
 }: AccessDeniedPageProps) {
   const theme = await getThemeSettings();
   const params = await searchParams;
-  const reason = params.reason === "suspended" ? "suspended" : "not-provisioned";
+  const reason =
+    params.reason === "suspended" ||
+    params.reason === "paused" ||
+    params.reason === "withdrawn"
+      ? params.reason
+      : "not-provisioned";
   const message = messages[reason];
 
   return (

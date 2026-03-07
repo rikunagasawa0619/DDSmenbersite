@@ -97,9 +97,10 @@ export async function getPortalSnapshot(user: MemberProfile) {
     offerings: visibleOfferings,
     reservations: myReservations,
     courseProgress:
-      Object.keys(courseProgress).length > 0
-        ? courseProgress
-        : demoCourseProgress[user.id] ?? {},
+      process.env.NODE_ENV !== "production" &&
+      Object.keys(courseProgress).length === 0
+        ? demoCourseProgress[user.id] ?? {}
+        : courseProgress,
   };
 }
 
@@ -115,7 +116,10 @@ export async function getAdminSnapshot() {
 
   return {
     stats,
-    members: members.length > 0 ? members : sampleUsers,
+    members:
+      process.env.NODE_ENV !== "production" && members.length === 0
+        ? sampleUsers
+        : members,
     campaigns,
     announcements,
     offerings,

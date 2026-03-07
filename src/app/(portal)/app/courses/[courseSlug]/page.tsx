@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -25,6 +26,9 @@ export default async function CourseDetailPage({
   return (
     <div className="space-y-6">
       <Card className="overflow-hidden bg-[linear-gradient(135deg,#ffffff,#e4ebff)]">
+        {course.thumbnailUrl ? (
+          <img src={course.thumbnailUrl} alt={course.title} className="mb-6 h-56 w-full rounded-[24px] object-cover" />
+        ) : null}
         <Badge tone="brand">{course.heroNote}</Badge>
         <h1 className="mt-4 font-display text-4xl font-bold text-slate-950">{course.title}</h1>
         <p className="mt-4 max-w-3xl text-slate-600">{course.summary}</p>
@@ -37,14 +41,24 @@ export default async function CourseDetailPage({
       </Card>
 
       <div className="grid gap-6">
-        {course.modules.map((module) => (
+        {course.modules.length === 0 ? (
+          <Card>
+            <div className="text-sm leading-7 text-slate-500">
+              このコースにはまだ章がありません。運営が講義を追加すると、ここに表示されます。
+            </div>
+          </Card>
+        ) : course.modules.map((module) => (
           <Card key={module.id}>
             <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">
-              Module
+              章
             </div>
             <h2 className="mt-2 font-display text-2xl font-bold text-slate-950">{module.title}</h2>
             <div className="mt-5 space-y-3">
-              {module.lessons.map((lesson) => (
+              {module.lessons.length === 0 ? (
+                <div className="rounded-[24px] border border-dashed border-black/10 p-4 text-sm text-slate-500">
+                  まだ講義がありません。
+                </div>
+              ) : module.lessons.map((lesson) => (
                 <div
                   key={lesson.id}
                   className="flex flex-col gap-4 rounded-[24px] border border-black/8 p-4 lg:flex-row lg:items-center lg:justify-between"
