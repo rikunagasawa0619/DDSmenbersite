@@ -120,6 +120,9 @@ async function safeQuery<T>(query: () => Promise<T>, fallback: T): Promise<T> {
 
   try {
     const result = await query();
+    if (process.env.NODE_ENV === "production") {
+      return result;
+    }
     return fallbackValue(result, fallback);
   } catch (error) {
     console.error("Repository query failed.", error);
