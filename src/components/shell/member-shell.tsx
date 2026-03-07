@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, CalendarDays, HelpCircle, LayoutGrid, Settings, Sparkles, Ticket, Wrench } from "lucide-react";
+import { ExternalLink, Home, CalendarDays, HelpCircle, LayoutGrid, Settings, Sparkles, Ticket, Wrench } from "lucide-react";
 
 import { BrandMark } from "@/components/brand-mark";
 import { LogoutButton } from "@/components/logout-button";
@@ -44,6 +44,15 @@ export function MemberShell({
             <div className="flex flex-wrap items-center gap-3">
               <Badge tone="brand">{user.planCode}</Badge>
               <Badge tone="neutral">{user.title}</Badge>
+              {["super_admin", "staff"].includes(user.role) ? (
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  管理画面へ
+                </Link>
+              ) : null}
               <Link
                 href="/app/profile"
                 className="inline-flex items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"

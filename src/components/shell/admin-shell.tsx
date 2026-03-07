@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BrushCleaning, CalendarCog, FileSpreadsheet, LayoutDashboard, Mail, Palette, ScrollText, Settings2, Users } from "lucide-react";
+import { BrushCleaning, CalendarCog, ExternalLink, FileSpreadsheet, LayoutDashboard, Mail, Palette, ScrollText, Settings2, Users } from "lucide-react";
 
 import { BrandMark } from "@/components/brand-mark";
 import { LogoutButton } from "@/components/logout-button";
@@ -72,7 +72,16 @@ export function AdminShell({
               <div className="text-sm text-slate-500">DDS Admin Console</div>
               <div className="font-display text-2xl font-bold text-slate-950">{user.name}</div>
             </div>
-            <LogoutButton />
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/app"
+                className="inline-flex items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              >
+                <ExternalLink className="h-4 w-4" />
+                受講生画面を見る
+              </Link>
+              <LogoutButton />
+            </div>
           </header>
           <main className="mt-8">{children}</main>
         </div>
