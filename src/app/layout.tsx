@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import {
+  ClerkProvider,
+} from "@clerk/nextjs";
 import { Noto_Sans_JP, Sora } from "next/font/google";
 
+import { ClerkAuthBar } from "@/components/clerk-auth-bar";
 import { Providers } from "@/components/providers";
 import { env, getAppUrl } from "@/lib/env";
 import "./globals.css";
@@ -49,7 +53,19 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`${bodyFont.variable} ${displayFont.variable} antialiased`}>
-        <Providers>{children}</Providers>
+        <ClerkProvider
+          afterSignOutUrl="/login"
+          appearance={{
+            variables: {
+              colorPrimary: "#1238c6",
+              colorText: "#0f172a",
+              colorBackground: "#f7f5ef",
+            },
+          }}
+        >
+          <ClerkAuthBar />
+          <Providers>{children}</Providers>
+        </ClerkProvider>
       </body>
     </html>
   );

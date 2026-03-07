@@ -1,4 +1,4 @@
-import { currentUser as clerkCurrentUser } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -19,19 +19,31 @@ export type CurrentUserContext = {
 
 export async function getCurrentUserContext(): Promise<CurrentUserContext> {
   if (isClerkServerReady) {
-    const user = await clerkCurrentUser();
-    const email = user?.emailAddresses[0]?.emailAddress;
+    const session = await auth();
 
-    if (!email) {
+    if (!session.userId) {
       return {
         member: null,
-        hasAuthenticatedSession: Boolean(user),
+        hasAuthenticatedSession: false,
+      };
+    }
+
+    const clerk = await clerkClient();
+    const user = await clerk.users.getUser(session.userId);
+    const primaryEmail =
+      user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId)?.emailAddress ??
+      user.emailAddresses[0]?.emailAddress;
+
+    if (!primaryEmail) {
+      return {
+        member: null,
+        hasAuthenticatedSession: true,
       };
     }
 
     return {
-      member: await getMemberByEmail(email),
-      hasAuthenticatedSession: Boolean(user),
+      member: await getMemberByEmail(primaryEmail),
+      hasAuthenticatedSession: true,
     };
   }
 
