@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import { CalendarDays, Clock3, MapPin, Ticket, UsersRound } from "lucide-react";
 
 import { createOfferingAction, markReservationStatusAction } from "@/actions/admin";
 import {
@@ -11,6 +12,8 @@ import {
 } from "@/lib/admin-display";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { ImageUploadField } from "@/components/ui/image-upload-field";
+import { Modal } from "@/components/ui/modal";
 import {
   getCalendarMonth,
   ScheduleCalendar,
@@ -31,6 +34,8 @@ import { formatDate, formatDateOnly } from "@/lib/utils";
 type OfferingsPageProps = {
   searchParams: Promise<{
     month?: string;
+    create?: string;
+    start?: string;
   }>;
 };
 
@@ -39,6 +44,145 @@ const minimumPlanOptions = [
   { value: "BIZ", label: "DDS Biz 以上" },
   { value: "PRO", label: "DDS Pro のみ" },
 ];
+
+function getDefaultStartValue(value?: string) {
+  if (value && /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(value)) {
+    return value.includes("T") ? value : `${value}T20:00`;
+  }
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}T20:00`;
+}
+
+function CreateOfferingModal({
+  closeHref,
+  defaultStart,
+}: {
+  closeHref: string;
+  defaultStart: string;
+}) {
+  return (
+    <Modal
+      title="募集枠を作成"
+      description="カレンダーで選んだ日付を起点に、講義予約やイベントをそのまま作成できます。"
+      closeHref={closeHref}
+      size="xl"
+    >
+      <form action={createOfferingAction} className="grid gap-5" encType="multipart/form-data">
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">募集枠タイトル</span>
+            <input name="title" placeholder="例: 3月グループコンサル" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">種別</span>
+            <select name="offeringType" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+              <option value="BOOKING">講義予約</option>
+              <option value="EVENT">イベント</option>
+            </select>
+          </label>
+        </div>
+
+        <label className="grid gap-2">
+          <span className="text-sm font-semibold text-slate-500">一覧用の要約</span>
+          <textarea name="summary" placeholder="カレンダーや一覧カードに表示する短い説明" className="min-h-24 rounded-2xl border border-black/10 bg-white px-4 py-3" />
+        </label>
+
+        <label className="grid gap-2">
+          <span className="text-sm font-semibold text-slate-500">詳細説明</span>
+          <textarea name="description" placeholder="参加対象、内容、持ち物、注意事項などを記載" className="min-h-32 rounded-2xl border border-black/10 bg-white px-4 py-3" />
+        </label>
+
+        <ImageUploadField name="thumbnailFile" label="募集枠サムネイル" hint="カード表示用。Cloudflare R2 に保存します。" />
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">開始日時</span>
+            <input name="startsAt" type="datetime-local" defaultValue={defaultStart} className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">終了日時</span>
+            <input name="endsAt" type="datetime-local" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          </label>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">開催場所</span>
+            <input name="locationLabel" placeholder="Zoom / 渋谷 / 大阪" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">講師 / 主催</span>
+            <input name="host" placeholder="講師名" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          </label>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">定員</span>
+            <input name="capacity" type="number" defaultValue={20} className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">必要クレジット</span>
+            <input name="creditRequired" type="number" defaultValue={1} className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          </label>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">クレジット消費タイミング</span>
+            <select name="consumptionMode" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+              <option value="ON_CONFIRM">予約確定時に消費</option>
+              <option value="ON_ATTEND">参加済みにしたときに消費</option>
+            </select>
+          </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">対象プラン</span>
+            <select name="minimumPlanCode" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+              {minimumPlanOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">返却期限</span>
+            <input name="refundDeadline" type="datetime-local" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-semibold text-slate-500">表示ラベル</span>
+            <input name="priceLabel" placeholder="例: 1クレジット / 無料" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          </label>
+        </div>
+
+        <label className="grid gap-2">
+          <span className="text-sm font-semibold text-slate-500">参加URL（任意）</span>
+          <input name="externalJoinUrl" placeholder="Zoom URL など" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+        </label>
+
+        <div className="grid gap-3 rounded-[24px] bg-black/[0.03] p-4 text-sm text-slate-700 md:grid-cols-2">
+          <label className="inline-flex items-center gap-3">
+            <input type="checkbox" name="waitlistEnabled" defaultChecked />
+            満席時は待機受付を有効にする
+          </label>
+          <label className="inline-flex items-center gap-3">
+            <input type="checkbox" name="featured" />
+            ホームに優先表示する
+          </label>
+        </div>
+
+        <div className="flex justify-end">
+          <SubmitButton pendingLabel="作成中...">募集枠を保存</SubmitButton>
+        </div>
+      </form>
+    </Modal>
+  );
+}
 
 export default async function AdminOfferingsPage({
   searchParams,
@@ -64,118 +208,96 @@ export default async function AdminOfferingsPage({
 
   return (
     <div className="space-y-8">
-      <div>
-        <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
-          募集枠管理
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
+            募集枠管理
+          </div>
+          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">
+            カレンダーからそのまま予約枠を作成
+          </h1>
+          <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">
+            日付セルを押すとそのまま作成モーダルが開きます。右側の一覧では定員、待機、参加状況をまとめて確認できます。
+          </p>
         </div>
-        <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">
-          カレンダーで予約枠を見ながら編集
-        </h1>
-        <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">
-          イベントと講義予約を同じカレンダーで管理します。対象プランは「DDS Biz 以上」「DDS Pro のみ」のような簡単な指定方式です。
-        </p>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href={`/admin/offerings?month=${shiftCalendarMonth(currentMonth, -1)}`}
+            className="inline-flex rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+          >
+            前月
+          </Link>
+          <Link
+            href={`/admin/offerings?month=${shiftCalendarMonth(currentMonth, 1)}`}
+            className="inline-flex rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+          >
+            次月
+          </Link>
+          <Link
+            href={`/admin/offerings?month=${params.month ?? shiftCalendarMonth(currentMonth, 0)}&create=offering`}
+            className="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
+          >
+            新しい募集枠
+          </Link>
+        </div>
       </div>
 
-      <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <Card className="overflow-hidden">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <div className="text-sm font-semibold text-slate-500">募集カレンダー</div>
+              <div className="text-sm font-semibold text-slate-500">月間カレンダー</div>
               <h2 className="mt-2 font-display text-2xl font-bold text-slate-950">
-                月ごとの公開スケジュール
+                空きセルから直接作成
               </h2>
             </div>
-            <div className="flex gap-3">
-              <Link
-                href={`/admin/offerings?month=${shiftCalendarMonth(currentMonth, -1)}`}
-                className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-              >
-                前月
-              </Link>
-              <Link
-                href={`/admin/offerings?month=${shiftCalendarMonth(currentMonth, 1)}`}
-                className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-              >
-                次月
-              </Link>
+            <div className="rounded-full bg-[var(--color-primary)]/8 px-4 py-2 text-sm font-semibold text-[var(--color-primary)]">
+              {offerings.length} 件の募集枠
             </div>
           </div>
           <ScheduleCalendar
             month={currentMonth}
             entries={calendarEntries}
-            emptyLabel="予定なし"
+            emptyLabel="ここから作成"
+            dayHrefBuilder={(dayKey) =>
+              `/admin/offerings?month=${params.month ?? shiftCalendarMonth(currentMonth, 0)}&create=offering&start=${dayKey}`
+            }
           />
         </Card>
 
-        {isDatabaseConfigured ? (
-          <Card>
-            <h2 className="font-display text-2xl font-bold text-slate-950">新しい募集枠を作成</h2>
-            <p className="mt-2 text-sm leading-7 text-slate-600">
-              終了日時を空欄にすると 1 時間後、返却期限を空欄にすると開始時刻までを返却対象として扱います。
-            </p>
-            <form action={createOfferingAction} className="mt-5 grid gap-3">
-              <input name="title" placeholder="募集枠タイトル" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-              <input name="summary" placeholder="一覧用の短い説明" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-              <textarea name="description" placeholder="詳細説明" className="min-h-28 rounded-2xl border border-black/10 bg-white px-4 py-3" />
-              <input name="thumbnailUrl" placeholder="サムネイル画像URL（任意）" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-              <div className="grid gap-3 md:grid-cols-2">
-                <select name="offeringType" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
-                  <option value="BOOKING">講義予約</option>
-                  <option value="EVENT">イベント</option>
-                </select>
-                <input name="locationLabel" placeholder="開催場所 例: Zoom / 渋谷" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+        <Card className="bg-[#10182b] text-white">
+          <div className="text-sm font-semibold text-white/60">運用の見え方</div>
+          <h2 className="mt-3 font-display text-3xl font-bold">枠を作る前に見るポイント</h2>
+          <div className="mt-6 grid gap-4">
+            <div className="rounded-[24px] bg-white/8 p-5">
+              <div className="flex items-center gap-3 text-white/65">
+                <UsersRound className="h-4 w-4" />
+                定員 / 待機
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="grid gap-2">
-                  <span className="text-sm font-semibold text-slate-500">開始日時</span>
-                  <input name="startsAt" type="datetime-local" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-                </label>
-                <label className="grid gap-2">
-                  <span className="text-sm font-semibold text-slate-500">終了日時</span>
-                  <input name="endsAt" type="datetime-local" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-                </label>
+              <div className="mt-3 text-sm leading-7 text-white/78">
+                定員20・必要1クレジットなら、まず通常枠として十分です。満席になりやすい講義は待機受付を有効にしてください。
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="grid gap-2">
-                  <span className="text-sm font-semibold text-slate-500">返却期限</span>
-                  <input name="refundDeadline" type="datetime-local" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-                </label>
-                <label className="grid gap-2">
-                  <span className="text-sm font-semibold text-slate-500">講師 / 主催</span>
-                  <input name="host" placeholder="講師名" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-                </label>
+            </div>
+            <div className="rounded-[24px] bg-white/8 p-5">
+              <div className="flex items-center gap-3 text-white/65">
+                <Ticket className="h-4 w-4" />
+                プラン制限
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="grid gap-2">
-                  <span className="text-sm font-semibold text-slate-500">定員</span>
-                  <input name="capacity" type="number" defaultValue={20} className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-                </label>
-                <label className="grid gap-2">
-                  <span className="text-sm font-semibold text-slate-500">必要クレジット</span>
-                  <input name="creditRequired" type="number" defaultValue={1} className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-                </label>
+              <div className="mt-3 text-sm leading-7 text-white/78">
+                対象プランは「DDS Biz 以上」のように上位互換で設定します。複雑な絞り込みは避け、運用判断を速くします。
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <select name="consumptionMode" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
-                  <option value="ON_CONFIRM">予約確定時に消費</option>
-                  <option value="ON_ATTEND">参加確定時に消費</option>
-                </select>
-                <select name="minimumPlanCode" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
-                  {minimumPlanOptions.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
+            </div>
+            <div className="rounded-[24px] bg-white/8 p-5">
+              <div className="flex items-center gap-3 text-white/65">
+                <Clock3 className="h-4 w-4" />
+                返却期限
               </div>
-              <input name="priceLabel" placeholder="表示ラベル 例: 1クレジット / 無料" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-              <input name="externalJoinUrl" placeholder="参加URL（任意）" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-              <div className="flex flex-wrap gap-4 rounded-2xl bg-black/[0.03] px-4 py-3 text-sm text-slate-600">
-                <label className="inline-flex items-center gap-2"><input type="checkbox" name="waitlistEnabled" defaultChecked /> 満席時は待機受付</label>
-                <label className="inline-flex items-center gap-2"><input type="checkbox" name="featured" /> ホームに優先表示</label>
+              <div className="mt-3 text-sm leading-7 text-white/78">
+                返却期限を空欄にすると開始時刻まで返却可能です。直前キャンセルを防ぎたい枠だけ個別に設定してください。
               </div>
-              <SubmitButton pendingLabel="作成中...">募集枠を作成</SubmitButton>
-            </form>
-          </Card>
-        ) : null}
+            </div>
+          </div>
+        </Card>
       </section>
 
       <div className="grid gap-5">
@@ -189,121 +311,101 @@ export default async function AdminOfferingsPage({
 
           return (
             <Card key={offering.id} id={`offering-${offering.id}`} className="overflow-hidden">
-              <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+              <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
                 <div className="space-y-5">
-                  <div className="flex flex-col gap-5 lg:flex-row lg:justify-between">
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <Badge tone="brand">{labelOfferingType(offering.offeringType)}</Badge>
-                        <Badge tone="accent">{labelMinimumPlan(minimumPlan)}</Badge>
-                        <Badge tone={counts.isFull ? "warning" : "success"}>
-                          定員 {counts.confirmed}/{offering.capacity}
-                        </Badge>
-                      </div>
-                      <div>
-                        <h2 className="font-display text-2xl font-bold text-slate-950">{offering.title}</h2>
-                        <p className="mt-3 text-sm leading-7 text-slate-600">{offering.description}</p>
-                      </div>
-                      {offering.thumbnailUrl ? (
-                        <img
-                          src={offering.thumbnailUrl}
-                          alt={offering.title}
-                          className="h-48 w-full rounded-[24px] object-cover"
-                        />
-                      ) : null}
-                    </div>
-                    <div className="grid min-w-[320px] gap-2 rounded-[24px] border border-black/6 bg-black/[0.03] p-4 text-sm text-slate-600">
-                      <div>開始日時: {formatDate(offering.startsAt)}</div>
-                      <div>終了日時: {formatDate(offering.endsAt)}</div>
-                      <div>返却期限: {formatDate(offering.refundDeadline)}</div>
-                      <div>開催場所: {offering.locationLabel}</div>
-                      <div>講師 / 主催: {offering.host}</div>
-                      <div>必要クレジット: {offering.creditRequired} 回</div>
-                      <div>消費タイミング: {labelConsumptionMode(offering.consumptionMode)}</div>
-                      <div>待機人数: {counts.waitlist}</div>
-                    </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge tone="brand">{labelOfferingType(offering.offeringType)}</Badge>
+                    <Badge tone="accent">{labelMinimumPlan(minimumPlan)}</Badge>
+                    <Badge tone={counts.isFull ? "warning" : "success"}>
+                      定員 {counts.confirmed}/{offering.capacity}
+                    </Badge>
+                    {counts.waitlist > 0 ? <Badge tone="warning">待機 {counts.waitlist}</Badge> : null}
                   </div>
 
-                  <div className="grid gap-4 xl:grid-cols-2">
-                    <div className="rounded-[24px] border border-black/6 p-4">
-                      <div className="text-sm font-semibold text-slate-500">予約一覧</div>
-                      <div className="mt-4 space-y-3">
-                        {offeringReservations.length === 0 ? (
-                          <div className="text-sm text-slate-500">予約はまだありません。</div>
-                        ) : (
-                          offeringReservations.map((reservation) => {
-                            const member = memberMap.get(reservation.userId);
-                            return (
-                              <div key={reservation.id} className="rounded-2xl bg-black/[0.03] p-4">
-                                <div className="font-semibold text-slate-950">
-                                  {member?.name ?? reservation.userId}
-                                </div>
-                                <div className="mt-1 text-sm text-slate-600">
-                                  {member?.email ?? "不明"} / {labelReservationStatus(reservation.status)}
-                                </div>
-                                {isDatabaseConfigured && reservation.status === "confirmed" ? (
-                                  <div className="mt-3 flex flex-wrap gap-3">
-                                    <form action={markReservationStatusAction}>
-                                      <input type="hidden" name="reservationId" value={reservation.id} />
-                                      <input type="hidden" name="status" value="ATTENDED" />
-                                      <SubmitButton pendingLabel="更新中..." className="bg-emerald-600">
-                                        参加済みにする
-                                      </SubmitButton>
-                                    </form>
-                                    <form action={markReservationStatusAction}>
-                                      <input type="hidden" name="reservationId" value={reservation.id} />
-                                      <input type="hidden" name="status" value="NO_SHOW" />
-                                      <SubmitButton pendingLabel="更新中..." className="bg-slate-800">
-                                        欠席にする
-                                      </SubmitButton>
-                                    </form>
-                                  </div>
-                                ) : null}
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="rounded-[24px] border border-black/6 p-4">
-                      <div className="text-sm font-semibold text-slate-500">待機一覧</div>
-                      <div className="mt-4 space-y-3">
-                        {offeringWaitlist.length === 0 ? (
-                          <div className="text-sm text-slate-500">待機はありません。</div>
-                        ) : (
-                          offeringWaitlist.map((entry) => {
-                            const member = memberMap.get(entry.userId);
-                            return (
-                              <div key={entry.id} className="rounded-2xl bg-black/[0.03] p-4">
-                                <div className="font-semibold text-slate-950">{member?.name ?? entry.userId}</div>
-                                <div className="mt-1 text-sm text-slate-600">
-                                  {member?.email ?? "不明"} / 登録日: {formatDateOnly(entry.createdAt)}
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
+                  <div className="grid gap-5 lg:grid-cols-[0.72fr_1fr]">
+                    {offering.thumbnailUrl ? (
+                      <img
+                        src={offering.thumbnailUrl}
+                        alt={offering.title}
+                        className="h-64 w-full rounded-[26px] object-cover"
+                      />
+                    ) : (
+                      <div className="h-64 rounded-[26px] bg-[linear-gradient(135deg,#dae3ff,#f8f6ee)]" />
+                    )}
+                    <div>
+                      <h2 className="font-display text-3xl font-bold text-slate-950">{offering.title}</h2>
+                      <p className="mt-3 text-sm leading-7 text-slate-600">{offering.description}</p>
+                      <div className="mt-5 grid gap-3 rounded-[24px] border border-black/8 bg-black/[0.02] p-4 text-sm text-slate-600">
+                        <div className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-[var(--color-primary)]" /> 開始: {formatDate(offering.startsAt)}</div>
+                        <div className="flex items-center gap-2"><Clock3 className="h-4 w-4 text-[var(--color-primary)]" /> 終了: {formatDate(offering.endsAt)}</div>
+                        <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-[var(--color-primary)]" /> 開催場所: {offering.locationLabel}</div>
+                        <div>講師 / 主催: {offering.host}</div>
+                        <div>必要クレジット: {offering.creditRequired} 回</div>
+                        <div>消費タイミング: {labelConsumptionMode(offering.consumptionMode)}</div>
+                        <div>参加URL: {offering.externalJoinUrl || "未設定"}</div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-[28px] bg-[#10182b] p-5 text-white">
-                  <div className="text-sm font-semibold text-white/60">運用メモ</div>
-                  <div className="mt-5 grid gap-3">
-                    <div className="rounded-[22px] bg-white/8 p-4">
-                      <div className="text-xs tracking-[0.18em] text-white/45">表示ラベル</div>
-                      <div className="mt-2 text-lg font-bold">{offering.priceLabel || "未設定"}</div>
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <div className="rounded-[26px] border border-black/8 bg-white p-4">
+                    <div className="font-semibold text-slate-950">予約一覧</div>
+                    <div className="mt-4 space-y-3">
+                      {offeringReservations.length === 0 ? (
+                        <div className="rounded-2xl bg-black/[0.03] px-4 py-3 text-sm text-slate-500">まだ予約はありません。</div>
+                      ) : (
+                        offeringReservations.map((reservation) => {
+                          const member = memberMap.get(reservation.userId);
+                          return (
+                            <div key={reservation.id} className="rounded-[22px] bg-black/[0.03] p-4">
+                              <div className="font-semibold text-slate-950">{member?.name ?? reservation.userId}</div>
+                              <div className="mt-1 text-sm text-slate-600">
+                                {member?.email ?? "不明"} / {labelReservationStatus(reservation.status)}
+                              </div>
+                              {isDatabaseConfigured && reservation.status === "confirmed" ? (
+                                <div className="mt-3 flex flex-wrap gap-3">
+                                  <form action={markReservationStatusAction}>
+                                    <input type="hidden" name="reservationId" value={reservation.id} />
+                                    <input type="hidden" name="status" value="ATTENDED" />
+                                    <SubmitButton pendingLabel="更新中..." className="bg-emerald-600">
+                                      参加済みにする
+                                    </SubmitButton>
+                                  </form>
+                                  <form action={markReservationStatusAction}>
+                                    <input type="hidden" name="reservationId" value={reservation.id} />
+                                    <input type="hidden" name="status" value="NO_SHOW" />
+                                    <SubmitButton pendingLabel="更新中..." className="bg-slate-800">
+                                      欠席にする
+                                    </SubmitButton>
+                                  </form>
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
-                    <div className="rounded-[22px] bg-white/8 p-4">
-                      <div className="text-xs tracking-[0.18em] text-white/45">参加URL</div>
-                      <div className="mt-2 break-all text-sm text-white/80">
-                        {offering.externalJoinUrl || "未設定"}
-                      </div>
-                    </div>
-                    <div className="rounded-[22px] bg-white/8 p-4 text-sm leading-7 text-white/75">
-                      終了日時を短くしすぎると会員側の予定が見づらくなるため、講義は 60 分以上を目安に設定してください。
+                  </div>
+
+                  <div className="rounded-[26px] border border-black/8 bg-white p-4">
+                    <div className="font-semibold text-slate-950">待機一覧</div>
+                    <div className="mt-4 space-y-3">
+                      {offeringWaitlist.length === 0 ? (
+                        <div className="rounded-2xl bg-black/[0.03] px-4 py-3 text-sm text-slate-500">待機はありません。</div>
+                      ) : (
+                        offeringWaitlist.map((entry) => {
+                          const member = memberMap.get(entry.userId);
+                          return (
+                            <div key={entry.id} className="rounded-[22px] bg-black/[0.03] p-4">
+                              <div className="font-semibold text-slate-950">{member?.name ?? entry.userId}</div>
+                              <div className="mt-1 text-sm text-slate-600">
+                                {member?.email ?? "不明"} / 登録日: {formatDateOnly(entry.createdAt)}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 </div>
@@ -312,6 +414,13 @@ export default async function AdminOfferingsPage({
           );
         })}
       </div>
+
+      {params.create === "offering" ? (
+        <CreateOfferingModal
+          closeHref={`/admin/offerings?month=${params.month ?? shiftCalendarMonth(currentMonth, 0)}`}
+          defaultStart={getDefaultStartValue(params.start)}
+        />
+      ) : null}
     </div>
   );
 }

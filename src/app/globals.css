@@ -37,3 +37,98 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+.dds-editor p {
+  margin: 0 0 1rem;
+}
+
+.dds-editor h2,
+.dds-editor h3 {
+  margin: 1.5rem 0 0.75rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dds-editor h2 {
+  font-size: 1.5rem;
+}
+
+.dds-editor h3 {
+  font-size: 1.25rem;
+}
+
+.dds-editor ul,
+.dds-editor ol {
+  margin: 0 0 1rem;
+  padding-left: 1.5rem;
+}
+
+.dds-editor blockquote {
+  margin: 1.25rem 0;
+  border-left: 4px solid rgba(18, 56, 198, 0.24);
+  padding-left: 1rem;
+  color: #475569;
+}
+
+.dds-editor a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.dds-editor.ProseMirror {
+  min-height: 18rem;
+}
+
+.dds-editor.ProseMirror:focus {
+  outline: none;
+}
+
+.dds-editor .is-editor-empty:first-child::before {
+  color: #94a3b8;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.dds-prose p {
+  margin: 0 0 1rem;
+}
+
+.dds-prose h2,
+.dds-prose h3,
+.dds-prose h4 {
+  margin: 1.5rem 0 0.75rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dds-prose h2 {
+  font-size: 1.5rem;
+}
+
+.dds-prose h3 {
+  font-size: 1.25rem;
+}
+
+.dds-prose h4 {
+  font-size: 1.125rem;
+}
+
+.dds-prose ul,
+.dds-prose ol {
+  margin: 0 0 1rem;
+  padding-left: 1.5rem;
+}
+
+.dds-prose blockquote {
+  margin: 1.25rem 0;
+  border-left: 4px solid rgba(18, 56, 198, 0.24);
+  padding-left: 1rem;
+  color: #475569;
+}
+
+.dds-prose a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}

@@ -1,42 +1,11 @@
 import { AudioLines, CheckCircle2, Download, ExternalLink, ListCollapse, PlayCircle } from "lucide-react";
-import sanitizeHtml from "sanitize-html";
 
+import { RichHtml } from "@/components/content/rich-html";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { sanitizeRichHtml } from "@/lib/rich-content";
 import type { LessonBlock } from "@/lib/types";
-
-function sanitizeLessonHtml(html: string): string {
-  return sanitizeHtml(html, {
-    allowedTags: [
-      "p",
-      "br",
-      "strong",
-      "em",
-      "ul",
-      "ol",
-      "li",
-      "blockquote",
-      "h2",
-      "h3",
-      "h4",
-      "a",
-      "code",
-      "pre",
-      "hr",
-    ],
-    allowedAttributes: {
-      a: ["href", "target", "rel"],
-    },
-    allowedSchemes: ["http", "https", "mailto"],
-    transformTags: {
-      a: sanitizeHtml.simpleTransform("a", {
-        rel: "noopener noreferrer",
-        target: "_blank",
-      }),
-    },
-  });
-}
 
 export function LessonBlocks({ blocks }: { blocks: LessonBlock[] }) {
   return (
@@ -57,7 +26,7 @@ export function LessonBlocks({ blocks }: { blocks: LessonBlock[] }) {
                 {block.title ? (
                   <h3 className="font-display text-xl font-bold text-slate-950">{block.title}</h3>
                 ) : null}
-                <p className="mt-3 whitespace-pre-line text-slate-600">{block.body}</p>
+                <RichHtml html={block.body} className="mt-3" />
               </Card>
             );
           case "embed_video":
@@ -165,7 +134,7 @@ export function LessonBlocks({ blocks }: { blocks: LessonBlock[] }) {
             return (
               <Card
                 key={block.id}
-                dangerouslySetInnerHTML={{ __html: sanitizeLessonHtml(block.html) }}
+                dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(block.html) }}
               />
             );
           default:

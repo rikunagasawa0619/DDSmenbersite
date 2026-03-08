@@ -41,10 +41,12 @@ export function ScheduleCalendar({
   month,
   entries,
   emptyLabel = "予定はありません",
+  dayHrefBuilder,
 }: {
   month: Date;
   entries: ScheduleCalendarEntry[];
   emptyLabel?: string;
+  dayHrefBuilder?: (dayKey: string) => string | undefined;
 }) {
   const monthStart = startOfMonth(month);
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -84,12 +86,31 @@ export function ScheduleCalendar({
                 !isSameMonth(day, month) && "bg-black/[0.015] text-slate-400",
               )}
             >
-              <div className="text-sm font-semibold">{formatInTimeZone(day, appTimeZone, "d")}</div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-sm font-semibold">{formatInTimeZone(day, appTimeZone, "d")}</div>
+                {dayHrefBuilder ? (
+                  <Link
+                    href={dayHrefBuilder(key) ?? "#"}
+                    className="inline-flex rounded-full border border-black/8 px-2.5 py-1 text-[10px] font-semibold tracking-[0.12em] text-slate-500 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                  >
+                    作成
+                  </Link>
+                ) : null}
+              </div>
               <div className="mt-3 space-y-2">
                 {dayEntries.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-black/8 px-2 py-3 text-[11px] leading-5 text-slate-400">
-                    {emptyLabel}
-                  </div>
+                  dayHrefBuilder ? (
+                    <Link
+                      href={dayHrefBuilder(key) ?? "#"}
+                      className="block rounded-2xl border border-dashed border-black/8 px-3 py-4 text-[11px] leading-5 text-slate-400 transition hover:border-[var(--color-primary)]/30 hover:bg-[var(--color-primary)]/4 hover:text-[var(--color-primary)]"
+                    >
+                      {emptyLabel}
+                    </Link>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-black/8 px-2 py-3 text-[11px] leading-5 text-slate-400">
+                      {emptyLabel}
+                    </div>
+                  )
                 ) : (
                   dayEntries.map((entry) =>
                     entry.href ? (

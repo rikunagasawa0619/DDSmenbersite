@@ -34,6 +34,7 @@ const envSchema = z
     R2_ACCESS_KEY_ID: optionalString,
     R2_SECRET_ACCESS_KEY: optionalString,
     R2_BUCKET: optionalString,
+    R2_PUBLIC_BASE_URL: optionalUrl,
   })
   .superRefine((env, ctx) => {
     const hasClerkPublic = Boolean(env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);

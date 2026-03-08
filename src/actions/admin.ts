@@ -5,6 +5,7 @@ import { Prisma, MemberStatus, MembershipPlanCode, PublishStatus, UserRole } fro
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { deliverCampaign } from "@/lib/campaigns";
 import { buildMonthlyGrantEntry, createBalanceAdjustment, createBonusGrant, createPlanChangeGrant } from "@/lib/credits";
 import { processMonthlyCreditGrants } from "@/lib/credit-batch";
 import { requireAdmin } from "@/lib/auth";
@@ -14,6 +15,7 @@ import { isClerkServerReady } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
 import { RateLimitError, assertRateLimit } from "@/lib/rate-limit";
 import { getMembershipPlanByCode } from "@/lib/repository";
+import { assertImageFile, isStorageConfigured, uploadImageFile } from "@/lib/storage";
 import type { LessonBlock, MembershipPlanCode as MembershipPlanCodeType } from "@/lib/types";
 
 function slugify(input: string) {
@@ -183,6 +185,61 @@ async function ensureWallet(userId: string) {
   });
 }
 
+async function persistUploadedImage(params: {
+  file: File | null;
+  folder: string;
+  alt: string;
+  redirectPath: string;
+}) {
+  if (!params.file || params.file.size === 0) {
+    return undefined;
+  }
+
+  if (!prisma) {
+    throw new Error("Database is not configured.");
+  }
+
+  if (!isStorageConfigured()) {
+    await redirectWithFlash(
+      "画像アップロードを使うには R2 の設定が必要です。",
+      "error",
+      params.redirectPath,
+    );
+  }
+
+  let uploaded: Awaited<ReturnType<typeof uploadImageFile>> | undefined;
+  try {
+    assertImageFile(params.file);
+    uploaded = await uploadImageFile({
+      file: params.file,
+      folder: params.folder,
+      alt: params.alt,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "画像アップロードに失敗しました。";
+    await redirectWithFlash(message, "error", params.redirectPath);
+  }
+
+  if (!uploaded) {
+    return undefined;
+  }
+
+  const asset = await prisma.asset.create({
+    data: {
+      id: uploaded.id,
+      storageKey: uploaded.storageKey,
+      fileName: uploaded.fileName,
+      fileType: "IMAGE",
+      mimeType: uploaded.mimeType,
+      sizeBytes: uploaded.sizeBytes,
+      url: uploaded.url,
+      alt: uploaded.alt,
+    },
+  });
+
+  return asset.url;
+}
+
 async function upsertSegmentBySlug(slug: string) {
   if (!prisma) {
     throw new Error("Database is not configured.");
@@ -322,20 +379,26 @@ export async function createBannerAction(formData: FormData) {
     eyebrow: formData.get("eyebrow"),
     title: formData.get("title"),
     subtitle: formData.get("subtitle"),
-    imageUrl: formData.get("imageUrl")?.toString() || undefined,
+    imageUrl: normalizeOptionalText(formData.get("imageUrl")),
     ctaLabel: formData.get("ctaLabel"),
     ctaHref: formData.get("ctaHref"),
     accent: formData.get("accent"),
     publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
   });
   const audience = parseAudienceFromForm(formData);
+  const uploadedImageUrl = await persistUploadedImage({
+    file: formData.get("imageFile") instanceof File ? (formData.get("imageFile") as File) : null,
+    folder: "banners",
+    alt: values.title,
+    redirectPath: "/admin/content",
+  });
 
   const created = await db.banner.create({
     data: {
       eyebrow: values.eyebrow,
       title: values.title,
       subtitle: values.subtitle,
-      imageUrl: values.imageUrl,
+      imageUrl: uploadedImageUrl ?? values.imageUrl,
       ctaLabel: values.ctaLabel,
       ctaHref: values.ctaHref,
       accent: values.accent,
@@ -390,7 +453,7 @@ export async function createOfferingAction(formData: FormData) {
     title: formData.get("title"),
     summary: formData.get("summary"),
     description: formData.get("description"),
-    thumbnailUrl: formData.get("thumbnailUrl")?.toString() || undefined,
+    thumbnailUrl: normalizeOptionalText(formData.get("thumbnailUrl")),
     offeringType: formData.get("offeringType"),
     startsAt: formData.get("startsAt"),
     endsAt: formData.get("endsAt")?.toString() || undefined,
@@ -404,6 +467,15 @@ export async function createOfferingAction(formData: FormData) {
     externalJoinUrl: formData.get("externalJoinUrl")?.toString() || undefined,
   });
   const audience = parseAudienceFromForm(formData);
+  const uploadedThumbnailUrl = await persistUploadedImage({
+    file:
+      formData.get("thumbnailFile") instanceof File
+        ? (formData.get("thumbnailFile") as File)
+        : null,
+    folder: "offerings",
+    alt: values.title,
+    redirectPath: "/admin/offerings",
+  });
   const startsAt = new Date(values.startsAt);
   const endsAt = values.endsAt ? new Date(values.endsAt) : new Date(startsAt.getTime() + 60 * 60 * 1000);
   const refundDeadline = values.refundDeadline ? new Date(values.refundDeadline) : startsAt;
@@ -414,7 +486,7 @@ export async function createOfferingAction(formData: FormData) {
       title: values.title,
       summary: values.summary,
       description: values.description,
-      thumbnailUrl: values.thumbnailUrl || null,
+      thumbnailUrl: uploadedThumbnailUrl ?? values.thumbnailUrl ?? null,
       offeringType: values.offeringType,
       startsAt,
       endsAt,
@@ -940,11 +1012,20 @@ export async function createCourseAction(formData: FormData) {
       summary: formData.get("summary"),
       heroNote: formData.get("heroNote"),
       estimatedHours: formData.get("estimatedHours"),
-      thumbnailUrl: formData.get("thumbnailUrl")?.toString() || undefined,
+      thumbnailUrl: normalizeOptionalText(formData.get("thumbnailUrl")),
       publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
     });
 
   const audience = parseAudienceFromForm(formData);
+  const uploadedThumbnailUrl = await persistUploadedImage({
+    file:
+      formData.get("thumbnailFile") instanceof File
+        ? (formData.get("thumbnailFile") as File)
+        : null,
+    folder: "courses",
+    alt: values.title,
+    redirectPath: "/admin/content",
+  });
   const created = await db.course.create({
     data: {
       slug: slugify(values.slug || values.title),
@@ -952,7 +1033,7 @@ export async function createCourseAction(formData: FormData) {
       summary: values.summary,
       heroNote: values.heroNote,
       estimatedHours: values.estimatedHours,
-      thumbnailUrl: values.thumbnailUrl || null,
+      thumbnailUrl: uploadedThumbnailUrl ?? values.thumbnailUrl ?? null,
       publishStatus: values.publishStatus ?? "PUBLISHED",
       audience,
     },
@@ -1107,12 +1188,14 @@ export async function createCampaignAction(formData: FormData) {
       title: z.string().min(2),
       subject: z.string().min(2),
       previewText: z.string().optional(),
+      bodyHtml: z.string().min(2),
       scheduledAt: z.string().optional(),
     })
     .parse({
       title: formData.get("title"),
       subject: formData.get("subject"),
       previewText: formData.get("previewText")?.toString() || undefined,
+      bodyHtml: formData.get("bodyHtml"),
       scheduledAt: formData.get("scheduledAt")?.toString() || undefined,
     });
 
@@ -1122,6 +1205,7 @@ export async function createCampaignAction(formData: FormData) {
       title: values.title,
       subject: values.subject,
       previewText: values.previewText || null,
+      bodyHtml: values.bodyHtml,
       targetJson,
       status: values.scheduledAt ? "SCHEDULED" : "DRAFT",
       scheduledAt: values.scheduledAt ? new Date(values.scheduledAt) : null,
@@ -1141,6 +1225,45 @@ export async function createCampaignAction(formData: FormData) {
   revalidatePath("/admin/campaigns");
 
   await redirectWithFlash("配信設定を保存しました。", "success", "/admin/campaigns");
+}
+
+export async function sendCampaignNowAction(formData: FormData) {
+  if (!prisma) {
+    await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/campaigns");
+  }
+
+  const actorId = await getAdminActorId();
+  await assertAdminMutationLimit(actorId, "send-campaign");
+  const campaignId = z.string().parse(formData.get("campaignId"));
+  let result: Awaited<ReturnType<typeof deliverCampaign>> | undefined;
+  try {
+    result = await deliverCampaign({
+      campaignId,
+      actorId,
+      source: "admin",
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "配信に失敗しました。メール設定を確認してください。";
+    await redirectWithFlash(message, "error", "/admin/campaigns");
+  }
+
+  if (!result) {
+    await redirectWithFlash("配信に失敗しました。", "error", "/admin/campaigns");
+  }
+  const finalResult = result as NonNullable<typeof result>;
+
+  revalidatePath("/admin/campaigns");
+
+  if (finalResult.skipped) {
+    await redirectWithFlash("この配信はすでに送信済みです。", "success", "/admin/campaigns");
+  }
+
+  await redirectWithFlash(
+    `${finalResult.deliveredCount} 件の会員メールに配信しました。`,
+    "success",
+    "/admin/campaigns",
+  );
 }
 
 export async function updateMemberPlanAction(formData: FormData) {

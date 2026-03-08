@@ -402,6 +402,8 @@ function mapCampaignRow(row: {
   id: string;
   title: string;
   subject: string;
+  previewText: string | null;
+  bodyHtml: string | null;
   status: EmailCampaignStatus;
   scheduledAt: Date | null;
   targetJson: Prisma.JsonValue;
@@ -410,6 +412,8 @@ function mapCampaignRow(row: {
     id: row.id,
     title: row.title,
     subject: row.subject,
+    previewText: row.previewText ?? undefined,
+    bodyHtml: row.bodyHtml ?? undefined,
     status: row.status.toLowerCase() as EmailCampaign["status"],
     scheduledAt: row.scheduledAt?.toISOString(),
     audience: mapAudience(row.targetJson) ?? {},

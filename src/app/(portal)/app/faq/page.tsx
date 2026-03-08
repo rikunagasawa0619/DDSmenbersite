@@ -1,3 +1,4 @@
+import { RichHtml } from "@/components/content/rich-html";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
 import { getPortalSnapshot } from "@/lib/portal";
@@ -19,7 +20,7 @@ export default async function FaqPage() {
           <Card key={faq.id}>
             <div className="text-sm font-semibold text-[var(--color-primary)]">{faq.category}</div>
             <h2 className="mt-3 font-display text-2xl font-bold text-slate-950">{faq.question}</h2>
-            <p className="mt-4 text-sm leading-7 text-slate-600">{faq.answer}</p>
+            <RichHtml html={faq.answer} className="mt-4 text-sm leading-7" />
           </Card>
         ))}
       </div>

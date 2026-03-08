@@ -372,8 +372,11 @@ model ThemeSettings {
 
 model Asset {
   id        String    @id @default(cuid())
+  storageKey String   @unique
   fileName  String
   fileType  AssetType
+  mimeType  String?
+  sizeBytes Int?
   url       String
   alt       String?
   createdAt DateTime  @default(now())
@@ -384,6 +387,7 @@ model EmailCampaign {
   title       String
   subject     String
   previewText String?
+  bodyHtml    String?
   targetJson  Json
   status      EmailCampaignStatus @default(DRAFT)
   scheduledAt DateTime?

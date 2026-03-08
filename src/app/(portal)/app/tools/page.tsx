@@ -1,5 +1,6 @@
 import { ExternalLink } from "lucide-react";
 
+import { RichHtml } from "@/components/content/rich-html";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
 import { getPortalSnapshot } from "@/lib/portal";
@@ -21,7 +22,7 @@ export default async function ToolsPage() {
           <Card key={tool.id}>
             <h2 className="font-display text-2xl font-bold text-slate-950">{tool.title}</h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">{tool.summary}</p>
-            <p className="mt-4 text-sm leading-7 text-slate-500">{tool.body}</p>
+            <RichHtml html={tool.body} className="mt-4 text-sm leading-7 text-slate-500" />
             <a
               href={tool.href}
               className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-primary)]"

@@ -17,6 +17,8 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks(.*)",
   "/api/health",
   "/api/cron/monthly-credits",
+  "/api/cron/email-campaigns",
+  "/api/assets/(.*)",
 ]);
 
 const protectedMiddleware = clerkMiddleware(async (auth, req) => {

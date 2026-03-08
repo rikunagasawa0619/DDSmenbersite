@@ -292,6 +292,8 @@ export interface EmailCampaign {
   id: string;
   title: string;
   subject: string;
+  previewText?: string;
+  bodyHtml?: string;
   status: "draft" | "scheduled" | "sent";
   scheduledAt?: string;
   audience: AudienceRule;

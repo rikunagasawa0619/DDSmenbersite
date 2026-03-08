@@ -6,6 +6,9 @@ import { redirect } from "next/navigation";
 export type FlashType = "success" | "error";
 
 function withFlash(url: URL, message: string, type: FlashType) {
+  for (const key of ["create", "edit", "modal", "start", "date", "courseId", "moduleId", "type"]) {
+    url.searchParams.delete(key);
+  }
   url.searchParams.set("toast", message);
   url.searchParams.set("toastType", type);
   return `${url.pathname}${url.search}${url.hash}`;
