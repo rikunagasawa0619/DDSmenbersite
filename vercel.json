@@ -5,10 +5,6 @@
     {
       "path": "/api/cron/monthly-credits",
       "schedule": "5 16 * * *"
-    },
-    {
-      "path": "/api/cron/email-campaigns",
-      "schedule": "*/30 * * * *"
     }
   ]
 }

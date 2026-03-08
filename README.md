@@ -139,7 +139,7 @@ Clerk 側で管理者ユーザーを作成し、そのメールアドレスで D
 - レート制限は現状アプリ内メモリで行っています。単一インスタンスや小規模運用では有効ですが、厳密な分散制御が必要なら Redis 系へ切り替えてください。
 - `UPSTASH_REDIS_REST_URL` と `UPSTASH_REDIS_REST_TOKEN` を設定すると、レート制限は Upstash Redis に切り替わります。
 - 予約確認 / キャンセルメールは `RESEND_API_KEY` と `RESEND_FROM_EMAIL` が設定されている場合のみ送信されます。
-- 告知メール配信も `RESEND_API_KEY` と `RESEND_FROM_EMAIL` が必要です。予約配信は `vercel.json` の `/api/cron/email-campaigns` で 30 分ごとに実行されます。
+- 告知メール配信も `RESEND_API_KEY` と `RESEND_FROM_EMAIL` が必要です。今すぐ送信は管理画面から実行できます。予約配信の route は `/api/cron/email-campaigns` に用意してあり、Vercel Pro など高頻度 cron を使える環境なら自動実行に切り替えられます。
 - 監査ログ UI は `/admin/audit-logs`、CSV 出力は `/admin/exports` です。
 - 月次クレジット付与は管理画面 `/admin/plans` から手動実行できます。本番では `vercel.json` の cron で `/api/cron/monthly-credits` を実行し、`CRON_SECRET` を設定してください。Vercel は `Authorization: Bearer <CRON_SECRET>` を自動付与します。
 - 画像アップロードは Cloudflare R2 前提です。画像本体は DB に入れず、DB にはメタデータと URL だけを保存するため、記事やバナーが増えても DB コストは膨らみにくい構成です。
