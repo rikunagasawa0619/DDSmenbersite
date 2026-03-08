@@ -129,6 +129,14 @@ export async function deliverScheduledCampaigns(actorId: string) {
     throw new Error("Database is not configured.");
   }
 
+  if (!isEmailConfigured()) {
+    return {
+      campaigns: 0,
+      deliveredCount: 0,
+      skippedReason: "email_not_configured" as const,
+    };
+  }
+
   const dueCampaigns = await prisma.emailCampaign.findMany({
     where: {
       status: EmailCampaignStatus.SCHEDULED,
@@ -151,5 +159,6 @@ export async function deliverScheduledCampaigns(actorId: string) {
   return {
     campaigns: dueCampaigns.length,
     deliveredCount,
+    skippedReason: null,
   };
 }

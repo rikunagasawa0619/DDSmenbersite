@@ -17,6 +17,17 @@ export async function GET(request: Request) {
     }
   }
 
-  const result = await deliverScheduledCampaigns(cronActorId);
-  return NextResponse.json({ ok: true, ...result });
+  try {
+    const result = await deliverScheduledCampaigns(cronActorId);
+    return NextResponse.json({ ok: true, ...result });
+  } catch (error) {
+    console.error("Scheduled email campaigns failed.", error);
+    return NextResponse.json(
+      {
+        ok: false,
+        error: error instanceof Error ? error.message : "Scheduled email campaigns failed.",
+      },
+      { status: 500 },
+    );
+  }
 }

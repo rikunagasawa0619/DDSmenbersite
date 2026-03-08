@@ -16,7 +16,7 @@ jobs:
         run: |
           if [ -z "$DDS_CRON_URL" ] || [ -z "$DDS_CRON_SECRET" ]; then
             echo "DDS_CRON_URL or DDS_CRON_SECRET is not configured."
-            exit 1
+            exit 0
           fi
           curl -fsS \
             -H "Authorization: Bearer $DDS_CRON_SECRET" \
