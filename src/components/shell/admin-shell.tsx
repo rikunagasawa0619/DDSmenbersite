@@ -59,11 +59,10 @@ export function AdminShell({
               );
             })}
           </div>
-          <div className="mt-8 rounded-[26px] bg-[linear-gradient(135deg,rgba(18,56,198,0.9),rgba(246,196,83,0.88))] p-5 text-sm text-white">
-            <div className="font-display text-lg font-bold">運用の基本方針</div>
-            <p className="mt-2 text-white/85">
-              会員検索、コンテンツ更新、予約枠作成、テーマ設定までを一画面で迷わず操作できる構成を目指しています。
-            </p>
+          <div className="mt-8 rounded-[26px] border border-white/10 bg-white/6 p-5">
+            <div className="text-xs font-semibold tracking-[0.18em] text-white/45">ログイン中</div>
+            <div className="mt-3 font-display text-xl font-bold text-white">{user.name}</div>
+            <div className="mt-2 text-sm text-white/65">{user.email}</div>
           </div>
         </aside>
         <div className="rounded-[30px] bg-[linear-gradient(180deg,#f8f6f1,#f1eee7)] p-6 md:p-8">

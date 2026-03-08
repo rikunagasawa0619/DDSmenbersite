@@ -16,12 +16,7 @@ export default async function AdminPlansPage() {
           <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
             プラン / クレジット
           </div>
-          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">
-            月次付与ルールを日本語で管理
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-            プランごとの月次付与回数、繰越上限、付与ルールを編集できます。会員ごとの毎月の付与日は会員管理画面で変更します。
-          </p>
+          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">プラン / クレジット</h1>
         </div>
         <form action={runMonthlyCreditGrantAction}>
           <SubmitButton pendingLabel="実行中...">月次クレジット付与を今すぐ実行</SubmitButton>
@@ -101,16 +96,8 @@ export default async function AdminPlansPage() {
       </section>
 
       <Card>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <div className="font-display text-2xl font-bold text-slate-950">運用メモ</div>
-            <p className="mt-2 text-sm leading-7 text-slate-600">
-              休会中・退会済み・利用停止の会員には自動付与されません。基準日未設定の会員は契約開始日を基準に自動付与されます。
-            </p>
-          </div>
-          <div className="rounded-[24px] bg-black/[0.03] px-5 py-4 text-sm font-semibold text-slate-600">
-            現在の登録会員数: {members.length} 名
-          </div>
+        <div className="rounded-[24px] bg-black/[0.03] px-5 py-4 text-sm font-semibold text-slate-600">
+          現在の登録会員数: {members.length} 名
         </div>
       </Card>
     </div>

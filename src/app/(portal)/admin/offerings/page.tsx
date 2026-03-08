@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { CalendarDays, Clock3, MapPin, Ticket, UsersRound } from "lucide-react";
+import { CalendarDays, Clock3, MapPin } from "lucide-react";
 
 import { createOfferingAction, markReservationStatusAction } from "@/actions/admin";
 import {
@@ -67,7 +67,6 @@ function CreateOfferingModal({
   return (
     <Modal
       title="募集枠を作成"
-      description="カレンダーで選んだ日付を起点に、講義予約やイベントをそのまま作成できます。"
       closeHref={closeHref}
       size="xl"
     >
@@ -213,12 +212,7 @@ export default async function AdminOfferingsPage({
           <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
             募集枠管理
           </div>
-          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">
-            カレンダーからそのまま予約枠を作成
-          </h1>
-          <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">
-            日付セルを押すとそのまま作成モーダルが開きます。右側の一覧では定員、待機、参加状況をまとめて確認できます。
-          </p>
+          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">募集枠</h1>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link
@@ -247,9 +241,7 @@ export default async function AdminOfferingsPage({
           <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="text-sm font-semibold text-slate-500">月間カレンダー</div>
-              <h2 className="mt-2 font-display text-2xl font-bold text-slate-950">
-                空きセルから直接作成
-              </h2>
+              <h2 className="mt-2 font-display text-2xl font-bold text-slate-950">カレンダー</h2>
             </div>
             <div className="rounded-full bg-[var(--color-primary)]/8 px-4 py-2 text-sm font-semibold text-[var(--color-primary)]">
               {offerings.length} 件の募集枠
@@ -265,37 +257,18 @@ export default async function AdminOfferingsPage({
           />
         </Card>
 
-        <Card className="bg-[#10182b] text-white">
-          <div className="text-sm font-semibold text-white/60">運用の見え方</div>
-          <h2 className="mt-3 font-display text-3xl font-bold">枠を作る前に見るポイント</h2>
-          <div className="mt-6 grid gap-4">
-            <div className="rounded-[24px] bg-white/8 p-5">
-              <div className="flex items-center gap-3 text-white/65">
-                <UsersRound className="h-4 w-4" />
-                定員 / 待機
-              </div>
-              <div className="mt-3 text-sm leading-7 text-white/78">
-                定員20・必要1クレジットなら、まず通常枠として十分です。満席になりやすい講義は待機受付を有効にしてください。
-              </div>
-            </div>
-            <div className="rounded-[24px] bg-white/8 p-5">
-              <div className="flex items-center gap-3 text-white/65">
-                <Ticket className="h-4 w-4" />
-                プラン制限
-              </div>
-              <div className="mt-3 text-sm leading-7 text-white/78">
-                対象プランは「DDS Biz 以上」のように上位互換で設定します。複雑な絞り込みは避け、運用判断を速くします。
-              </div>
-            </div>
-            <div className="rounded-[24px] bg-white/8 p-5">
-              <div className="flex items-center gap-3 text-white/65">
-                <Clock3 className="h-4 w-4" />
-                返却期限
-              </div>
-              <div className="mt-3 text-sm leading-7 text-white/78">
-                返却期限を空欄にすると開始時刻まで返却可能です。直前キャンセルを防ぎたい枠だけ個別に設定してください。
-              </div>
-            </div>
+        <Card className="grid gap-4 bg-[#10182b] text-white md:grid-cols-3">
+          <div className="rounded-[24px] bg-white/8 p-5">
+            <div className="text-xs tracking-[0.18em] text-white/45">総枠数</div>
+            <div className="mt-3 font-display text-4xl font-bold">{offerings.length}</div>
+          </div>
+          <div className="rounded-[24px] bg-white/8 p-5">
+            <div className="text-xs tracking-[0.18em] text-white/45">予約数</div>
+            <div className="mt-3 font-display text-4xl font-bold">{reservations.length}</div>
+          </div>
+          <div className="rounded-[24px] bg-white/8 p-5">
+            <div className="text-xs tracking-[0.18em] text-white/45">待機数</div>
+            <div className="mt-3 font-display text-4xl font-bold">{waitlistEntries.length}</div>
           </div>
         </Card>
       </section>

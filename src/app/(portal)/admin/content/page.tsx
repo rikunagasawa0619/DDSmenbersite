@@ -103,14 +103,14 @@ function SectionHeader({
   action,
 }: {
   title: string;
-  description: string;
+  description?: string;
   action?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-4 border-b border-black/6 pb-5 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h2 className="font-display text-2xl font-bold text-slate-950">{title}</h2>
-        <p className="mt-2 text-sm leading-7 text-slate-600">{description}</p>
+        {description ? <p className="mt-2 text-sm leading-7 text-slate-600">{description}</p> : null}
       </div>
       {action}
     </div>
@@ -164,7 +164,6 @@ function ContentModal({
     return (
       <Modal
         title="バナーを追加"
-        description="ホーム上部で目立つ告知カードです。画像付きで会員に見せたい案内を登録します。"
         closeHref={closeHref}
         size="lg"
       >
@@ -222,7 +221,6 @@ function ContentModal({
     return (
       <Modal
         title="お知らせを追加"
-        description="会員ホームに表示する告知です。本文は記事風のレイアウトで作成できます。"
         closeHref={closeHref}
         size="xl"
       >
@@ -267,7 +265,7 @@ function ContentModal({
 
   if (create === "deal") {
     return (
-      <Modal title="お得情報を追加" description="キャンペーンや会員特典をカード形式で登録します。" closeHref={closeHref} size="xl">
+      <Modal title="お得情報を追加" closeHref={closeHref} size="xl">
         <form action={createDealAction} className="grid gap-5">
           <div className="grid gap-4 md:grid-cols-2">
             <input name="title" placeholder="タイトル" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
@@ -305,7 +303,7 @@ function ContentModal({
 
   if (create === "tool") {
     return (
-      <Modal title="ツールを追加" description="会員に紹介したい外部ツールやテンプレートを登録します。" closeHref={closeHref} size="xl">
+      <Modal title="ツールを追加" closeHref={closeHref} size="xl">
         <form action={createToolItemAction} className="grid gap-5">
           <input name="title" placeholder="ツール名" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
           <textarea name="summary" placeholder="一覧用の短い概要" className="min-h-24 rounded-2xl border border-black/10 bg-white px-4 py-3" />
@@ -331,7 +329,7 @@ function ContentModal({
 
   if (create === "faq") {
     return (
-      <Modal title="FAQ を追加" description="質問と回答を会員向けに整備します。回答は見出し付きの本文で記述できます。" closeHref={closeHref} size="xl">
+      <Modal title="FAQ を追加" closeHref={closeHref} size="xl">
         <form action={createFaqAction} className="grid gap-5">
           <div className="grid gap-4 md:grid-cols-2">
             <input name="category" placeholder="カテゴリ" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
@@ -363,7 +361,7 @@ function ContentModal({
 
   if (create === "course") {
     return (
-      <Modal title="コースを追加" description="まずコースを作成し、その後に章と講義を追加します。" closeHref={closeHref} size="lg">
+      <Modal title="コースを追加" closeHref={closeHref} size="lg">
         <form action={createCourseAction} className="grid gap-5" encType="multipart/form-data">
           <div className="grid gap-4 md:grid-cols-2">
             <input name="title" placeholder="コース名" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
@@ -397,7 +395,7 @@ function ContentModal({
 
   if (create === "module") {
     return (
-      <Modal title="章を追加" description="コースの中に章を追加します。" closeHref={closeHref} size="md">
+      <Modal title="章を追加" closeHref={closeHref} size="md">
         <form action={createCourseModuleAction} className="grid gap-5">
           <select
             name="courseId"
@@ -421,7 +419,7 @@ function ContentModal({
 
   if (create === "lesson") {
     return (
-      <Modal title="講義を追加" description="章の中に動画講義、記事講義、ポッドキャストを追加できます。" closeHref={closeHref} size="xl">
+      <Modal title="講義を追加" closeHref={closeHref} size="xl">
         <form action={createCourseLessonAction} className="grid gap-5">
           <select
             name="moduleId"
@@ -495,12 +493,7 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
           <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
             コンテンツ管理
           </div>
-          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">
-            一覧はダッシュボード、作成は前面エディター
-          </h1>
-          <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">
-            バナー、お知らせ、特典、ツール、FAQ、教材コース、章、講義を整理して管理できます。作成フォームはモーダルで開くため、一覧を見失わずに運用できます。
-          </p>
+          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">コンテンツ</h1>
         </div>
         <div className="flex flex-wrap gap-3">
           <CreateLink href="/admin/content?create=course" label="新しいコース" />
@@ -529,7 +522,6 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
           <Card className="space-y-6">
             <SectionHeader
               title="クイック作成"
-              description="よく使う投稿タイプをすぐに追加できます。"
             />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <Link href="/admin/content?create=banner" className="rounded-[26px] border border-black/8 bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]">
@@ -559,7 +551,6 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
             <Card className="space-y-6">
               <SectionHeader
                 title="ホームに出るコンテンツ"
-                description="バナーとお知らせを優先的に管理します。"
                 action={<CreateLink href="/admin/content?create=banner" label="バナー追加" tone="secondary" />}
               />
               <div className="grid gap-4 md:grid-cols-2">
@@ -605,7 +596,6 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
             <Card className="space-y-6">
               <SectionHeader
                 title="特典・ツール・FAQ"
-                description="運用メニューごとに追加します。"
                 action={<CreateLink href="/admin/content?create=faq" label="FAQ追加" tone="secondary" />}
               />
               <div className="grid gap-4 md:grid-cols-2">
@@ -649,7 +639,6 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
           <Card className="space-y-6">
             <SectionHeader
               title="教材の階層構造"
-              description="コース → 章 → 講義 の順に作成します。各階層ごとに追加ボタンを配置しました。"
               action={
                 <div className="flex flex-wrap gap-3">
                   <CreateLink href="/admin/content?create=course" label="コース追加" tone="secondary" />

@@ -42,7 +42,6 @@ function CampaignModal({ closeHref }: { closeHref: string }) {
   return (
     <Modal
       title="告知メールを作成"
-      description="記事のように本文を作成して、下書き保存または予約配信できます。送信は一覧からいつでも実行できます。"
       closeHref={closeHref}
       size="xl"
     >
@@ -88,12 +87,7 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
           <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
             配信管理
           </div>
-          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">
-            保存だけで終わらない告知メール運用
-          </h1>
-          <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">
-            告知本文を記事のように作成し、下書き保存、予約配信、今すぐ送信まで管理できます。
-          </p>
+          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">配信</h1>
         </div>
         <Link
           href="/admin/campaigns?create=campaign"
@@ -113,7 +107,7 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
               <div className="font-display text-2xl font-bold text-slate-950">
                 {emailReady ? "メール送信は利用可能です" : "メール送信設定が未完了です"}
               </div>
-              <p className="mt-3 text-sm leading-7 text-slate-600">
+              <p className="mt-2 text-sm leading-7 text-slate-600">
                 {emailReady
                   ? "今すぐ送信ボタンで配信できます。予約日時を設定したものは cron が自動配信します。"
                   : "Resend の API キーと送信元メールアドレスが入っていないため、保存はできますが送信は行えません。"}
@@ -147,9 +141,7 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
       <div className="grid gap-5">
         {campaigns.length === 0 ? (
           <Card>
-            <div className="rounded-[24px] border border-dashed border-black/10 p-6 text-sm leading-7 text-slate-500">
-              まだ配信設定がありません。最初の告知メールを作成してください。
-            </div>
+            <div className="rounded-[24px] border border-dashed border-black/10 p-6 text-sm leading-7 text-slate-500">配信はまだありません。</div>
           </Card>
         ) : (
           campaigns.map((campaign) => (
