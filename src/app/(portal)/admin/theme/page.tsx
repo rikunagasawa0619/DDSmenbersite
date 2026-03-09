@@ -28,11 +28,11 @@ export default async function AdminThemePage() {
 
       <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
         <Card className="overflow-hidden bg-[#10182b] text-white">
-          <div className="text-sm font-semibold text-white/60">ブランドプレビュー</div>
+          <div className="text-sm font-semibold text-slate-300">ブランドプレビュー</div>
           <div className="mt-5 rounded-[28px] border border-white/10 bg-white/6 p-6">
             <Badge tone="brand">DDS Member Portal</Badge>
             <h2 className="mt-4 font-display text-3xl font-bold">{theme.brandName}</h2>
-            <p className="mt-3 text-sm leading-7 text-white/78">{theme.heroHeadline}</p>
+            <p className="mt-3 text-sm leading-7 text-slate-100">{theme.heroHeadline}</p>
             <div className="mt-6 grid gap-3">
               {[
                 { label: "メインカラー", value: theme.primaryColor },
@@ -41,7 +41,7 @@ export default async function AdminThemePage() {
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between rounded-[22px] bg-white/8 p-4">
                   <div>
-                    <div className="text-xs tracking-[0.18em] text-white/45">{item.label}</div>
+                    <div className="text-xs tracking-[0.18em] text-slate-300">{item.label}</div>
                     <div className="mt-2 text-lg font-bold">{item.value}</div>
                   </div>
                   <div

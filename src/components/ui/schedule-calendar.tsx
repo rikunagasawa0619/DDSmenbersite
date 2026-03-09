@@ -101,9 +101,9 @@ export function ScheduleCalendar({
                     <Link
                       href={dayHrefBuilder(key) ?? "#"}
                       aria-label={`${key} に予定を作成`}
-                      className="flex min-h-24 items-end rounded-2xl border border-transparent px-3 py-3 text-[11px] leading-5 text-transparent transition group-hover:border-black/6 hover:border-[var(--color-primary)]/24 hover:bg-[rgba(45,91,255,0.04)]"
+                      className="flex min-h-24 items-end rounded-2xl border border-transparent px-3 py-3 text-[11px] leading-5 text-slate-300/0 transition group-hover:border-black/6 group-hover:text-slate-400 hover:border-[var(--color-primary)]/24 hover:bg-[rgba(45,91,255,0.04)] hover:text-[var(--color-primary)]"
                     >
-                      <span className="font-display text-[11px] font-extrabold uppercase tracking-[0.16em] group-hover:text-slate-400 hover:text-[var(--color-primary)]">
+                      <span className="font-display text-[11px] font-extrabold uppercase tracking-[0.16em]">
                         +
                       </span>
                     </Link>

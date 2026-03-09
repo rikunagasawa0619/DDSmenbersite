@@ -109,13 +109,13 @@ export default async function AdminDashboardPage() {
           <div className="dds-kicker text-[var(--color-accent)]">運営サマリー</div>
           <div className="mt-4 grid gap-4">
             <div className="rounded-[26px] border border-white/10 bg-white/6 p-5">
-              <div className="text-sm text-white/60">会員数の伸び</div>
+              <div className="text-sm text-slate-300">会員数の伸び</div>
               <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em]">
                 {snapshot.stats[0]?.value ?? "-"}
               </div>
             </div>
             <div className="rounded-[26px] border border-white/10 bg-white/6 p-5">
-              <div className="text-sm text-white/60">公開中のお知らせ</div>
+              <div className="text-sm text-slate-300">公開中のお知らせ</div>
               <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em]">
                 {snapshot.announcements.length}
               </div>

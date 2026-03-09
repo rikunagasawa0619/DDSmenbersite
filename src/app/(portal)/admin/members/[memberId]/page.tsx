@@ -138,7 +138,7 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
           <div className="relative">
             <Link
               href="/admin/members"
-              className="inline-flex items-center gap-2 font-display text-[11px] font-extrabold uppercase tracking-[0.16em] text-white/70 transition hover:text-white"
+              className="inline-flex items-center gap-2 font-display text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-200 transition hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               会員一覧へ戻る
@@ -148,7 +148,7 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
                 {member.avatarLabel}
               </div>
               <div className="flex-1">
-                <div className="dds-kicker text-[var(--color-accent)]">member profile</div>
+                <div className="dds-kicker text-[var(--color-accent)]">会員プロフィール</div>
                 <h1 className="mt-4 font-display text-4xl font-extrabold tracking-[-0.08em] text-white md:text-5xl">
                   {member.name}
                 </h1>
@@ -157,7 +157,7 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
                   <Badge tone="accent">{labelPlan(member.planCode)}</Badge>
                   <Badge tone={getStatusTone(member.status)}>{labelMemberStatus(member.status)}</Badge>
                 </div>
-                <div className="mt-6 grid gap-3 text-sm text-white/74 md:grid-cols-2">
+                <div className="mt-6 grid gap-3 text-sm text-slate-100 md:grid-cols-2">
                   <div className="inline-flex items-center gap-2">
                     <Mail className="h-4 w-4 text-[var(--color-accent)]" />
                     {member.email}
@@ -251,7 +251,7 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <div className="dds-kicker text-white/45">運用サマリー</div>
+              <div className="dds-kicker text-slate-300">運用サマリー</div>
               <div className="mt-1 font-display text-2xl font-extrabold tracking-[-0.08em] text-white">
                 行動履歴
               </div>
@@ -259,19 +259,19 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <div className="rounded-[24px] bg-white/8 p-4">
-              <div className="dds-kicker text-white/45">予約数</div>
+              <div className="dds-kicker text-slate-300">予約数</div>
               <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-white">
                 {reservations.length}
               </div>
             </div>
             <div className="rounded-[24px] bg-white/8 p-4">
-              <div className="dds-kicker text-white/45">待機数</div>
+              <div className="dds-kicker text-slate-300">待機数</div>
               <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-white">
                 {waitlistForMember.length}
               </div>
             </div>
             <div className="rounded-[24px] bg-white/8 p-4">
-              <div className="dds-kicker text-white/45">操作履歴</div>
+              <div className="dds-kicker text-slate-300">操作履歴</div>
               <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-white">
                 {relatedLogs.length}
               </div>

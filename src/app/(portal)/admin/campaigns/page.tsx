@@ -165,8 +165,8 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
                 </div>
 
                 <div className="grid min-w-[320px] gap-4 rounded-[28px] bg-[#10182b] p-5 text-white">
-                  <div className="text-sm font-semibold text-white/60">配信情報</div>
-                  <div className="rounded-[22px] bg-white/8 p-4 text-sm text-white/80">
+                  <div className="text-sm font-semibold text-slate-300">配信情報</div>
+                  <div className="rounded-[22px] bg-white/8 p-4 text-sm text-slate-100">
                     {campaign.scheduledAt ? `配信予定: ${formatDate(campaign.scheduledAt)}` : "即時送信待ち"}
                   </div>
                   <div className="flex flex-wrap gap-3">
@@ -192,7 +192,7 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
                     )}
                     <Link
                       href="/admin/campaigns?create=campaign"
-                      className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white/84 transition hover:border-white/35 hover:text-white"
+                      className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:border-white/40 hover:text-white"
                     >
                       <MailPlus className="h-4 w-4" />
                       新規作成

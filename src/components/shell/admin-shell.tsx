@@ -51,8 +51,8 @@ export function AdminShell({
                   className={cn(
                     "flex items-center gap-3 rounded-[22px] border px-4 py-3 transition",
                     active
-                      ? "border-[rgba(215,255,100,0.35)] bg-[linear-gradient(135deg,rgba(215,255,100,0.36),rgba(45,91,255,0.18))] text-white shadow-[0_18px_40px_rgba(45,91,255,0.22)]"
-                      : "border-transparent text-white/72 hover:border-white/10 hover:bg-white/6 hover:text-white",
+                      ? "border-[rgba(215,255,100,0.35)] bg-[linear-gradient(135deg,rgba(215,255,100,0.88),rgba(153,205,255,0.78))] text-slate-950 shadow-[0_18px_40px_rgba(45,91,255,0.22)]"
+                      : "border-transparent text-white/84 hover:border-white/10 hover:bg-white/6 hover:text-white",
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -64,9 +64,9 @@ export function AdminShell({
             })}
           </div>
           <div className="relative z-10 mt-10 rounded-[28px] border border-white/10 bg-black/18 p-5 backdrop-blur">
-            <div className="dds-kicker text-white/42">ログイン中</div>
+            <div className="dds-kicker text-slate-300">ログイン中</div>
             <div className="mt-4 text-2xl font-light tracking-[-0.04em] text-white">{user.name}</div>
-            <div className="mt-2 text-sm text-white/62">{user.email}</div>
+            <div className="mt-2 text-sm text-slate-200">{user.email}</div>
           </div>
         </aside>
         <div className="relative overflow-hidden rounded-[34px] bg-[linear-gradient(180deg,#f6f1e5,#ede6d7_48%,#f4efe5)] p-6 md:p-8">

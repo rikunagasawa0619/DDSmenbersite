@@ -257,15 +257,15 @@ export default async function AdminOfferingsPage({
 
         <Card className="grid gap-4 bg-[#10182b] text-white md:grid-cols-3">
           <div className="rounded-[24px] bg-white/8 p-5">
-            <div className="text-xs tracking-[0.18em] text-white/45">総枠数</div>
+            <div className="text-xs tracking-[0.18em] text-slate-300">総枠数</div>
             <div className="mt-3 font-display text-4xl font-bold">{offerings.length}</div>
           </div>
           <div className="rounded-[24px] bg-white/8 p-5">
-            <div className="text-xs tracking-[0.18em] text-white/45">予約数</div>
+            <div className="text-xs tracking-[0.18em] text-slate-300">予約数</div>
             <div className="mt-3 font-display text-4xl font-bold">{reservations.length}</div>
           </div>
           <div className="rounded-[24px] bg-white/8 p-5">
-            <div className="text-xs tracking-[0.18em] text-white/45">待機数</div>
+            <div className="text-xs tracking-[0.18em] text-slate-300">待機数</div>
             <div className="mt-3 font-display text-4xl font-bold">{waitlistEntries.length}</div>
           </div>
         </Card>
