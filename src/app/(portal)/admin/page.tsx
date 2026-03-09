@@ -1,11 +1,13 @@
+import { LiveActivityFeed } from "@/components/admin/live-activity-feed";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
 import { getAdminSnapshot } from "@/lib/portal";
+import { listAuditLogs } from "@/lib/repository";
 
 export default async function AdminDashboardPage() {
   await requireAdmin();
-  const snapshot = await getAdminSnapshot();
+  const [snapshot, initialLogs] = await Promise.all([getAdminSnapshot(), listAuditLogs(6)]);
 
   return (
     <div className="space-y-8">
@@ -123,6 +125,8 @@ export default async function AdminDashboardPage() {
           </div>
         </Card>
       </section>
+
+      <LiveActivityFeed initialLogs={initialLogs} />
     </div>
   );
 }

@@ -1,7 +1,25 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
+const remotePatterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [];
+
+if (process.env.R2_PUBLIC_BASE_URL) {
+  try {
+    const url = new URL(process.env.R2_PUBLIC_BASE_URL);
+    remotePatterns.push({
+      protocol: url.protocol.replace(":", "") as "http" | "https",
+      hostname: url.hostname,
+      pathname: `${url.pathname.replace(/\/$/, "")}/**`,
+    });
+  } catch (error) {
+    console.warn("Invalid R2_PUBLIC_BASE_URL for next/image remotePatterns.", error);
+  }
+}
+
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns,
+  },
   async headers() {
     return [
       {

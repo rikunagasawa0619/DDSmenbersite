@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ImageUploadField } from "@/components/ui/image-upload-field";
 import { Modal } from "@/components/ui/modal";
+import { PortalImage } from "@/components/ui/portal-image";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireAdmin } from "@/lib/auth";
@@ -25,6 +26,7 @@ import { isDatabaseConfigured } from "@/lib/prisma";
 import {
   listAnnouncements,
   listBanners,
+  listContentVersionFeed,
   listCourses,
   listDeals,
   listFaqs,
@@ -132,8 +134,7 @@ function ItemCard({
   return (
     <div className="rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,244,236,0.88))] p-4 shadow-[0_16px_36px_rgba(15,23,42,0.04)]">
       {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt={title} className="mb-4 h-40 w-full rounded-[20px] object-cover" />
+        <PortalImage src={imageUrl} alt={title} className="mb-4 h-40 rounded-[20px]" />
       ) : null}
       {badge ? <Badge tone="accent">{badge}</Badge> : null}
       <div className="mt-3 font-display text-xl font-extrabold tracking-[-0.06em] text-slate-950">{title}</div>
@@ -475,13 +476,14 @@ function ContentModal({
 export default async function AdminContentPage({ searchParams }: ContentPageProps) {
   await requireAdmin();
   const params = await searchParams;
-  const [banners, announcements, deals, tools, faqs, courses] = await Promise.all([
+  const [banners, announcements, deals, tools, faqs, courses, versions] = await Promise.all([
     listBanners(true),
     listAnnouncements(true),
     listDeals(true),
     listTools(true),
     listFaqs(true),
     listCourses(true),
+    listContentVersionFeed(10),
   ]);
   const modules = courses.flatMap((course) =>
     course.modules.map((module) => ({
@@ -547,6 +549,32 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
                 <div className="mt-4 font-display text-xl font-bold text-slate-950">ツールを追加</div>
                 <p className="mt-2 text-sm leading-7 text-slate-600">外部リンクと配布物</p>
               </Link>
+            </div>
+          </Card>
+
+          <Card className="space-y-6">
+            <SectionHeader title="版履歴" />
+            <div className="grid gap-3">
+              {versions.length === 0 ? (
+                <div className="rounded-[24px] border border-dashed border-black/10 p-5 text-sm text-slate-500">
+                  まだ版履歴はありません。
+                </div>
+              ) : (
+                versions.map((version) => {
+                  const snapshot = version.metadata?.snapshot as Record<string, unknown> | undefined;
+                  return (
+                    <div key={version.id} className="rounded-[24px] border border-black/8 bg-white px-4 py-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="font-semibold text-slate-950">{version.action}</div>
+                        <Badge tone="brand">v{String(version.metadata?.version ?? 1)}</Badge>
+                      </div>
+                      <div className="mt-2 text-sm text-slate-600">
+                        {(typeof snapshot?.title === "string" && snapshot.title) || version.targetType}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </Card>
 
@@ -661,8 +689,7 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
                     <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                       <div className="flex flex-1 gap-5">
                         {course.thumbnailUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={course.thumbnailUrl} alt={course.title} className="hidden h-36 w-56 rounded-[22px] object-cover md:block" />
+                          <PortalImage src={course.thumbnailUrl} alt={course.title} className="hidden h-36 w-56 rounded-[22px] md:block" sizes="224px" />
                         ) : (
                           <div className="hidden h-36 w-56 rounded-[22px] bg-[linear-gradient(135deg,#d9e3ff,#f9f6ec)] md:block" />
                         )}

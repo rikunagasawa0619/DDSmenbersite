@@ -6,6 +6,7 @@ import { BrushCleaning, CalendarCog, ExternalLink, FileSpreadsheet, LayoutDashbo
 
 import { BrandMark } from "@/components/brand-mark";
 import { LogoutButton } from "@/components/logout-button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import type { MemberProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,7 @@ export function AdminShell({
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex items-center gap-3 rounded-[22px] border px-4 py-3 transition",
                     active
@@ -80,6 +82,7 @@ export function AdminShell({
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              <ThemeToggle />
               <Link
                 href="/app"
                 className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/60 px-4 py-2 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
@@ -90,7 +93,30 @@ export function AdminShell({
               <LogoutButton />
             </div>
           </header>
-          <main className="relative mt-8">{children}</main>
+          <nav className="relative mt-6 flex gap-2 overflow-x-auto pb-2 md:hidden">
+            {adminNavigation.map((item) => {
+              const Icon = item.icon;
+              const active =
+                item.href === "/admin" ? currentPath === item.href : currentPath.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition",
+                    active
+                      ? "border-[var(--color-primary)] bg-[rgba(45,91,255,0.12)] text-slate-950"
+                      : "border-black/8 bg-white/75 text-slate-600",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+          <main id="main-content" className="relative mt-8">{children}</main>
         </div>
       </div>
     </div>

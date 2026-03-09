@@ -19,7 +19,12 @@ export default async function AdminPlansPage() {
           <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">プラン / クレジット</h1>
         </div>
         <form action={runMonthlyCreditGrantAction}>
-          <SubmitButton pendingLabel="実行中...">月次クレジット付与を今すぐ実行</SubmitButton>
+          <SubmitButton
+            pendingLabel="実行中..."
+            confirmMessage="月次クレジット付与を手動実行します。対象会員へ即時反映されます。"
+          >
+            月次クレジット付与を今すぐ実行
+          </SubmitButton>
         </form>
       </div>
 

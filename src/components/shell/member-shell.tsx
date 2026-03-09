@@ -7,6 +7,7 @@ import { ExternalLink, Home, CalendarDays, HelpCircle, LayoutGrid, Settings, Spa
 import { BrandMark } from "@/components/brand-mark";
 import { LogoutButton } from "@/components/logout-button";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { labelPlan } from "@/lib/admin-display";
 import type { MemberProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -61,10 +62,11 @@ export function MemberShell({
                 <Settings className="h-4 w-4" />
                 プロフィール
               </Link>
+              <ThemeToggle />
               <LogoutButton />
             </div>
           </header>
-          <nav className="mt-6 flex flex-wrap gap-2">
+          <nav className="mt-6 hidden flex-wrap gap-2 md:flex">
             {navigation.map((item) => {
               const Icon = item.icon;
               const active =
@@ -75,6 +77,7 @@ export function MemberShell({
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={active ? "page" : undefined}
                   className={cn(
                     "inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition",
                     active
@@ -88,7 +91,30 @@ export function MemberShell({
               );
             })}
           </nav>
-          <main className="mt-8">{children}</main>
+          <main id="main-content" className="mt-8">{children}</main>
+          <nav className="fixed inset-x-4 bottom-4 z-40 grid grid-cols-4 gap-2 rounded-[28px] border border-black/8 bg-[rgba(255,255,255,0.92)] p-2 shadow-[0_20px_60px_rgba(15,23,42,0.15)] backdrop-blur md:hidden">
+            {navigation.slice(0, 4).map((item) => {
+              const Icon = item.icon;
+              const active =
+                item.href === "/app" ? currentPath === item.href : currentPath.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "flex min-h-14 flex-col items-center justify-center gap-1 rounded-[20px] text-[11px] font-semibold transition",
+                    active
+                      ? "bg-[rgba(45,91,255,0.12)] text-slate-950"
+                      : "text-slate-500",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
         </div>
       </div>
     </div>

@@ -8,6 +8,30 @@
   --color-brand: #23110f;
   --color-surface: #ebe4d6;
   --color-ink-soft: #162338;
+  --color-surface-strong: rgba(255, 255, 255, 0.82);
+  --color-surface-muted: rgba(247, 243, 234, 0.92);
+  --color-outline: rgba(7, 17, 31, 0.1);
+  --color-muted: #526273;
+  --color-success: #067647;
+  --color-warning: #9a6700;
+  --color-danger: #b42318;
+}
+
+:root[data-theme="dark"] {
+  --color-background: #08111d;
+  --color-foreground: #f5f7fb;
+  --color-primary: #83a2ff;
+  --color-accent: #d3ff77;
+  --color-brand: #fff8ed;
+  --color-surface: #132033;
+  --color-ink-soft: #dfe7f3;
+  --color-surface-strong: rgba(17, 25, 40, 0.82);
+  --color-surface-muted: rgba(11, 18, 29, 0.94);
+  --color-outline: rgba(226, 232, 240, 0.12);
+  --color-muted: #b3c0d4;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
 }
 
 @theme inline {
@@ -48,8 +72,31 @@ body::before {
     radial-gradient(rgba(255, 255, 255, 0.18) 0.6px, transparent 0.6px);
   background-position: 0 0, 12px 12px;
   background-size: 24px 24px;
-  mix-blend-mode: multiply;
   z-index: -1;
+  contain: paint;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-background: #08111d;
+    --color-foreground: #f5f7fb;
+    --color-primary: #83a2ff;
+    --color-accent: #d3ff77;
+    --color-brand: #fff8ed;
+    --color-surface: #132033;
+    --color-ink-soft: #dfe7f3;
+    --color-surface-strong: rgba(17, 25, 40, 0.82);
+    --color-surface-muted: rgba(11, 18, 29, 0.94);
+    --color-outline: rgba(226, 232, 240, 0.12);
+    --color-muted: #b3c0d4;
+    --color-success: #34d399;
+    --color-warning: #fbbf24;
+    --color-danger: #f87171;
+  }
+}
+
+@view-transition {
+  navigation: auto;
 }
 
 ::selection {
@@ -162,9 +209,9 @@ a {
 }
 
 .dds-panel {
-  border: 1px solid rgba(7, 17, 31, 0.08);
+  border: 1px solid var(--color-outline);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 239, 229, 0.88));
+    linear-gradient(180deg, var(--color-surface-strong), var(--color-surface-muted));
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.7) inset,
     0 22px 60px rgba(7, 17, 31, 0.08);
@@ -185,9 +232,9 @@ a {
   border-radius: 1.25rem;
   border: 1px solid rgba(7, 17, 31, 0.1);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 243, 234, 0.92));
+    linear-gradient(180deg, var(--color-surface-strong), var(--color-surface-muted));
   padding: 0.9rem 1rem;
-  color: #07111f;
+  color: var(--color-foreground);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
   transition:
     border-color 180ms ease,
@@ -218,16 +265,16 @@ a {
 .dds-admin-label > span {
   font-size: 0.82rem;
   font-weight: 700;
-  color: rgba(22, 35, 56, 0.82);
+  color: var(--color-muted);
 }
 
 .dds-admin-section {
   display: grid;
   gap: 1.25rem;
-  border: 1px solid rgba(7, 17, 31, 0.08);
+  border: 1px solid var(--color-outline);
   border-radius: 1.75rem;
   padding: 1.25rem;
-  background: rgba(255, 255, 255, 0.55);
+  background: color-mix(in srgb, var(--color-surface-strong) 78%, transparent);
 }
 
 .dds-admin-toolbar-button {
@@ -236,7 +283,7 @@ a {
   gap: 0.5rem;
   border-radius: 1rem;
   border: 1px solid rgba(7, 17, 31, 0.08);
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--color-surface-strong);
   padding: 0.6rem 0.85rem;
   font-family: var(--font-display), monospace;
   font-size: 0.72rem;
@@ -249,6 +296,24 @@ a {
     border-color 180ms ease,
     background-color 180ms ease,
     color 180ms ease;
+}
+
+.dds-skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(-150%);
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: white;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  transition: transform 160ms ease;
+}
+
+.dds-skip-link:focus {
+  transform: translateY(0);
 }
 
 .dds-admin-toolbar-button:hover {

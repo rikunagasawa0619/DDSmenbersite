@@ -1,11 +1,13 @@
-/* eslint-disable @next/next/no-img-element */
 import {
   getCalendarMonth,
   ScheduleCalendar,
   shiftCalendarMonth,
 } from "@/components/ui/schedule-calendar";
+import { CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PortalImage } from "@/components/ui/portal-image";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { bookOfferingAction, cancelReservationAction } from "@/actions/member";
 import { requireUser } from "@/lib/auth";
@@ -95,11 +97,11 @@ export default async function BookingsPage({
 
       <div className="grid gap-5">
         {snapshot.offerings.length === 0 ? (
-          <Card>
-            <div className="text-sm leading-7 text-slate-500">
-              現在受付中の講義予約・イベントはありません。
-            </div>
-          </Card>
+          <EmptyState
+            icon={CalendarDays}
+            title="現在受付中の募集枠はありません"
+            description="新しい講義予約やイベントが公開されると、この一覧に表示されます。"
+          />
         ) : snapshot.offerings.map((offering) => {
           const currentReservation = snapshot.reservations.find(
             (reservation) => reservation.offeringId === offering.id && reservation.status === "confirmed",
@@ -116,7 +118,7 @@ export default async function BookingsPage({
                     </Badge>
                   </div>
                   {offering.thumbnailUrl ? (
-                    <img src={offering.thumbnailUrl} alt={offering.title} className="mt-4 h-52 w-full rounded-[24px] object-cover" />
+                    <PortalImage src={offering.thumbnailUrl} alt={offering.title} className="mt-4 h-52 rounded-[24px]" />
                   ) : null}
                   <h2 className="mt-4 font-display text-2xl font-bold text-slate-950">{offering.title}</h2>
                   <p className="mt-3 text-sm leading-7 text-slate-600">{offering.summary}</p>
@@ -150,7 +152,11 @@ export default async function BookingsPage({
                     currentReservation ? (
                       <form action={cancelReservationAction} className="mt-4">
                         <input type="hidden" name="reservationId" value={currentReservation.id} />
-                        <SubmitButton pendingLabel="取消中..." className="w-full bg-slate-800">
+                        <SubmitButton
+                          pendingLabel="取消中..."
+                          className="w-full bg-slate-800"
+                          confirmMessage="この予約をキャンセルします。返却期限外の場合はクレジットが返却されません。"
+                        >
                           予約をキャンセル
                         </SubmitButton>
                       </form>

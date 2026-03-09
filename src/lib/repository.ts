@@ -52,6 +52,23 @@ import type {
   WaitlistEntry,
 } from "@/lib/types";
 
+type MemberListPageParams = {
+  query?: string;
+  planCode?: MembershipPlanCode | "ALL";
+  status?: MemberProfile["status"] | "ALL";
+  sort?: "recent" | "oldest" | "name" | "plan" | "status";
+  page?: number;
+  pageSize?: number;
+};
+
+type PaginatedResult<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
 function mapAudience(value: Prisma.JsonValue | null | undefined): AudienceRule | undefined {
   if (!value || typeof value !== "object") {
     return undefined;
@@ -541,6 +558,158 @@ export async function listMembers(): Promise<MemberProfile[]> {
   );
 }
 
+function sortMemberProfiles(
+  members: MemberProfile[],
+  sort: NonNullable<MemberListPageParams["sort"]>,
+) {
+  return [...members].sort((a, b) => {
+    if (sort === "name") return a.name.localeCompare(b.name, "ja");
+    if (sort === "plan") return a.planCode.localeCompare(b.planCode);
+    if (sort === "status") return a.status.localeCompare(b.status);
+    if (sort === "oldest") return a.joinedAt.localeCompare(b.joinedAt);
+    return b.joinedAt.localeCompare(a.joinedAt);
+  });
+}
+
+function paginateItems<T>(items: T[], page: number, pageSize: number): PaginatedResult<T> {
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+  const start = (safePage - 1) * pageSize;
+  return {
+    items: items.slice(start, start + pageSize),
+    total,
+    page: safePage,
+    pageSize,
+    totalPages,
+  };
+}
+
+export async function listMembersPage(
+  params: MemberListPageParams = {},
+): Promise<PaginatedResult<MemberProfile>> {
+  const query = params.query?.trim().toLowerCase() ?? "";
+  const planCode = params.planCode ?? "ALL";
+  const status = params.status ?? "ALL";
+  const sort = params.sort ?? "recent";
+  const page = params.page ?? 1;
+  const pageSize = params.pageSize ?? 20;
+
+  if (!isDatabaseConfigured || !prisma) {
+    const filtered = sortMemberProfiles(
+      sampleUsers.filter((member) => {
+        const matchesQuery =
+          !query ||
+          member.name.toLowerCase().includes(query) ||
+          member.email.toLowerCase().includes(query) ||
+          member.company?.toLowerCase().includes(query);
+        const matchesPlan = planCode === "ALL" || member.planCode === planCode;
+        const matchesStatus = status === "ALL" || member.status === status;
+        return matchesQuery && matchesPlan && matchesStatus;
+      }),
+      sort,
+    );
+    return paginateItems(filtered, page, pageSize);
+  }
+
+  const where: Prisma.UserWhereInput = {
+    ...(query
+      ? {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { email: { contains: query, mode: "insensitive" } },
+            { company: { contains: query, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+    ...(status !== "ALL" ? { status: status.toUpperCase() as never } : {}),
+    ...(planCode !== "ALL"
+      ? {
+          planAssignments: {
+            some: {
+              isActive: true,
+              plan: { code: planCode },
+            },
+          },
+        }
+      : {}),
+  };
+
+  const orderBy: Prisma.UserOrderByWithRelationInput[] =
+    sort === "name"
+      ? [{ name: "asc" }]
+      : sort === "oldest"
+        ? [{ createdAt: "asc" }]
+        : sort === "status"
+          ? [{ status: "asc" }, { createdAt: "desc" }]
+          : [{ createdAt: "desc" }];
+
+  if (sort === "plan") {
+    const profiles = await listMembers();
+    const filtered = profiles.filter((member) => {
+      const matchesQuery =
+        !query ||
+        member.name.toLowerCase().includes(query) ||
+        member.email.toLowerCase().includes(query) ||
+        member.company?.toLowerCase().includes(query);
+      const matchesPlan = planCode === "ALL" || member.planCode === planCode;
+      const matchesStatus = status === "ALL" || member.status === status;
+      return matchesQuery && matchesPlan && matchesStatus;
+    });
+    return paginateItems(sortMemberProfiles(filtered, sort), page, pageSize);
+  }
+
+  const [rows, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      include: userInclude,
+      orderBy,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    items: rows.map(mapMemberRow),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}
+
+export async function getMemberStatusCounts() {
+  if (!isDatabaseConfigured || !prisma) {
+    return {
+      active: sampleUsers.filter((member) => member.status === "active").length,
+      invited: sampleUsers.filter((member) => member.status === "invited").length,
+      paused: sampleUsers.filter((member) => member.status === "paused").length,
+      withdrawn: sampleUsers.filter((member) => member.status === "withdrawn").length,
+      suspended: sampleUsers.filter((member) => member.status === "suspended").length,
+    };
+  }
+
+  const grouped = await prisma.user.groupBy({
+    by: ["status"],
+    _count: { _all: true },
+  });
+  const counts = {
+    active: 0,
+    invited: 0,
+    paused: 0,
+    withdrawn: 0,
+    suspended: 0,
+  };
+
+  for (const entry of grouped) {
+    const key = entry.status.toLowerCase() as keyof typeof counts;
+    counts[key] = entry._count._all;
+  }
+
+  return counts;
+}
+
 export async function getWalletByUserId(
   userId: string,
   plan: MembershipPlan,
@@ -757,6 +926,64 @@ export async function listAuditLogs(limit = 100): Promise<AuditLogEntry[]> {
       })).map(mapAuditLogRow),
     [],
   );
+}
+
+export async function listContentVersionFeed(limit = 12): Promise<AuditLogEntry[]> {
+  const targetTypes = [
+    "Announcement",
+    "Banner",
+    "Deal",
+    "ToolItem",
+    "FaqItem",
+    "Course",
+    "Module",
+    "Lesson",
+    "EmailCampaign",
+  ];
+
+  const logs = await listAuditLogs(Math.max(limit * 3, limit));
+  return logs
+    .filter(
+      (entry) =>
+        targetTypes.includes(entry.targetType) &&
+        typeof entry.metadata?.version === "number" &&
+        typeof entry.metadata?.snapshot === "object",
+    )
+    .slice(0, limit);
+}
+
+export async function listAuditLogsPage(
+  page = 1,
+  pageSize = 40,
+): Promise<PaginatedResult<AuditLogEntry>> {
+  if (!isDatabaseConfigured || !prisma) {
+    return paginateItems([], page, pageSize);
+  }
+
+  const [rows, total] = await Promise.all([
+    prisma.auditLog.findMany({
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.auditLog.count(),
+  ]);
+
+  return {
+    items: rows.map(mapAuditLogRow),
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
 }
 
 export async function getCourseProgressMap(userId: string): Promise<Record<string, number>> {

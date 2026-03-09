@@ -5,6 +5,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getHomeHeroVariant } from "@/lib/experiments";
 
 const features = [
   {
@@ -29,7 +30,9 @@ const features = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const heroVariant = await getHomeHeroVariant();
+
   return (
     <div className="min-h-screen">
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-8">
@@ -45,27 +48,69 @@ export default function HomePage() {
           </div>
         </header>
 
-        <section className="relative mt-6 overflow-hidden rounded-[36px] border border-white/60 bg-[linear-gradient(135deg,#0f172a,#1238c6_55%,#2854ff)] px-6 py-16 text-white shadow-[0_30px_120px_rgba(18,56,198,0.28)] md:px-12">
-          <div className="absolute inset-y-0 right-0 w-[40%] bg-[radial-gradient(circle_at_center,rgba(246,196,83,0.35),transparent_60%)]" />
+        <section
+          className={
+            heroVariant === "immersive"
+              ? "relative mt-6 overflow-hidden rounded-[36px] border border-white/60 bg-[linear-gradient(135deg,#0f172a,#1238c6_55%,#2854ff)] px-6 py-16 text-white shadow-[0_30px_120px_rgba(18,56,198,0.28)] md:px-12"
+              : "relative mt-6 overflow-hidden rounded-[36px] border border-[#201514] bg-[linear-gradient(135deg,#f4efe4,#d9cdb7_55%,#fef9ef)] px-6 py-16 text-slate-950 shadow-[0_30px_120px_rgba(32,21,20,0.18)] md:px-12"
+          }
+        >
+          <div
+            className={
+              heroVariant === "immersive"
+                ? "absolute inset-y-0 right-0 w-[40%] bg-[radial-gradient(circle_at_center,rgba(246,196,83,0.35),transparent_60%)]"
+                : "absolute -right-10 top-0 h-72 w-72 rounded-full bg-[rgba(38,17,14,0.08)] blur-3xl"
+            }
+          />
           <div className="relative max-w-3xl">
-            <Badge tone="accent">DDS会員サイト v1</Badge>
+            <Badge tone={heroVariant === "immersive" ? "accent" : "brand"}>DDS会員サイト v1</Badge>
             <h1 className="mt-6 max-w-4xl text-4xl font-black tracking-tight md:text-6xl">
-              DDSの受講体験を、
-              <br />
-              UTAGE級の導線で一つにまとめる。
+              {heroVariant === "immersive" ? (
+                <>
+                  DDSの受講体験を、
+                  <br />
+                  UTAGE級の導線で一つにまとめる。
+                </>
+              ) : (
+                <>
+                  会員サイト運営を、
+                  <br />
+                  予約・教材・会員管理まで一直線に。
+                </>
+              )}
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-white/82">
-              ホーム、お得情報、イベント、講義予約、教材、FAQ、管理画面を同じ基盤でつなぎ、
-              会員の行動導線と運営コストを同時に最適化します。
+            <p
+              className={
+                heroVariant === "immersive"
+                  ? "mt-6 max-w-2xl text-lg leading-8 text-white/82"
+                  : "mt-6 max-w-2xl text-lg leading-8 text-slate-700"
+              }
+            >
+              {heroVariant === "immersive"
+                ? "ホーム、お得情報、イベント、講義予約、教材、FAQ、管理画面を同じ基盤でつなぎ、会員の行動導線と運営コストを同時に最適化します。"
+                : "会員向けの導線と運営者向けの操作面を分断せず、申し込み、クレジット、教材更新、告知配信をひとつの設計にまとめます。"}
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link href="/login">
-                <Button className="bg-white text-[var(--color-primary)] hover:bg-white/90">
+                <Button
+                  className={
+                    heroVariant === "immersive"
+                      ? "bg-white text-[var(--color-primary)] hover:bg-white/90"
+                      : "bg-[#26110e] text-white hover:bg-[#341814]"
+                  }
+                >
                   会員画面へ
                 </Button>
               </Link>
               <Link href="/app">
-                <Button variant="secondary" className="border-white/30 bg-white/10 text-white hover:bg-white/14 hover:text-white">
+                <Button
+                  variant="secondary"
+                  className={
+                    heroVariant === "immersive"
+                      ? "border-white/30 bg-white/10 text-white hover:bg-white/14 hover:text-white"
+                      : "border-[#26110e]/20 bg-white/70 text-slate-950 hover:bg-white"
+                  }
+                >
                   デモを見る
                 </Button>
               </Link>

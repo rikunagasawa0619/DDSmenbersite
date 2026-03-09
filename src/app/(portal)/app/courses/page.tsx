@@ -1,9 +1,11 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import { LayoutGrid } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PortalImage } from "@/components/ui/portal-image";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { requireUser } from "@/lib/auth";
 import { getPortalSnapshot } from "@/lib/portal";
@@ -22,16 +24,18 @@ export default async function CoursesPage() {
       </div>
       <div className="grid gap-5 xl:grid-cols-3">
         {snapshot.courses.length === 0 ? (
-          <Card className="xl:col-span-3">
-            <div className="text-sm leading-7 text-slate-500">
-              まだ公開中のオンライン教材はありません。運営側でコースが公開されると、この一覧に表示されます。
-            </div>
-          </Card>
+          <div className="xl:col-span-3">
+            <EmptyState
+              icon={LayoutGrid}
+              title="公開中の教材はまだありません"
+              description="運営がコースを公開すると、この一覧に教材と進捗カードが表示されます。"
+            />
+          </div>
         ) : snapshot.courses.map((course) => (
           <Card key={course.id} className="flex h-full flex-col">
             <div className="rounded-[24px] bg-[linear-gradient(135deg,#dbe5ff,#ffffff)] p-5">
               {course.thumbnailUrl ? (
-                <img src={course.thumbnailUrl} alt={course.title} className="mb-4 h-44 w-full rounded-[20px] object-cover" />
+                <PortalImage src={course.thumbnailUrl} alt={course.title} className="mb-4 h-44 rounded-[20px]" />
               ) : null}
               <Badge tone="brand">{course.heroNote}</Badge>
               <h2 className="mt-4 font-display text-2xl font-bold text-slate-950">{course.title}</h2>

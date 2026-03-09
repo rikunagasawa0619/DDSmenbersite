@@ -1,10 +1,10 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { ArrowRight, Bell, CalendarDays, Ticket, TrendingUp } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PortalImage } from "@/components/ui/portal-image";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { requireUser } from "@/lib/auth";
 import { getBannerAccentStyle } from "@/lib/banner-accent";
@@ -88,7 +88,7 @@ export default async function AppHomePage() {
             style={{ backgroundImage: getBannerAccentStyle(banner.accent).backgroundImage }}
           >
             {banner.imageUrl ? (
-              <img src={banner.imageUrl} alt={banner.title} className="mb-5 h-48 w-full rounded-[24px] object-cover" />
+              <PortalImage src={banner.imageUrl} alt={banner.title} className="mb-5 h-48 rounded-[24px]" priority />
             ) : null}
             <Badge tone="brand">{banner.eyebrow}</Badge>
             <h2 className="mt-4 font-display text-2xl font-bold text-slate-950">{banner.title}</h2>

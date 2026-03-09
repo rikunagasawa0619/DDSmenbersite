@@ -62,6 +62,19 @@ function parseAudienceFromForm(
   return planCodes ? { planCodes } : undefined;
 }
 
+function buildVersionMetadata(
+  snapshot: Record<string, unknown>,
+  extra: Record<string, unknown> = {},
+) {
+  return JSON.parse(
+    JSON.stringify({
+      version: 1,
+      snapshot,
+      ...extra,
+    }),
+  ) as Prisma.InputJsonValue;
+}
+
 function buildLessonBlocksFromForm(values: {
   title: string;
   summary: string;
@@ -375,7 +388,15 @@ export async function createAnnouncementAction(formData: FormData) {
       action: "announcement.create",
       targetType: "Announcement",
       targetId: created.id,
-      metadata: audience ?? {},
+      metadata: buildVersionMetadata(
+        {
+          title: created.title,
+          summary: created.summary,
+          publishStatus: created.publishStatus,
+          publishAt: created.publishAt?.toISOString() ?? null,
+        },
+        { audience: audience ?? {} },
+      ),
     },
   });
 
@@ -442,7 +463,15 @@ export async function createBannerAction(formData: FormData) {
       action: "banner.create",
       targetType: "Banner",
       targetId: created.id,
-      metadata: audience ?? {},
+      metadata: buildVersionMetadata(
+        {
+          eyebrow: created.eyebrow,
+          title: created.title,
+          accent: created.accent,
+          publishStatus: created.publishStatus,
+        },
+        { audience: audience ?? {} },
+      ),
     },
   });
 
@@ -785,6 +814,58 @@ export async function updateMemberSettingsAction(formData: FormData) {
   await redirectWithFlash("会員設定を更新しました。", "success", "/admin/members");
 }
 
+export async function bulkUpdateMemberStatusAction(formData: FormData) {
+  if (!prisma) {
+    await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/members");
+  }
+  const db = prisma!;
+
+  const actorId = await getAdminActorId();
+  await assertAdminMutationLimit(actorId, "bulk-update-member-status");
+
+  const schema = z.object({
+    memberIds: z.array(z.string().min(1)).min(1, "会員を1件以上選択してください。"),
+    status: z.enum(["ACTIVE", "INVITED", "PAUSED", "WITHDRAWN", "SUSPENDED"]),
+  });
+
+  const values = await handleAdminInput(
+    schema,
+    {
+      memberIds: formData.getAll("memberIds"),
+      status: formData.get("status"),
+    },
+    "/admin/members",
+  );
+
+  const updated = await db.user.updateMany({
+    where: {
+      id: { in: values.memberIds },
+    },
+    data: {
+      status: values.status as MemberStatus,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      userId: actorId,
+      action: "member.status.bulk-update",
+      targetType: "UserCollection",
+      targetId: values.memberIds.join(","),
+      metadata: {
+        count: updated.count,
+        status: values.status,
+      },
+    },
+  });
+
+  revalidatePath("/admin/members");
+  revalidatePath("/admin/plans");
+  revalidatePath("/app");
+
+  await redirectWithFlash(`${updated.count}名のステータスを更新しました。`, "success", "/admin/members");
+}
+
 export async function savePlanSettingsAction(formData: FormData) {
   if (!prisma) {
     await redirectWithFlash("データベース設定後に利用できます。", "error", "/admin/plans");
@@ -900,7 +981,15 @@ export async function createDealAction(formData: FormData) {
       action: "deal.create",
       targetType: "Deal",
       targetId: created.id,
-      metadata: audience ?? {},
+      metadata: buildVersionMetadata(
+        {
+          title: created.title,
+          badge: created.badge,
+          offer: created.offer,
+          publishStatus: created.publishStatus,
+        },
+        { audience: audience ?? {} },
+      ),
     },
   });
 
@@ -954,7 +1043,14 @@ export async function createToolItemAction(formData: FormData) {
       action: "tool.create",
       targetType: "ToolItem",
       targetId: created.id,
-      metadata: audience ?? {},
+      metadata: buildVersionMetadata(
+        {
+          title: created.title,
+          href: created.href,
+          publishStatus: created.publishStatus,
+        },
+        { audience: audience ?? {} },
+      ),
     },
   });
 
@@ -1005,7 +1101,14 @@ export async function createFaqAction(formData: FormData) {
       action: "faq.create",
       targetType: "FaqItem",
       targetId: created.id,
-      metadata: audience ?? {},
+      metadata: buildVersionMetadata(
+        {
+          category: created.category,
+          question: created.question,
+          publishStatus: created.publishStatus,
+        },
+        { audience: audience ?? {} },
+      ),
     },
   });
 
@@ -1074,7 +1177,15 @@ export async function createCourseAction(formData: FormData) {
       action: "course.create",
       targetType: "Course",
       targetId: created.id,
-      metadata: audience ?? {},
+      metadata: buildVersionMetadata(
+        {
+          title: created.title,
+          slug: created.slug,
+          estimatedHours: created.estimatedHours,
+          publishStatus: created.publishStatus,
+        },
+        { audience: audience ?? {} },
+      ),
     },
   });
 
@@ -1120,6 +1231,11 @@ export async function createCourseModuleAction(formData: FormData) {
       action: "course.module.create",
       targetType: "Module",
       targetId: created.id,
+      metadata: buildVersionMetadata({
+        title: created.title,
+        courseId: created.courseId,
+        sortOrder: created.sortOrder,
+      }),
     },
   });
 
@@ -1188,14 +1304,18 @@ export async function createCourseLessonAction(formData: FormData) {
   await db.auditLog.create({
     data: {
       userId: actorId,
-        action: "course.lesson.create",
-        targetType: "Lesson",
-        targetId: created.id,
-        metadata: {
-          lessonType: parsedValues.lessonType,
-        },
-      },
-    });
+      action: "course.lesson.create",
+      targetType: "Lesson",
+      targetId: created.id,
+      metadata: buildVersionMetadata({
+        title: created.title,
+        slug: created.slug,
+        lessonType: parsedValues.lessonType,
+        moduleId: created.moduleId,
+        sortOrder: created.sortOrder,
+      }),
+    },
+  });
 
   revalidatePath("/admin/content");
   revalidatePath("/app/courses");
@@ -1247,7 +1367,15 @@ export async function createCampaignAction(formData: FormData) {
       action: "campaign.create",
       targetType: "EmailCampaign",
       targetId: created.id,
-      metadata: targetJson,
+      metadata: buildVersionMetadata(
+        {
+          title: created.title,
+          subject: created.subject,
+          status: created.status,
+          scheduledAt: created.scheduledAt?.toISOString() ?? null,
+        },
+        { audience: targetJson },
+      ),
     },
   });
 

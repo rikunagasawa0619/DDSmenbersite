@@ -1,10 +1,12 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BookOpenText } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PortalImage } from "@/components/ui/portal-image";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { requireUser } from "@/lib/auth";
 import { getPortalSnapshot } from "@/lib/portal";
@@ -27,7 +29,7 @@ export default async function CourseDetailPage({
     <div className="space-y-6">
       <Card className="overflow-hidden bg-[linear-gradient(135deg,#ffffff,#e4ebff)]">
         {course.thumbnailUrl ? (
-          <img src={course.thumbnailUrl} alt={course.title} className="mb-6 h-56 w-full rounded-[24px] object-cover" />
+          <PortalImage src={course.thumbnailUrl} alt={course.title} className="mb-6 h-56 rounded-[24px]" priority />
         ) : null}
         <Badge tone="brand">{course.heroNote}</Badge>
         <h1 className="mt-4 font-display text-4xl font-bold text-slate-950">{course.title}</h1>
@@ -42,11 +44,11 @@ export default async function CourseDetailPage({
 
       <div className="grid gap-6">
         {course.modules.length === 0 ? (
-          <Card>
-            <div className="text-sm leading-7 text-slate-500">
-              このコースにはまだ章がありません。運営が講義を追加すると、ここに表示されます。
-            </div>
-          </Card>
+          <EmptyState
+            icon={BookOpenText}
+            title="このコースにはまだ章がありません"
+            description="運営が講義を追加すると、このページに章と講義の一覧が表示されます。"
+          />
         ) : course.modules.map((module) => (
           <Card key={module.id}>
             <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-primary)]">

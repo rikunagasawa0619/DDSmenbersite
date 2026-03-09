@@ -1,7 +1,9 @@
-/* eslint-disable @next/next/no-img-element */
+import { CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PortalImage } from "@/components/ui/portal-image";
 import { requireUser } from "@/lib/auth";
 import { getPortalSnapshot } from "@/lib/portal";
 import { formatDate } from "@/lib/utils";
@@ -22,11 +24,13 @@ export default async function EventsPage() {
       </div>
       <div className="grid gap-5">
         {events.length === 0 ? (
-          <Card>
-            <div className="text-sm leading-7 text-slate-500">
-              現在募集中のイベントはありません。最新の予約状況は講義予約タブのカレンダーでも確認できます。
-            </div>
-          </Card>
+          <EmptyState
+            icon={CalendarDays}
+            title="募集中のイベントはありません"
+            description="最新の予約状況は講義予約タブのカレンダーでも確認できます。"
+            actionHref="/app/bookings"
+            actionLabel="予約カレンダーを見る"
+          />
         ) : events.map((event) => (
           <Card key={event.id}>
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -38,7 +42,7 @@ export default async function EventsPage() {
                   </Badge>
                 </div>
                 {event.thumbnailUrl ? (
-                  <img src={event.thumbnailUrl} alt={event.title} className="mt-4 h-52 w-full rounded-[24px] object-cover" />
+                  <PortalImage src={event.thumbnailUrl} alt={event.title} className="mt-4 h-52 rounded-[24px]" />
                 ) : null}
                 <h2 className="mt-4 font-display text-2xl font-bold text-slate-950">{event.title}</h2>
                 <p className="mt-3 text-sm leading-7 text-slate-600">{event.description}</p>

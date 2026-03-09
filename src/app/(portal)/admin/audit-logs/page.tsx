@@ -1,11 +1,21 @@
+import { ScrollText } from "lucide-react";
+
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import { requireAdmin } from "@/lib/auth";
-import { listAuditLogs } from "@/lib/repository";
+import { listAuditLogsPage } from "@/lib/repository";
 import { formatDate } from "@/lib/utils";
 
-export default async function AdminAuditLogsPage() {
+export default async function AdminAuditLogsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   await requireAdmin();
-  const logs = await listAuditLogs(150);
+  const params = await searchParams;
+  const currentPage = Math.max(1, Number(params.page ?? "1") || 1);
+  const logPage = await listAuditLogsPage(currentPage, 40);
 
   return (
     <div className="space-y-8">
@@ -17,10 +27,14 @@ export default async function AdminAuditLogsPage() {
       </div>
 
       <div className="grid gap-4">
-        {logs.length === 0 ? (
-          <Card>監査ログはまだありません。</Card>
+        {logPage.items.length === 0 ? (
+          <EmptyState
+            icon={ScrollText}
+            title="監査ログはまだありません"
+            description="会員更新、配信実行、クレジット操作などの履歴がここに集約されます。"
+          />
         ) : (
-          logs.map((log) => (
+          logPage.items.map((log) => (
             <Card key={log.id}>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
@@ -45,6 +59,11 @@ export default async function AdminAuditLogsPage() {
           ))
         )}
       </div>
+      <PaginationNav
+        currentPage={logPage.page}
+        totalPages={logPage.totalPages}
+        hrefBuilder={(page) => `/admin/audit-logs${page > 1 ? `?page=${page}` : ""}`}
+      />
     </div>
   );
 }

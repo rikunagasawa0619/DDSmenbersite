@@ -27,9 +27,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const addToast = useCallback((message: string, type: ToastType = "success") => {
     const id = nextId++;
     setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    if (type === "success") {
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 8000);
+    }
   }, []);
 
   const removeToast = useCallback((id: number) => {
@@ -46,6 +48,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
+            role="status"
             className={cn(
               "flex items-center gap-3 rounded-2xl px-5 py-4 text-sm font-semibold shadow-[0_16px_48px_rgba(0,0,0,0.15)] transition-all animate-in slide-in-from-right-full",
               t.type === "success"

@@ -297,11 +297,11 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
             <input type="hidden" name="userId" value={member.id} />
             <label className="dds-admin-label">
               <span>氏名</span>
-              <input name="name" defaultValue={member.name} className="dds-admin-input" />
+              <input name="name" defaultValue={member.name} className="dds-admin-input" required minLength={2} />
             </label>
             <label className="dds-admin-label">
               <span>肩書き</span>
-              <input name="title" defaultValue={member.title} className="dds-admin-input" />
+              <input name="title" defaultValue={member.title} className="dds-admin-input" required minLength={1} />
             </label>
             <label className="dds-admin-label">
               <span>会社名</span>
@@ -335,7 +335,12 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
               </select>
             </label>
             <div className="md:col-span-2 flex justify-end">
-              <SubmitButton pendingLabel="更新中...">基本設定を保存</SubmitButton>
+              <SubmitButton
+                pendingLabel="更新中..."
+                confirmMessage="会員の基本設定を更新します。ステータス変更を含む場合は会員導線に影響します。"
+              >
+                基本設定を保存
+              </SubmitButton>
             </div>
           </form>
         </Card>
@@ -371,7 +376,12 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
                   : `月 ${plan.monthlyCreditGrant} 回付与 / 繰越上限 ${plan.rolloverCap} 回`}
               </div>
               <div className="flex justify-end">
-                <SubmitButton pendingLabel="更新中...">プランを更新</SubmitButton>
+                <SubmitButton
+                  pendingLabel="更新中..."
+                  confirmMessage="プランを変更します。クレジット残高と閲覧権限が再計算される場合があります。"
+                >
+                  プランを更新
+                </SubmitButton>
               </div>
             </form>
           </Card>
@@ -399,14 +409,19 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
               </label>
               <label className="dds-admin-label">
                 <span>増減数</span>
-                <input name="amount" type="number" placeholder="例: 4 / -2" className="dds-admin-input" />
+                <input name="amount" type="number" placeholder="例: 4 / -2" className="dds-admin-input" required />
               </label>
               <label className="dds-admin-label">
                 <span>理由</span>
-                <textarea name="note" placeholder="理由を記録" className="dds-admin-textarea min-h-24" />
+                <textarea name="note" placeholder="理由を記録" className="dds-admin-textarea min-h-24" required minLength={2} />
               </label>
               <div className="flex justify-end">
-                <SubmitButton pendingLabel="反映中...">クレジットを反映</SubmitButton>
+                <SubmitButton
+                  pendingLabel="反映中..."
+                  confirmMessage="クレジット残高を調整します。台帳にも記録されます。"
+                >
+                  クレジットを反映
+                </SubmitButton>
               </div>
             </form>
           </Card>

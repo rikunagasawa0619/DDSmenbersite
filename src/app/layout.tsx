@@ -6,6 +6,8 @@ import { IBM_Plex_Sans_JP, JetBrains_Mono } from "next/font/google";
 
 import { ClerkAuthBar } from "@/components/clerk-auth-bar";
 import { Providers } from "@/components/providers";
+import { ServiceWorkerRegister } from "@/components/providers/service-worker-register";
+import { ThemeScript } from "@/components/providers/theme-script";
 import { env, getAppUrl } from "@/lib/env";
 import "./globals.css";
 
@@ -53,6 +55,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`${bodyFont.variable} ${displayFont.variable} antialiased`}>
+        <ThemeScript />
         <ClerkProvider
           afterSignOutUrl="/login"
           appearance={{
@@ -63,8 +66,14 @@ export default function RootLayout({
             },
           }}
         >
+          <a href="#main-content" className="dds-skip-link">
+            コンテンツへスキップ
+          </a>
           <ClerkAuthBar />
-          <Providers>{children}</Providers>
+          <Providers>
+            <ServiceWorkerRegister />
+            {children}
+          </Providers>
         </ClerkProvider>
       </body>
     </html>

@@ -4,6 +4,12 @@ import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3
 import { buildAbsoluteUrl, env } from "@/lib/env";
 
 const maxImageFileSize = 5 * 1024 * 1024;
+const imageSignatures = [
+  { mime: "image/png", bytes: [0x89, 0x50, 0x4e, 0x47] },
+  { mime: "image/jpeg", bytes: [0xff, 0xd8, 0xff] },
+  { mime: "image/gif", bytes: [0x47, 0x49, 0x46, 0x38] },
+  { mime: "image/webp", bytes: [0x52, 0x49, 0x46, 0x46] },
+];
 
 function sanitizeFileName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
@@ -51,12 +57,31 @@ export function assertImageFile(file: File | null) {
   }
 }
 
+async function assertImageMagicBytes(file: File) {
+  const bytes = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const matched = imageSignatures.find((signature) =>
+    signature.bytes.every((byte, index) => bytes[index] === byte),
+  );
+
+  if (!matched) {
+    throw new Error("画像ファイルの形式を判別できませんでした。PNG/JPG/GIF/WebP を利用してください。");
+  }
+
+  if (matched.mime === "image/webp") {
+    const webpHeader = new TextDecoder().decode(bytes.slice(8, 12));
+    if (webpHeader !== "WEBP") {
+      throw new Error("WebP ファイルの形式が正しくありません。");
+    }
+  }
+}
+
 export async function uploadImageFile(params: {
   file: File;
   folder: string;
   alt?: string;
 }) {
   assertImageFile(params.file);
+  await assertImageMagicBytes(params.file);
   const client = getR2Client();
   const id = randomUUID();
   const fileName = sanitizeFileName(params.file.name || `${id}.bin`);

@@ -47,8 +47,8 @@ function CampaignModal({ closeHref }: { closeHref: string }) {
     >
       <form action={createCampaignAction} className="dds-admin-form grid gap-5">
         <div className="grid gap-4 md:grid-cols-2">
-          <input name="title" placeholder="管理用タイトル" className="dds-admin-input" />
-          <input name="subject" placeholder="メール件名" className="dds-admin-input" />
+          <input name="title" placeholder="管理用タイトル" className="dds-admin-input" required minLength={2} />
+          <input name="subject" placeholder="メール件名" className="dds-admin-input" required minLength={2} />
         </div>
         <textarea name="previewText" placeholder="受信一覧で見える短い案内文" className="dds-admin-textarea min-h-24" />
         <div className="grid gap-2">
@@ -177,6 +177,7 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
                           pendingLabel="送信中..."
                           className="bg-white text-[#10182b] shadow-none hover:bg-white/90"
                           disabled={!emailReady}
+                          confirmMessage="この配信を今すぐ送信します。送信後は取り消せません。"
                         >
                           <span className="inline-flex items-center gap-2">
                             <Send className="h-4 w-4" />

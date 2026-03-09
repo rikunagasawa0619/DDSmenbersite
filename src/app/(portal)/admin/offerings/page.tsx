@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { CalendarDays, Clock3, MapPin } from "lucide-react";
 
@@ -14,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ImageUploadField } from "@/components/ui/image-upload-field";
 import { Modal } from "@/components/ui/modal";
+import { PortalImage } from "@/components/ui/portal-image";
 import {
   getCalendarMonth,
   ScheduleCalendar,
@@ -74,7 +74,7 @@ function CreateOfferingModal({
         <div className="grid gap-4 md:grid-cols-2">
           <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">募集枠タイトル</span>
-            <input name="title" placeholder="例: 3月グループコンサル" className="dds-admin-input" />
+            <input name="title" placeholder="例: 3月グループコンサル" className="dds-admin-input" required minLength={2} />
           </label>
           <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">種別</span>
@@ -87,12 +87,12 @@ function CreateOfferingModal({
 
         <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">一覧用の要約</span>
-          <textarea name="summary" placeholder="カレンダーや一覧カードに表示する短い説明" className="dds-admin-textarea min-h-24" />
+          <textarea name="summary" placeholder="カレンダーや一覧カードに表示する短い説明" className="dds-admin-textarea min-h-24" required minLength={2} />
         </label>
 
         <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">詳細説明</span>
-          <textarea name="description" placeholder="参加対象、内容、持ち物、注意事項などを記載" className="dds-admin-textarea min-h-32" />
+          <textarea name="description" placeholder="参加対象、内容、持ち物、注意事項などを記載" className="dds-admin-textarea min-h-32" required minLength={2} />
         </label>
 
         <ImageUploadField name="thumbnailFile" label="募集枠サムネイル" hint="カード表示用。Cloudflare R2 に保存します。" />
@@ -100,7 +100,7 @@ function CreateOfferingModal({
         <div className="grid gap-4 md:grid-cols-2">
           <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">開始日時</span>
-            <input name="startsAt" type="datetime-local" defaultValue={defaultStart} className="dds-admin-input" />
+            <input name="startsAt" type="datetime-local" defaultValue={defaultStart} className="dds-admin-input" required />
           </label>
           <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">終了日時</span>
@@ -122,11 +122,11 @@ function CreateOfferingModal({
         <div className="grid gap-4 md:grid-cols-2">
           <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">定員</span>
-            <input name="capacity" type="number" defaultValue={20} className="dds-admin-input" />
+            <input name="capacity" type="number" defaultValue={20} className="dds-admin-input" min={1} required />
           </label>
           <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">必要クレジット</span>
-            <input name="creditRequired" type="number" defaultValue={1} className="dds-admin-input" />
+            <input name="creditRequired" type="number" defaultValue={1} className="dds-admin-input" min={0} required />
           </label>
         </div>
 
@@ -295,11 +295,7 @@ export default async function AdminOfferingsPage({
 
                   <div className="grid gap-5 lg:grid-cols-[0.72fr_1fr]">
                     {offering.thumbnailUrl ? (
-                      <img
-                        src={offering.thumbnailUrl}
-                        alt={offering.title}
-                        className="h-64 w-full rounded-[26px] object-cover"
-                      />
+                      <PortalImage src={offering.thumbnailUrl} alt={offering.title} className="h-64 rounded-[26px]" />
                     ) : (
                       <div className="h-64 rounded-[26px] bg-[linear-gradient(135deg,#dae3ff,#f8f6ee)]" />
                     )}
@@ -339,14 +335,22 @@ export default async function AdminOfferingsPage({
                                   <form action={markReservationStatusAction}>
                                     <input type="hidden" name="reservationId" value={reservation.id} />
                                     <input type="hidden" name="status" value="ATTENDED" />
-                                    <SubmitButton pendingLabel="更新中..." className="bg-emerald-600">
+                                    <SubmitButton
+                                      pendingLabel="更新中..."
+                                      className="bg-emerald-600"
+                                      confirmMessage="この予約を参加済みに更新します。クレジット消費が発生する場合があります。"
+                                    >
                                       参加済みにする
                                     </SubmitButton>
                                   </form>
                                   <form action={markReservationStatusAction}>
                                     <input type="hidden" name="reservationId" value={reservation.id} />
                                     <input type="hidden" name="status" value="NO_SHOW" />
-                                    <SubmitButton pendingLabel="更新中..." className="bg-slate-800">
+                                    <SubmitButton
+                                      pendingLabel="更新中..."
+                                      className="bg-slate-800"
+                                      confirmMessage="この予約を欠席に更新します。返却されない可能性があります。"
+                                    >
                                       欠席にする
                                     </SubmitButton>
                                   </form>

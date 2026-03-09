@@ -15,12 +15,15 @@ type Bucket = {
 
 declare global {
   var __ddsRateLimitStore: Map<string, Bucket> | undefined;
+  var __ddsRateLimitSweepCount: number | undefined;
 }
 
 const store = global.__ddsRateLimitStore ?? new Map<string, Bucket>();
+let sweepCount = global.__ddsRateLimitSweepCount ?? 0;
 
 if (process.env.NODE_ENV !== "production") {
   global.__ddsRateLimitStore = store;
+  global.__ddsRateLimitSweepCount = sweepCount;
 }
 
 export class RateLimitError extends Error {
@@ -85,6 +88,17 @@ export async function assertRateLimit(options: RateLimitOptions, subject?: strin
   }
 
   const now = Date.now();
+  sweepCount += 1;
+  if (sweepCount % 200 === 0 || store.size > 5000) {
+    for (const [key, value] of store.entries()) {
+      if (value.resetAt <= now) {
+        store.delete(key);
+      }
+    }
+    if (process.env.NODE_ENV !== "production") {
+      global.__ddsRateLimitSweepCount = sweepCount;
+    }
+  }
   const bucketKey = `${options.key}:${identifier}`;
   const current = store.get(bucketKey);
 

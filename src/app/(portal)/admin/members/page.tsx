@@ -1,14 +1,17 @@
 import Link from "next/link";
+import { Users } from "lucide-react";
 
-import { createMemberAction } from "@/actions/admin";
+import { bulkUpdateMemberStatusAction, createMemberAction } from "@/actions/admin";
 import { labelMemberStatus, labelPlan } from "@/lib/admin-display";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
+import { PaginationNav } from "@/components/ui/pagination-nav";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireAdmin } from "@/lib/auth";
 import { isDatabaseConfigured } from "@/lib/prisma";
-import { listMembers, listMembershipPlans } from "@/lib/repository";
+import { getMemberStatusCounts, listMembersPage, listMembershipPlans } from "@/lib/repository";
 
 type MembersPageProps = {
   searchParams: Promise<{
@@ -17,6 +20,7 @@ type MembersPageProps = {
     status?: string;
     sort?: string;
     create?: string;
+    page?: string;
   }>;
 };
 
@@ -39,15 +43,15 @@ function NewMemberModal({
       <form action={createMemberAction} className="dds-admin-form grid gap-4 xl:grid-cols-2">
         <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">氏名</span>
-          <input name="name" className="dds-admin-input" />
+          <input name="name" className="dds-admin-input" required minLength={2} />
         </label>
         <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">メールアドレス</span>
-          <input name="email" type="email" className="dds-admin-input" />
+          <input name="email" type="email" className="dds-admin-input" required />
         </label>
         <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">肩書き</span>
-          <input name="title" className="dds-admin-input" />
+          <input name="title" className="dds-admin-input" required />
         </label>
         <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">会社名</span>
@@ -108,33 +112,30 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
   const selectedPlan = params.plan?.toUpperCase() ?? "ALL";
   const selectedStatus = params.status?.toLowerCase() ?? "ALL";
   const sort = params.sort ?? "recent";
+  const currentPage = Math.max(1, Number(params.page ?? "1") || 1);
 
-  const [members, plans] = await Promise.all([listMembers(), listMembershipPlans()]);
-  const statusCounts = {
-    active: members.filter((member) => member.status === "active").length,
-    invited: members.filter((member) => member.status === "invited").length,
-    paused: members.filter((member) => member.status === "paused").length,
-    withdrawn: members.filter((member) => member.status === "withdrawn").length,
-  };
+  const [memberPage, plans, statusCounts] = await Promise.all([
+    listMembersPage({
+      query,
+      planCode: selectedPlan as "ALL" | "HOBBY" | "BIZ" | "PRO",
+      status: selectedStatus as "ALL" | "active" | "invited" | "paused" | "withdrawn" | "suspended",
+      sort: sort as "recent" | "oldest" | "name" | "plan" | "status",
+      page: currentPage,
+      pageSize: 20,
+    }),
+    listMembershipPlans(),
+    getMemberStatusCounts(),
+  ]);
 
-  const filteredMembers = members
-    .filter((member) => {
-      const matchesQuery =
-        !query ||
-        member.name.toLowerCase().includes(query) ||
-        member.email.toLowerCase().includes(query) ||
-        member.company?.toLowerCase().includes(query);
-      const matchesPlan = selectedPlan === "ALL" || member.planCode === selectedPlan;
-      const matchesStatus = selectedStatus === "ALL" || member.status === selectedStatus;
-      return matchesQuery && matchesPlan && matchesStatus;
-    })
-    .sort((a, b) => {
-      if (sort === "name") return a.name.localeCompare(b.name, "ja");
-      if (sort === "plan") return a.planCode.localeCompare(b.planCode);
-      if (sort === "status") return a.status.localeCompare(b.status);
-      if (sort === "oldest") return a.joinedAt.localeCompare(b.joinedAt);
-      return b.joinedAt.localeCompare(a.joinedAt);
-    });
+  function buildPageHref(page: number) {
+    const nextParams = new URLSearchParams();
+    if (params.q) nextParams.set("q", params.q);
+    if (selectedPlan !== "ALL") nextParams.set("plan", selectedPlan);
+    if (selectedStatus !== "ALL") nextParams.set("status", selectedStatus);
+    if (sort !== "recent") nextParams.set("sort", sort);
+    if (page > 1) nextParams.set("page", String(page));
+    return `/admin/members${nextParams.toString() ? `?${nextParams}` : ""}`;
+  }
 
   return (
     <div className="space-y-8">
@@ -223,44 +224,93 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
       <Card className="overflow-hidden p-0">
         {!isDatabaseConfigured ? (
           <div className="p-6 text-sm text-slate-500">データベース接続後に会員管理が有効になります。</div>
-        ) : filteredMembers.length === 0 ? (
-          <div className="p-6 text-sm text-slate-500">条件に一致する会員が見つかりませんでした。</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="dds-admin-table min-w-full">
-              <thead>
-                <tr className="text-left text-sm font-semibold text-slate-500">
-                  <th className="px-6 py-4">メールアドレス</th>
-                  <th className="px-6 py-4">名前</th>
-                  <th className="px-6 py-4">プラン</th>
-                  <th className="px-6 py-4">会員ステータス</th>
-                  <th className="px-6 py-4 text-right">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredMembers.map((member) => (
-                  <tr key={member.id} className="text-sm text-slate-700">
-                    <td className="px-6 py-4">{member.email}</td>
-                    <td className="px-6 py-4 font-semibold text-slate-950">{member.name}</td>
-                    <td className="px-6 py-4">{labelPlan(member.planCode)}</td>
-                    <td className="px-6 py-4">
-                      <Badge tone={statusTone(member.status)}>{labelMemberStatus(member.status)}</Badge>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <Link
-                        href={`/admin/members/${member.id}`}
-                        className="inline-flex rounded-full border border-black/10 px-4 py-2 font-display text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
-                      >
-                        詳細表示
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        ) : memberPage.items.length === 0 ? (
+          <div className="p-6">
+            <EmptyState
+              icon={Users}
+              title="条件に一致する会員がいません"
+              description="検索条件やステータスを変えると、別の会員が見つかる可能性があります。"
+              actionHref="/admin/members"
+              actionLabel="条件をリセット"
+            />
           </div>
+        ) : (
+          <form action={bulkUpdateMemberStatusAction}>
+            <div className="flex flex-col gap-4 border-b border-black/6 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="dds-kicker text-slate-500">一括操作</div>
+                <div className="mt-2 text-sm text-slate-600">選択した会員のステータスをまとめて変更できます。</div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <select name="status" className="dds-admin-select min-w-44" defaultValue="ACTIVE">
+                  <option value="ACTIVE">利用中へ変更</option>
+                  <option value="INVITED">招待中へ変更</option>
+                  <option value="PAUSED">休会中へ変更</option>
+                  <option value="WITHDRAWN">退会済みへ変更</option>
+                  <option value="SUSPENDED">利用停止へ変更</option>
+                </select>
+                <SubmitButton
+                  pendingLabel="反映中..."
+                  confirmMessage="選択した会員のステータスを一括変更します。よろしいですか？"
+                >
+                  選択中に適用
+                </SubmitButton>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="dds-admin-table min-w-full">
+                <thead>
+                  <tr className="text-left text-sm font-semibold text-slate-500">
+                    <th className="px-6 py-4">
+                      <span className="sr-only">選択</span>
+                    </th>
+                    <th className="px-6 py-4">メールアドレス</th>
+                    <th className="px-6 py-4">名前</th>
+                    <th className="px-6 py-4">プラン</th>
+                    <th className="px-6 py-4">会員ステータス</th>
+                    <th className="px-6 py-4 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {memberPage.items.map((member) => (
+                    <tr key={member.id} className="text-sm text-slate-700">
+                      <td className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          name="memberIds"
+                          value={member.id}
+                          className="h-4 w-4 rounded border-black/20 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
+                          aria-label={`${member.name} を選択`}
+                        />
+                      </td>
+                      <td className="px-6 py-4">{member.email}</td>
+                      <td className="px-6 py-4 font-semibold text-slate-950">{member.name}</td>
+                      <td className="px-6 py-4">{labelPlan(member.planCode)}</td>
+                      <td className="px-6 py-4">
+                        <Badge tone={statusTone(member.status)}>{labelMemberStatus(member.status)}</Badge>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link
+                          href={`/admin/members/${member.id}`}
+                          className="inline-flex rounded-full border border-black/10 px-4 py-2 font-display text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                        >
+                          詳細表示
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </form>
         )}
       </Card>
+
+      <PaginationNav
+        currentPage={memberPage.page}
+        totalPages={memberPage.totalPages}
+        hrefBuilder={buildPageHref}
+      />
 
       {params.create === "member" ? (
         <NewMemberModal
