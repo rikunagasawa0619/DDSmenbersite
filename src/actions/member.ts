@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/auth";
+import { parseOrRedirect } from "@/lib/action-form";
+import { lockCreditWallet, isRetryableTransactionError } from "@/lib/credit-wallet";
 import { canRefundCredit, createConsumptionEntry, createRefundEntry } from "@/lib/credits";
 import {
   sendReservationCancelledEmail,
@@ -71,6 +73,32 @@ function isEligibleForAudience(
   return true;
 }
 
+async function handleMemberInput<TSchema extends z.ZodType>(
+  schema: TSchema,
+  input: unknown,
+  fallbackPath: string,
+) {
+  return parseOrRedirect(schema, input, fallbackPath);
+}
+
+async function handleMemberTransaction<T>(
+  action: () => Promise<T>,
+  fallbackPath: string,
+) {
+  try {
+    return await action();
+  } catch (error) {
+    if (isRetryableTransactionError(error)) {
+      await redirectWithFlash(
+        "操作が重なったため完了できませんでした。もう一度お試しください。",
+        "error",
+        fallbackPath,
+      );
+    }
+    throw error;
+  }
+}
+
 export async function bookOfferingAction(formData: FormData) {
   const db = prisma!;
   if (!db) {
@@ -78,7 +106,11 @@ export async function bookOfferingAction(formData: FormData) {
   }
 
   const user = await requireUser();
-  const offeringId = z.string().parse(formData.get("offeringId"));
+  const offeringId = await handleMemberInput(
+    z.string().min(1, "募集枠が見つかりません。"),
+    formData.get("offeringId"),
+    "/app/bookings",
+  );
   const dbUser = await ensureDbUser(user.email, user.id);
 
   if (!dbUser) {
@@ -103,8 +135,10 @@ export async function bookOfferingAction(formData: FormData) {
     throw error;
   }
 
-  const bookingOutcome = await db.$transaction(
-    async (tx) => {
+  const bookingOutcome = await handleMemberTransaction(
+    () =>
+      db.$transaction(
+        async (tx) => {
       const [offering] = await tx.$queryRaw<
         Array<{
           id: string;
@@ -164,10 +198,6 @@ export async function bookOfferingAction(formData: FormData) {
         await redirectWithFlash("すでに申込済みです。", "error", "/app/bookings");
       }
 
-      const wallet =
-        (await tx.creditWallet.findUnique({ where: { userId: targetUser.id } })) ??
-        (await tx.creditWallet.create({ data: { userId: targetUser.id, currentBalance: 0 } }));
-
       const confirmedCount = await tx.reservation.count({
         where: { offeringId, status: { in: ["CONFIRMED", "ATTENDED"] } },
       });
@@ -195,7 +225,11 @@ export async function bookOfferingAction(formData: FormData) {
         offering.credit_required > 0 &&
         offering.consumption_mode === "ON_CONFIRM";
 
-      if (requiresCreditOnConfirm && wallet.currentBalance < offering.credit_required) {
+      const wallet = requiresCreditOnConfirm
+        ? await lockCreditWallet(tx, targetUser.id)
+        : null;
+
+      if (requiresCreditOnConfirm && (wallet?.currentBalance ?? 0) < offering.credit_required) {
         await redirectWithFlash("クレジット残高が不足しています。", "error", "/app/bookings");
       }
 
@@ -203,7 +237,7 @@ export async function bookOfferingAction(formData: FormData) {
         data: { offeringId, userId: targetUser.id, status: "CONFIRMED" },
       });
 
-      if (requiresCreditOnConfirm) {
+      if (requiresCreditOnConfirm && wallet) {
         const entry = createConsumptionEntry({
           userId: targetUser.id,
           amount: offering.credit_required,
@@ -237,8 +271,10 @@ export async function bookOfferingAction(formData: FormData) {
         locationLabel: offering.location_label ?? "Online",
         joinUrl: offering.external_join_url,
       };
-    },
-    { isolationLevel: "Serializable" },
+        },
+        { isolationLevel: "Serializable" },
+      ),
+    "/app/bookings",
   );
 
   try {
@@ -273,7 +309,11 @@ export async function cancelReservationAction(formData: FormData) {
   }
 
   const user = await requireUser();
-  const reservationId = z.string().parse(formData.get("reservationId"));
+  const reservationId = await handleMemberInput(
+    z.string().min(1, "予約情報が見つかりません。"),
+    formData.get("reservationId"),
+    "/app/bookings",
+  );
   const dbUser = await ensureDbUser(user.email, user.id);
 
   if (!dbUser) {
@@ -316,8 +356,10 @@ export async function cancelReservationAction(formData: FormData) {
   let promotedUserEmail: string | undefined;
   let promotedUserName: string | undefined;
 
-  await db.$transaction(
-    async (tx) => {
+  await handleMemberTransaction(
+    () =>
+      db.$transaction(
+        async (tx) => {
       const cancelled = await tx.reservation.updateMany({
         where: {
           id: activeReservation.id,
@@ -340,6 +382,7 @@ export async function cancelReservationAction(formData: FormData) {
         activeReservation.offering.consumptionMode === "ON_CONFIRM" &&
         refundable
       ) {
+        const lockedWallet = await lockCreditWallet(tx, targetUser.id);
         const refund = createRefundEntry({
           userId: targetUser.id,
           amount: activeReservation.offering.creditRequired,
@@ -349,7 +392,7 @@ export async function cancelReservationAction(formData: FormData) {
         });
 
         await tx.creditWallet.update({
-          where: { id: wallet.id },
+          where: { id: lockedWallet.id },
           data: {
             currentBalance: {
               increment: activeReservation.offering.creditRequired,
@@ -359,7 +402,7 @@ export async function cancelReservationAction(formData: FormData) {
 
         await tx.creditLedger.create({
           data: {
-            walletId: wallet.id,
+            walletId: lockedWallet.id,
             userId: targetUser.id,
             type: "REFUNDED",
             amount: refund.amount,
@@ -392,11 +435,13 @@ export async function cancelReservationAction(formData: FormData) {
       }
 
       const nextPlan = nextWaitlist.user.planAssignments[0]?.plan;
-      const nextWallet = nextWaitlist.user.wallet;
       const requiresCreditOnPromotion =
         !nextPlan?.unlimitedCredits &&
         activeReservation.offering.creditRequired > 0 &&
         activeReservation.offering.consumptionMode === "ON_CONFIRM";
+      const nextWallet = requiresCreditOnPromotion
+        ? await lockCreditWallet(tx, nextWaitlist.userId)
+        : nextWaitlist.user.wallet;
       const canPromote =
         nextPlan &&
         (!requiresCreditOnPromotion ||
@@ -451,8 +496,10 @@ export async function cancelReservationAction(formData: FormData) {
           },
         });
       }
-    },
-    { isolationLevel: "Serializable" },
+        },
+        { isolationLevel: "Serializable" },
+      ),
+    "/app/bookings",
   );
 
   try {
@@ -495,7 +542,11 @@ export async function markLessonCompleteAction(formData: FormData) {
   }
 
   const user = await requireUser();
-  const lessonId = z.string().parse(formData.get("lessonId"));
+  const lessonId = await handleMemberInput(
+    z.string().min(1, "講義情報が見つかりません。"),
+    formData.get("lessonId"),
+    "/app/courses",
+  );
   const dbUser = await ensureDbUser(user.email, user.id);
 
   if (!dbUser) {
@@ -558,11 +609,16 @@ export async function updateProfileAction(formData: FormData) {
       title: z.string().trim().min(1),
       company: z.string().trim().max(120).optional(),
     })
-    .parse({
+    ;
+  const parsedValues = await handleMemberInput(
+    values,
+    {
       name: formData.get("name"),
       title: formData.get("title"),
       company: formData.get("company")?.toString() || undefined,
-    });
+    },
+    "/app/profile",
+  );
 
   try {
     await assertRateLimit(
@@ -579,10 +635,10 @@ export async function updateProfileAction(formData: FormData) {
   await db.user.update({
     where: { id: targetUser.id },
     data: {
-      name: values.name,
-      title: values.title,
-      company: values.company || null,
-      avatarLabel: values.name.slice(0, 2).toUpperCase(),
+      name: parsedValues.name,
+      title: parsedValues.title,
+      company: parsedValues.company || null,
+      avatarLabel: parsedValues.name.slice(0, 2).toUpperCase(),
     },
   });
 

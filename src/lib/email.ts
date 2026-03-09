@@ -1,4 +1,5 @@
 import { env, getAppUrl } from "@/lib/env";
+import { escapeHtml, sanitizeUrl } from "@/lib/rich-content";
 
 type SendEmailParams = {
   to: string;
@@ -28,7 +29,7 @@ export async function sendEmail(params: SendEmailParams) {
     body: JSON.stringify({
       from: env.RESEND_FROM_EMAIL,
       to: [params.to],
-      subject: params.subject,
+      subject: params.subject.replace(/[\r\n]+/g, " ").trim(),
       html: params.html,
     }),
   });
@@ -46,9 +47,9 @@ function wrapEmail(title: string, body: string) {
     <div style="font-family:Arial,sans-serif;background:#f7f5ef;padding:32px;color:#0f172a;">
       <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:24px;padding:32px;">
         <div style="font-size:12px;letter-spacing:0.14em;text-transform:uppercase;color:#1238c6;font-weight:700;">DDS Members</div>
-        <h1 style="margin:16px 0 0;font-size:28px;line-height:1.25;">${title}</h1>
+        <h1 style="margin:16px 0 0;font-size:28px;line-height:1.25;">${escapeHtml(title)}</h1>
         <div style="margin-top:24px;font-size:15px;line-height:1.8;color:#334155;">${body}</div>
-        <div style="margin-top:32px;font-size:13px;color:#64748b;">${getAppUrl()}</div>
+        <div style="margin-top:32px;font-size:13px;color:#64748b;">${escapeHtml(getAppUrl())}</div>
       </div>
     </div>
   `;
@@ -64,9 +65,14 @@ export async function sendReservationConfirmedEmail(params: {
   waitlist?: boolean;
 }) {
   const actionLabel = params.waitlist ? "待機申込を受け付けました" : "予約が確定しました";
-  const joinBlock = params.joinUrl
-    ? `<p><a href="${params.joinUrl}" style="color:#1238c6;font-weight:700;">参加リンクはこちら</a></p>`
+  const safeJoinUrl = sanitizeUrl(params.joinUrl);
+  const joinBlock = safeJoinUrl
+    ? `<p><a href="${safeJoinUrl}" style="color:#1238c6;font-weight:700;">参加リンクはこちら</a></p>`
     : "";
+  const title = escapeHtml(params.title);
+  const name = escapeHtml(params.name);
+  const startsAt = escapeHtml(params.startsAt);
+  const locationLabel = escapeHtml(params.locationLabel);
 
   return sendEmail({
     to: params.to,
@@ -74,9 +80,9 @@ export async function sendReservationConfirmedEmail(params: {
     html: wrapEmail(
       actionLabel,
       `
-        <p>${params.name} 様</p>
-        <p>${params.title} の${params.waitlist ? "待機申込" : "予約"}を受け付けました。</p>
-        <p>日時: ${params.startsAt}<br />場所: ${params.locationLabel}</p>
+        <p>${name} 様</p>
+        <p>${title} の${params.waitlist ? "待機申込" : "予約"}を受け付けました。</p>
+        <p>日時: ${startsAt}<br />場所: ${locationLabel}</p>
         ${joinBlock}
       `,
     ),
@@ -89,14 +95,16 @@ export async function sendReservationCancelledEmail(params: {
   title: string;
   refunded: boolean;
 }) {
+  const name = escapeHtml(params.name);
+  const title = escapeHtml(params.title);
   return sendEmail({
     to: params.to,
     subject: `DDS 予約キャンセル: ${params.title}`,
     html: wrapEmail(
       "予約をキャンセルしました",
       `
-        <p>${params.name} 様</p>
-        <p>${params.title} の予約キャンセルを受け付けました。</p>
+        <p>${name} 様</p>
+        <p>${title} の予約キャンセルを受け付けました。</p>
         <p>${params.refunded ? "返却期限内のためクレジットを返却しました。" : "返却期限外のためクレジット返却はありません。"}</p>
       `,
     ),

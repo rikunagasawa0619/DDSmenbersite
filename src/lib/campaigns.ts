@@ -2,7 +2,7 @@ import { EmailCampaignStatus, MembershipPlanCode, MemberStatus } from "@prisma/c
 
 import { sendEmail, isEmailConfigured } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
-import { sanitizeRichHtml } from "@/lib/rich-content";
+import { escapeHtml, sanitizeRichHtml } from "@/lib/rich-content";
 
 function formatAudienceLabel(planCodes?: MembershipPlanCode[]) {
   if (!planCodes || planCodes.length === 0) {
@@ -21,17 +21,20 @@ function buildCampaignEmailHtml(params: {
 }) {
   const body = params.bodyHtml
     ? sanitizeRichHtml(params.bodyHtml)
-    : `<p>${params.previewText ?? "新しいお知らせがあります。"}</p>`;
+    : `<p>${escapeHtml(params.previewText ?? "新しいお知らせがあります。")}</p>`;
+  const safeTitle = escapeHtml(params.title);
+  const safePreview = params.previewText ? escapeHtml(params.previewText) : undefined;
+  const safeAudienceLabel = escapeHtml(params.audienceLabel);
 
   return `
     <div style="font-family:Arial,sans-serif;background:#f7f5ef;padding:32px;color:#0f172a;">
       <div style="max-width:680px;margin:0 auto;background:#ffffff;border-radius:28px;padding:36px;">
         <div style="font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#1238c6;font-weight:700;">DDS MEMBERS</div>
-        <h1 style="margin:18px 0 0;font-size:28px;line-height:1.3;">${params.title}</h1>
-        ${params.previewText ? `<p style="margin-top:14px;color:#64748b;font-size:15px;line-height:1.8;">${params.previewText}</p>` : ""}
+        <h1 style="margin:18px 0 0;font-size:28px;line-height:1.3;">${safeTitle}</h1>
+        ${safePreview ? `<p style="margin-top:14px;color:#64748b;font-size:15px;line-height:1.8;">${safePreview}</p>` : ""}
         <div style="margin-top:28px;font-size:15px;line-height:1.9;color:#334155;">${body}</div>
         <div style="margin-top:28px;padding:18px 20px;border-radius:20px;background:#f8fafc;color:#475569;font-size:13px;">
-          配信対象: ${params.audienceLabel}
+          配信対象: ${safeAudienceLabel}
         </div>
       </div>
     </div>

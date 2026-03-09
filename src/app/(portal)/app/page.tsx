@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { requireUser } from "@/lib/auth";
+import { getBannerAccentStyle } from "@/lib/banner-accent";
 import { getPortalSnapshot } from "@/lib/portal";
 import { formatDate, formatDateOnly } from "@/lib/utils";
 
@@ -83,7 +84,8 @@ export default async function AppHomePage() {
         ) : snapshot.banners.map((banner) => (
           <Card
             key={banner.id}
-            className={`overflow-hidden bg-gradient-to-br ${banner.accent}`}
+            className="overflow-hidden"
+            style={{ backgroundImage: getBannerAccentStyle(banner.accent).backgroundImage }}
           >
             {banner.imageUrl ? (
               <img src={banner.imageUrl} alt={banner.title} className="mb-5 h-48 w-full rounded-[24px] object-cover" />

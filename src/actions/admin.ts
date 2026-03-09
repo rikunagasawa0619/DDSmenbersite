@@ -6,6 +6,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { deliverCampaign } from "@/lib/campaigns";
+import { parseOrRedirect } from "@/lib/action-form";
+import { bannerAccentValues, normalizeBannerAccent } from "@/lib/banner-accent";
+import { lockCreditWallet, isRetryableTransactionError } from "@/lib/credit-wallet";
 import { buildMonthlyGrantEntry, createBalanceAdjustment, createBonusGrant, createPlanChangeGrant } from "@/lib/credits";
 import { processMonthlyCreditGrants } from "@/lib/credit-batch";
 import { requireAdmin } from "@/lib/auth";
@@ -164,6 +167,32 @@ async function assertAdminMutationLimit(actorId: string, action: string) {
   }
 }
 
+async function handleAdminInput<TSchema extends z.ZodType>(
+  schema: TSchema,
+  input: unknown,
+  fallbackPath: string,
+) {
+  return parseOrRedirect(schema, input, fallbackPath);
+}
+
+async function handleAdminTransaction<T>(
+  action: () => Promise<T>,
+  fallbackPath: string,
+) {
+  try {
+    return await action();
+  } catch (error) {
+    if (isRetryableTransactionError(error)) {
+      await redirectWithFlash(
+        "別の操作と競合したため完了できませんでした。もう一度お試しください。",
+        "error",
+        fallbackPath,
+      );
+    }
+    throw error;
+  }
+}
+
 async function ensureWallet(userId: string) {
   if (!prisma) {
     throw new Error("Database is not configured.");
@@ -276,7 +305,7 @@ export async function saveThemeSettingsAction(formData: FormData) {
     termsNotice: z.string().min(5),
   });
 
-  const values = schema.parse({
+  const values = await handleAdminInput(schema, {
     brandName: formData.get("brandName"),
     heroHeadline: formData.get("heroHeadline"),
     primaryColor: formData.get("primaryColor"),
@@ -285,7 +314,7 @@ export async function saveThemeSettingsAction(formData: FormData) {
     logoWordmark: formData.get("logoWordmark"),
     supportEmail: formData.get("supportEmail"),
     termsNotice: formData.get("termsNotice"),
-  });
+  }, "/admin/theme");
 
   const existing = await db.themeSettings.findFirst();
 
@@ -320,13 +349,13 @@ export async function createAnnouncementAction(formData: FormData) {
     publishStatus: z.nativeEnum(PublishStatus).optional(),
   });
 
-  const values = schema.parse({
+  const values = await handleAdminInput(schema, {
     title: formData.get("title"),
     summary: formData.get("summary"),
     body: formData.get("body"),
     publishAt: formData.get("publishAt")?.toString() || undefined,
     publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
-  });
+  }, "/admin/content");
   const audience = parseAudienceFromForm(formData);
 
   const created = await db.announcement.create({
@@ -371,11 +400,11 @@ export async function createBannerAction(formData: FormData) {
     imageUrl: z.string().optional(),
     ctaLabel: z.string().min(1),
     ctaHref: z.string().min(1),
-    accent: z.string().min(4),
+    accent: z.enum(bannerAccentValues),
     publishStatus: z.nativeEnum(PublishStatus).optional(),
   });
 
-  const values = schema.parse({
+  const values = await handleAdminInput(schema, {
     eyebrow: formData.get("eyebrow"),
     title: formData.get("title"),
     subtitle: formData.get("subtitle"),
@@ -384,7 +413,7 @@ export async function createBannerAction(formData: FormData) {
     ctaHref: formData.get("ctaHref"),
     accent: formData.get("accent"),
     publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
-  });
+  }, "/admin/content");
   const audience = parseAudienceFromForm(formData);
   const uploadedImageUrl = await persistUploadedImage({
     file: formData.get("imageFile") instanceof File ? (formData.get("imageFile") as File) : null,
@@ -401,7 +430,7 @@ export async function createBannerAction(formData: FormData) {
       imageUrl: uploadedImageUrl ?? values.imageUrl,
       ctaLabel: values.ctaLabel,
       ctaHref: values.ctaHref,
-      accent: values.accent,
+      accent: normalizeBannerAccent(values.accent),
       publishStatus: values.publishStatus ?? "PUBLISHED",
       audience,
     },
@@ -449,7 +478,7 @@ export async function createOfferingAction(formData: FormData) {
     externalJoinUrl: z.string().optional(),
   });
 
-  const values = schema.parse({
+  const values = await handleAdminInput(schema, {
     title: formData.get("title"),
     summary: formData.get("summary"),
     description: formData.get("description"),
@@ -465,7 +494,7 @@ export async function createOfferingAction(formData: FormData) {
     priceLabel: formData.get("priceLabel"),
     host: formData.get("host"),
     externalJoinUrl: formData.get("externalJoinUrl")?.toString() || undefined,
-  });
+  }, "/admin/offerings");
   const audience = parseAudienceFromForm(formData);
   const uploadedThumbnailUrl = await persistUploadedImage({
     file:
@@ -542,7 +571,7 @@ export async function createMemberAction(formData: FormData) {
     segmentSlugs: z.string().optional(),
   });
 
-  const values = schema.parse({
+  const values = await handleAdminInput(schema, {
     name: formData.get("name"),
     email: formData.get("email"),
     title: formData.get("title"),
@@ -552,7 +581,7 @@ export async function createMemberAction(formData: FormData) {
     status: formData.get("status") || "INVITED",
     creditGrantBaseDate: formData.get("creditGrantBaseDate")?.toString() || undefined,
     segmentSlugs: formData.get("segmentSlugs")?.toString() || "",
-  });
+  }, "/admin/members");
 
   const existing = await db.user.findUnique({ where: { email: values.email } });
   if (existing) {
@@ -706,8 +735,8 @@ export async function updateMemberSettingsAction(formData: FormData) {
       role: z.enum(["SUPER_ADMIN", "STAFF", "STUDENT"]),
       status: z.enum(["ACTIVE", "INVITED", "PAUSED", "WITHDRAWN", "SUSPENDED"]),
       creditGrantBaseDate: z.string().optional(),
-    })
-    .parse({
+    });
+  const parsedValues = await handleAdminInput(values, {
       userId: formData.get("userId"),
       name: formData.get("name"),
       title: formData.get("title"),
@@ -715,38 +744,38 @@ export async function updateMemberSettingsAction(formData: FormData) {
       role: formData.get("role"),
       status: formData.get("status"),
       creditGrantBaseDate: formData.get("creditGrantBaseDate")?.toString() || undefined,
-    });
+    }, "/admin/members");
 
   const creditGrantDay =
-    values.creditGrantBaseDate && !Number.isNaN(new Date(values.creditGrantBaseDate).getTime())
-      ? new Date(values.creditGrantBaseDate).getDate()
+    parsedValues.creditGrantBaseDate && !Number.isNaN(new Date(parsedValues.creditGrantBaseDate).getTime())
+      ? new Date(parsedValues.creditGrantBaseDate).getDate()
       : null;
 
   const updated = await db.user.update({
-    where: { id: values.userId },
+    where: { id: parsedValues.userId },
     data: {
-      name: values.name,
-      title: values.title,
-      company: values.company || null,
-      role: values.role as UserRole,
-      status: values.status as MemberStatus,
+      name: parsedValues.name,
+      title: parsedValues.title,
+      company: parsedValues.company || null,
+      role: parsedValues.role as UserRole,
+      status: parsedValues.status as MemberStatus,
       creditGrantDay,
-      avatarLabel: values.name.slice(0, 2).toUpperCase(),
+      avatarLabel: parsedValues.name.slice(0, 2).toUpperCase(),
     },
   });
 
   await db.auditLog.create({
     data: {
-      userId: actorId,
-      action: "member.settings.update",
-      targetType: "User",
-      targetId: updated.id,
-      metadata: {
-        role: values.role,
-        status: values.status,
-        creditGrantDay,
+        userId: actorId,
+        action: "member.settings.update",
+        targetType: "User",
+        targetId: updated.id,
+        metadata: {
+          role: parsedValues.role,
+          status: parsedValues.status,
+          creditGrantDay,
+        },
       },
-    },
   });
 
   revalidatePath("/admin/members");
@@ -774,8 +803,8 @@ export async function savePlanSettingsAction(formData: FormData) {
       monthlyCreditGrant: z.coerce.number().int().nonnegative(),
       rolloverCap: z.coerce.number().int().nonnegative(),
       cycleBasis: z.enum(["CALENDAR_MONTH", "CONTRACT_DATE"]),
-    })
-    .parse({
+    });
+  const parsedValues = await handleAdminInput(values, {
       planCode: formData.get("planCode"),
       name: formData.get("name"),
       heroLabel: formData.get("heroLabel"),
@@ -783,17 +812,17 @@ export async function savePlanSettingsAction(formData: FormData) {
       monthlyCreditGrant: formData.get("monthlyCreditGrant"),
       rolloverCap: formData.get("rolloverCap"),
       cycleBasis: formData.get("cycleBasis"),
-    });
+    }, "/admin/plans");
 
   const updated = await db.membershipPlan.update({
-    where: { code: values.planCode },
+    where: { code: parsedValues.planCode },
     data: {
-      name: values.name,
-      heroLabel: values.heroLabel,
-      description: values.description,
-      monthlyCreditGrant: values.monthlyCreditGrant,
-      rolloverCap: values.rolloverCap,
-      cycleBasis: values.cycleBasis,
+      name: parsedValues.name,
+      heroLabel: parsedValues.heroLabel,
+      description: parsedValues.description,
+      monthlyCreditGrant: parsedValues.monthlyCreditGrant,
+      rolloverCap: parsedValues.rolloverCap,
+      cycleBasis: parsedValues.cycleBasis,
     },
   });
 
@@ -838,8 +867,8 @@ export async function createDealAction(formData: FormData) {
       ctaLabel: z.string().optional(),
       ctaHref: z.string().optional(),
       publishStatus: z.nativeEnum(PublishStatus).optional(),
-    })
-    .parse({
+    });
+  const parsedValues = await handleAdminInput(values, {
       title: formData.get("title"),
       summary: formData.get("summary"),
       body: formData.get("body"),
@@ -848,19 +877,19 @@ export async function createDealAction(formData: FormData) {
       ctaLabel: formData.get("ctaLabel")?.toString() || undefined,
       ctaHref: formData.get("ctaHref")?.toString() || undefined,
       publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
-    });
+    }, "/admin/content");
 
   const audience = parseAudienceFromForm(formData);
   const created = await db.deal.create({
     data: {
-      title: values.title,
-      summary: values.summary,
-      body: values.body,
-      badge: values.badge || null,
-      offer: values.offer || null,
-      ctaLabel: values.ctaLabel || null,
-      ctaHref: values.ctaHref || null,
-      publishStatus: values.publishStatus ?? "PUBLISHED",
+      title: parsedValues.title,
+      summary: parsedValues.summary,
+      body: parsedValues.body,
+      badge: parsedValues.badge || null,
+      offer: parsedValues.offer || null,
+      ctaLabel: parsedValues.ctaLabel || null,
+      ctaHref: parsedValues.ctaHref || null,
+      publishStatus: parsedValues.publishStatus ?? "PUBLISHED",
       audience,
     },
   });
@@ -898,23 +927,23 @@ export async function createToolItemAction(formData: FormData) {
       body: z.string().min(2),
       href: z.string().optional(),
       publishStatus: z.nativeEnum(PublishStatus).optional(),
-    })
-    .parse({
+    });
+  const parsedValues = await handleAdminInput(values, {
       title: formData.get("title"),
       summary: formData.get("summary"),
       body: formData.get("body"),
       href: formData.get("href")?.toString() || undefined,
       publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
-    });
+    }, "/admin/content");
 
   const audience = parseAudienceFromForm(formData);
   const created = await db.toolItem.create({
     data: {
-      title: values.title,
-      summary: values.summary,
-      body: values.body,
-      href: values.href || null,
-      publishStatus: values.publishStatus ?? "PUBLISHED",
+      title: parsedValues.title,
+      summary: parsedValues.summary,
+      body: parsedValues.body,
+      href: parsedValues.href || null,
+      publishStatus: parsedValues.publishStatus ?? "PUBLISHED",
       audience,
     },
   });
@@ -951,21 +980,21 @@ export async function createFaqAction(formData: FormData) {
       question: z.string().min(2),
       answer: z.string().min(2),
       publishStatus: z.nativeEnum(PublishStatus).optional(),
-    })
-    .parse({
+    });
+  const parsedValues = await handleAdminInput(values, {
       category: formData.get("category"),
       question: formData.get("question"),
       answer: formData.get("answer"),
       publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
-    });
+    }, "/admin/content");
 
   const audience = parseAudienceFromForm(formData);
   const created = await db.faqItem.create({
     data: {
-      category: values.category,
-      question: values.question,
-      answer: values.answer,
-      publishStatus: values.publishStatus ?? "PUBLISHED",
+      category: parsedValues.category,
+      question: parsedValues.question,
+      answer: parsedValues.answer,
+      publishStatus: parsedValues.publishStatus ?? "PUBLISHED",
       audience,
     },
   });
@@ -1005,8 +1034,8 @@ export async function createCourseAction(formData: FormData) {
       estimatedHours: z.string().min(1),
       thumbnailUrl: z.string().optional(),
       publishStatus: z.nativeEnum(PublishStatus).optional(),
-    })
-    .parse({
+    });
+  const parsedValues = await handleAdminInput(values, {
       title: formData.get("title"),
       slug: formData.get("slug")?.toString() || undefined,
       summary: formData.get("summary"),
@@ -1014,7 +1043,7 @@ export async function createCourseAction(formData: FormData) {
       estimatedHours: formData.get("estimatedHours"),
       thumbnailUrl: normalizeOptionalText(formData.get("thumbnailUrl")),
       publishStatus: formData.get("publishStatus")?.toString() || "PUBLISHED",
-    });
+    }, "/admin/content");
 
   const audience = parseAudienceFromForm(formData);
   const uploadedThumbnailUrl = await persistUploadedImage({
@@ -1023,18 +1052,18 @@ export async function createCourseAction(formData: FormData) {
         ? (formData.get("thumbnailFile") as File)
         : null,
     folder: "courses",
-    alt: values.title,
+    alt: parsedValues.title,
     redirectPath: "/admin/content",
   });
   const created = await db.course.create({
     data: {
-      slug: slugify(values.slug || values.title),
-      title: values.title,
-      summary: values.summary,
-      heroNote: values.heroNote,
-      estimatedHours: values.estimatedHours,
-      thumbnailUrl: uploadedThumbnailUrl ?? values.thumbnailUrl ?? null,
-      publishStatus: values.publishStatus ?? "PUBLISHED",
+      slug: slugify(parsedValues.slug || parsedValues.title),
+      title: parsedValues.title,
+      summary: parsedValues.summary,
+      heroNote: parsedValues.heroNote,
+      estimatedHours: parsedValues.estimatedHours,
+      thumbnailUrl: uploadedThumbnailUrl ?? parsedValues.thumbnailUrl ?? null,
+      publishStatus: parsedValues.publishStatus ?? "PUBLISHED",
       audience,
     },
   });
@@ -1070,18 +1099,18 @@ export async function createCourseModuleAction(formData: FormData) {
       courseId: z.string().min(1),
       title: z.string().min(2),
       sortOrder: z.coerce.number().int().nonnegative().optional(),
-    })
-    .parse({
+    });
+  const parsedValues = await handleAdminInput(values, {
       courseId: formData.get("courseId"),
       title: formData.get("title"),
       sortOrder: formData.get("sortOrder")?.toString() || undefined,
-    });
+    }, "/admin/content");
 
   const created = await db.module.create({
     data: {
-      courseId: values.courseId,
-      title: values.title,
-      sortOrder: values.sortOrder ?? 0,
+      courseId: parsedValues.courseId,
+      title: parsedValues.title,
+      sortOrder: parsedValues.sortOrder ?? 0,
     },
   });
 
@@ -1124,8 +1153,8 @@ export async function createCourseLessonAction(formData: FormData) {
       ctaHref: z.string().optional(),
       ctaBody: z.string().optional(),
       sortOrder: z.coerce.number().int().nonnegative().optional(),
-    })
-    .parse({
+    });
+  const parsedValues = await handleAdminInput(values, {
       moduleId: formData.get("moduleId"),
       title: formData.get("title"),
       slug: formData.get("slug")?.toString() || undefined,
@@ -1139,19 +1168,19 @@ export async function createCourseLessonAction(formData: FormData) {
       ctaHref: formData.get("ctaHref")?.toString() || undefined,
       ctaBody: formData.get("ctaBody")?.toString() || undefined,
       sortOrder: formData.get("sortOrder")?.toString() || undefined,
-    });
+    }, "/admin/content");
 
-  const blocks = buildLessonBlocksFromForm(values);
+  const blocks = buildLessonBlocksFromForm(parsedValues);
 
   const created = await db.lesson.create({
     data: {
-      moduleId: values.moduleId,
-      slug: slugify(values.slug || values.title),
-      title: values.title,
-      summary: values.summary,
-      lessonType: values.lessonType,
-      duration: values.duration || null,
-      sortOrder: values.sortOrder ?? 0,
+      moduleId: parsedValues.moduleId,
+      slug: slugify(parsedValues.slug || parsedValues.title),
+      title: parsedValues.title,
+      summary: parsedValues.summary,
+      lessonType: parsedValues.lessonType,
+      duration: parsedValues.duration || null,
+      sortOrder: parsedValues.sortOrder ?? 0,
       body: blocks as unknown as Prisma.InputJsonValue,
     },
   });
@@ -1159,14 +1188,14 @@ export async function createCourseLessonAction(formData: FormData) {
   await db.auditLog.create({
     data: {
       userId: actorId,
-      action: "course.lesson.create",
-      targetType: "Lesson",
-      targetId: created.id,
-      metadata: {
-        lessonType: values.lessonType,
+        action: "course.lesson.create",
+        targetType: "Lesson",
+        targetId: created.id,
+        metadata: {
+          lessonType: parsedValues.lessonType,
+        },
       },
-    },
-  });
+    });
 
   revalidatePath("/admin/content");
   revalidatePath("/app/courses");
@@ -1190,25 +1219,25 @@ export async function createCampaignAction(formData: FormData) {
       previewText: z.string().optional(),
       bodyHtml: z.string().min(2),
       scheduledAt: z.string().optional(),
-    })
-    .parse({
+    });
+  const parsedValues = await handleAdminInput(values, {
       title: formData.get("title"),
       subject: formData.get("subject"),
       previewText: formData.get("previewText")?.toString() || undefined,
       bodyHtml: formData.get("bodyHtml"),
       scheduledAt: formData.get("scheduledAt")?.toString() || undefined,
-    });
+    }, "/admin/campaigns");
 
   const targetJson = parseAudienceFromForm(formData) ?? {};
   const created = await db.emailCampaign.create({
     data: {
-      title: values.title,
-      subject: values.subject,
-      previewText: values.previewText || null,
-      bodyHtml: values.bodyHtml,
+      title: parsedValues.title,
+      subject: parsedValues.subject,
+      previewText: parsedValues.previewText || null,
+      bodyHtml: parsedValues.bodyHtml,
       targetJson,
-      status: values.scheduledAt ? "SCHEDULED" : "DRAFT",
-      scheduledAt: values.scheduledAt ? new Date(values.scheduledAt) : null,
+      status: parsedValues.scheduledAt ? "SCHEDULED" : "DRAFT",
+      scheduledAt: parsedValues.scheduledAt ? new Date(parsedValues.scheduledAt) : null,
     },
   });
 
@@ -1234,7 +1263,11 @@ export async function sendCampaignNowAction(formData: FormData) {
 
   const actorId = await getAdminActorId();
   await assertAdminMutationLimit(actorId, "send-campaign");
-  const campaignId = z.string().parse(formData.get("campaignId"));
+  const campaignId = await handleAdminInput(
+    z.string().min(1, "配信情報が見つかりません。"),
+    formData.get("campaignId"),
+    "/admin/campaigns",
+  );
   let result: Awaited<ReturnType<typeof deliverCampaign>> | undefined;
   try {
     result = await deliverCampaign({
@@ -1274,8 +1307,16 @@ export async function updateMemberPlanAction(formData: FormData) {
 
   const actorId = await getAdminActorId();
   await assertAdminMutationLimit(actorId, "update-plan");
-  const userId = z.string().parse(formData.get("userId"));
-  const nextPlanCode = z.nativeEnum(MembershipPlanCode).parse(formData.get("planCode"));
+  const userId = await handleAdminInput(
+    z.string().min(1, "対象会員が見つかりません。"),
+    formData.get("userId"),
+    "/admin/members",
+  );
+  const nextPlanCode = await handleAdminInput(
+    z.nativeEnum(MembershipPlanCode),
+    formData.get("planCode"),
+    "/admin/members",
+  );
 
   const [member, nextPlan] = await Promise.all([
     db.user.findUnique({
@@ -1321,7 +1362,7 @@ export async function updateMemberPlanAction(formData: FormData) {
   });
   const nextPlanSegment = await upsertSegmentBySlug(`plan:${nextPlanCode.toLowerCase()}`);
 
-  await db.$transaction(async (tx) => {
+  await handleAdminTransaction(() => db.$transaction(async (tx) => {
     await tx.planAssignment.updateMany({
       where: { userId, isActive: true },
       data: {
@@ -1393,7 +1434,7 @@ export async function updateMemberPlanAction(formData: FormData) {
         },
       },
     });
-  });
+  }), "/admin/members");
 
   revalidatePath("/admin/members");
   revalidatePath("/admin/plans");
@@ -1418,12 +1459,12 @@ export async function adjustMemberCreditsAction(formData: FormData) {
     note: z.string().min(2),
   });
 
-  const values = schema.parse({
+  const values = await handleAdminInput(schema, {
     userId: formData.get("userId"),
     mode: formData.get("mode"),
     amount: formData.get("amount"),
     note: formData.get("note"),
-  });
+  }, "/admin/members");
 
   if (values.mode === "bonus" && values.amount <= 0) {
     await redirectWithFlash("手動付与は 1 以上で入力してください。", "error", "/admin/members");
@@ -1536,14 +1577,14 @@ export async function markReservationStatusAction(formData: FormData) {
     .object({
       reservationId: z.string().min(1),
       status: z.enum(["ATTENDED", "NO_SHOW"]),
-    })
-    .parse({
+    });
+  const parsedValues = await handleAdminInput(values, {
       reservationId: formData.get("reservationId"),
       status: formData.get("status"),
-    });
+    }, "/admin/offerings");
 
   const reservation = await db.reservation.findUnique({
-    where: { id: values.reservationId },
+    where: { id: parsedValues.reservationId },
     include: {
       offering: true,
       user: {
@@ -1569,67 +1610,77 @@ export async function markReservationStatusAction(formData: FormData) {
   }
 
   const activePlan = targetReservation.user.planAssignments[0]?.plan;
-  const wallet = targetReservation.user.wallet ?? (await ensureWallet(targetReservation.userId));
   const requiresConsumptionNow =
     !activePlan?.unlimitedCredits &&
     targetReservation.offering.consumptionMode === "ON_ATTEND" &&
     targetReservation.offering.creditRequired > 0;
 
-  if (requiresConsumptionNow && wallet.currentBalance < targetReservation.offering.creditRequired) {
-    await redirectWithFlash(
-      "残高不足のため出席確定できません。先にクレジットを補正してください。",
-      "error",
-      "/admin/offerings",
-    );
-  }
+  await handleAdminTransaction(
+    () =>
+      db.$transaction(async (tx) => {
+        const lockedWallet = requiresConsumptionNow
+          ? await lockCreditWallet(tx, targetReservation.userId)
+          : null;
 
-  await db.$transaction(async (tx) => {
-    await tx.reservation.update({
-      where: { id: targetReservation.id },
-      data: {
-        status: values.status,
-      },
-    });
+        if (
+          requiresConsumptionNow &&
+          (lockedWallet?.currentBalance ?? 0) < targetReservation.offering.creditRequired
+        ) {
+          await redirectWithFlash(
+            "残高不足のため出席確定できません。先にクレジットを補正してください。",
+            "error",
+            "/admin/offerings",
+          );
+        }
 
-    if (requiresConsumptionNow) {
-      await tx.creditWallet.update({
-        where: { id: wallet.id },
-        data: {
-          currentBalance: {
-            decrement: targetReservation.offering.creditRequired,
+        await tx.reservation.update({
+          where: { id: targetReservation.id },
+          data: {
+            status: parsedValues.status,
           },
-        },
-      });
+        });
 
-      await tx.creditLedger.create({
-        data: {
-          walletId: wallet.id,
-          userId: targetReservation.userId,
-          type: "CONSUMED",
-          amount: targetReservation.offering.creditRequired * -1,
-          note:
-            values.status === "ATTENDED"
-              ? `${targetReservation.offering.title} を参加済みに更新`
-              : `${targetReservation.offering.title} を欠席処理`,
-          offeringId: targetReservation.offeringId,
-          reservationId: targetReservation.id,
-        },
-      });
-    }
+        if (requiresConsumptionNow && lockedWallet) {
+          await tx.creditWallet.update({
+            where: { id: lockedWallet.id },
+            data: {
+              currentBalance: {
+                decrement: targetReservation.offering.creditRequired,
+              },
+            },
+          });
 
-    await tx.auditLog.create({
-      data: {
-        userId: actorId,
-        action: "reservation.status.update",
-        targetType: "Reservation",
-        targetId: targetReservation.id,
-        metadata: {
-          status: values.status,
-          offeringId: targetReservation.offeringId,
-        },
-      },
-    });
-  });
+          await tx.creditLedger.create({
+            data: {
+              walletId: lockedWallet.id,
+              userId: targetReservation.userId,
+              type: "CONSUMED",
+              amount: targetReservation.offering.creditRequired * -1,
+              note:
+                parsedValues.status === "ATTENDED"
+                  ? `${targetReservation.offering.title} を参加済みに更新`
+                  : `${targetReservation.offering.title} を欠席処理`,
+              offeringId: targetReservation.offeringId,
+              reservationId: targetReservation.id,
+            },
+          });
+        }
+
+        await tx.auditLog.create({
+          data: {
+            userId: actorId,
+            action: "reservation.status.update",
+            targetType: "Reservation",
+            targetId: targetReservation.id,
+            metadata: {
+              status: parsedValues.status,
+              offeringId: targetReservation.offeringId,
+            },
+          },
+        });
+      }, { isolationLevel: "Serializable" }),
+    "/admin/offerings",
+  );
 
   revalidatePath("/admin/offerings");
   revalidatePath("/app");
@@ -1637,7 +1688,7 @@ export async function markReservationStatusAction(formData: FormData) {
   revalidatePath("/app/events");
 
   await redirectWithFlash(
-    values.status === "ATTENDED" ? "参加済みに更新しました。" : "欠席として処理しました。",
+    parsedValues.status === "ATTENDED" ? "参加済みに更新しました。" : "欠席として処理しました。",
     "success",
     "/admin/offerings",
   );

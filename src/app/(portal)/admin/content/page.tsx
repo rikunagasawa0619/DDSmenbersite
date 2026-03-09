@@ -13,6 +13,7 @@ import {
   createToolItemAction,
 } from "@/actions/admin";
 import { getMinimumPlanCodeFromAudience, labelPlan } from "@/lib/admin-display";
+import { bannerAccentOptions } from "@/lib/banner-accent";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ImageUploadField } from "@/components/ui/image-upload-field";
@@ -174,8 +175,12 @@ function ContentModal({
               <input name="eyebrow" placeholder="今月の注目" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
             </label>
             <label className="grid gap-2">
-              <span className="text-sm font-semibold text-slate-500">背景カラー指定</span>
-              <input name="accent" defaultValue="from-sky-200 via-blue-100 to-indigo-200" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+              <span className="text-sm font-semibold text-slate-500">背景カラー</span>
+              <select name="accent" defaultValue="sky" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+                {bannerAccentOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
             </label>
           </div>
           <label className="grid gap-2">

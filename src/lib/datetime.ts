@@ -1,6 +1,5 @@
 import {
   endOfMonth,
-  formatISO,
   getDaysInMonth,
   setMonth,
   setYear,
@@ -118,5 +117,5 @@ export function getNextContractGrantDate(
 }
 
 export function formatIsoInAppZone(date: Date) {
-  return formatISO(date);
+  return formatInTimeZone(date, appTimeZone, "yyyy-MM-dd'T'HH:mm:ssXXX");
 }

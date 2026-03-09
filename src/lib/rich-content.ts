@@ -1,12 +1,30 @@
 import sanitizeHtml from "sanitize-html";
 
-function escapeHtml(value: string) {
+export function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+export function sanitizeUrl(value?: string | null) {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  try {
+    const url = new URL(trimmed);
+    if (!["http:", "https:", "mailto:"].includes(url.protocol)) {
+      return undefined;
+    }
+
+    return url.toString();
+  } catch {
+    return undefined;
+  }
 }
 
 export function normalizeRichHtml(input: string) {
