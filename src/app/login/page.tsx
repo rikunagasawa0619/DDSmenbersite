@@ -12,7 +12,7 @@ export default function LoginPage() {
     <div className="min-h-screen px-4 py-10">
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.95fr_1.05fr]">
         <Card className="overflow-hidden bg-[linear-gradient(155deg,#0f172a,#1238c6)] p-8 text-white md:p-12">
-          <BrandMark className="[&_*]:text-white" />
+          <BrandMark />
           <Badge tone="accent" >DDS Private Members</Badge>
           <h1 className="mt-6 max-w-xl text-4xl font-black tracking-tight">
             受講導線も、運営導線も、
@@ -23,14 +23,14 @@ export default function LoginPage() {
           </p>
           <div className="mt-10 grid gap-4 md:grid-cols-2">
             <div className="rounded-[26px] bg-white/10 p-5">
-              <div className="text-sm font-semibold text-[var(--color-accent)]">会員向け</div>
+              <div className="text-sm font-semibold text-[#f7d7a2]">会員向け</div>
               <div className="mt-2 text-lg font-bold">ホーム / 予約 / 教材 / FAQ</div>
               <p className="mt-2 text-sm text-white/75">
                 残クレジット、直近イベント、教材進捗、お知らせを一画面に集約。
               </p>
             </div>
             <div className="rounded-[26px] bg-white/10 p-5">
-              <div className="text-sm font-semibold text-[var(--color-accent)]">運営向け</div>
+              <div className="text-sm font-semibold text-[#f7d7a2]">運営向け</div>
               <div className="mt-2 text-lg font-bold">会員管理 / 付与 / 公開制御</div>
               <p className="mt-2 text-sm text-white/75">
                 手動クレジット付与、プラン変更、セグメント設定、募集枠管理に対応。

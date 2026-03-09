@@ -125,7 +125,7 @@ export default function HomePage() {
               <li>Clerk本番認証 + 未設定時のデモ認証 fallback</li>
               <li>Prisma schema / seed / unit tests まで同梱</li>
             </ul>
-            <Link href="/login" className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-accent)]">
+            <Link href="/login" className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-100">
               ログイン画面を開く
               <ArrowRight className="h-4 w-4" />
             </Link>

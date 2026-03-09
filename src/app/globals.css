@@ -5,6 +5,7 @@
   --color-foreground: #07111f;
   --color-primary: #2d5bff;
   --color-accent: #d7ff64;
+  --color-brand: #23110f;
   --color-surface: #ebe4d6;
   --color-ink-soft: #162338;
 }
@@ -171,9 +172,9 @@ a {
 
 .dds-kicker {
   font-family: var(--font-display), monospace;
-  font-size: 0.72rem;
+  font-size: 0.79rem;
   font-weight: 800;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
@@ -215,9 +216,9 @@ a {
 }
 
 .dds-admin-label > span {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  color: rgba(22, 35, 56, 0.72);
+  color: rgba(22, 35, 56, 0.82);
 }
 
 .dds-admin-section {

@@ -148,7 +148,7 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
                 {member.avatarLabel}
               </div>
               <div className="flex-1">
-                <div className="dds-kicker text-[var(--color-accent)]">会員プロフィール</div>
+                <div className="dds-kicker text-[var(--color-brand)]">会員プロフィール</div>
                 <h1 className="mt-4 font-display text-4xl font-extrabold tracking-[-0.08em] text-slate-950 md:text-5xl">
                   {member.name}
                 </h1>
@@ -159,11 +159,11 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
                 </div>
                 <div className="mt-6 grid gap-3 text-sm text-slate-700 md:grid-cols-2">
                   <div className="inline-flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-[var(--color-accent)]" />
+                    <Mail className="h-4 w-4 text-[var(--color-primary)]" />
                     {member.email}
                   </div>
                   <div className="inline-flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-[var(--color-accent)]" />
+                    <ShieldCheck className="h-4 w-4 text-[var(--color-primary)]" />
                     登録日 {formatDateOnly(member.joinedAt)}
                   </div>
                 </div>

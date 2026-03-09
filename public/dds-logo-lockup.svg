@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">DDS Digital Service</title>
+  <desc id="desc">DDS Digital Service logo</desc>
+  <rect width="512" height="512" fill="#ffffff"/>
+  <rect x="82" y="42" width="350" height="350" fill="none" stroke="#23110f" stroke-width="20"/>
+  <rect x="104" y="94" width="214" height="26" fill="#23110f"/>
+  <rect x="104" y="164" width="38" height="174" fill="#23110f"/>
+  <rect x="176" y="164" width="28" height="146" fill="#23110f"/>
+  <path d="M222 164H288C371 164 412 212 412 252C412 308 369 338 288 338H222Z" fill="#23110f"/>
+  <path d="M248 190H288C347 190 386 220 386 252C386 294 347 312 288 312H248Z" fill="#ffffff"/>
+  <rect x="78" y="402" width="356" height="70" fill="#23110f"/>
+  <text x="256" y="447" fill="#ffffff" text-anchor="middle" font-family="JetBrains Mono, IBM Plex Sans JP, monospace" font-size="34" font-weight="800" letter-spacing="2">DIGITAL SERVICE</text>
+</svg>

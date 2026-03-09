@@ -14,7 +14,7 @@ export default async function AdminDashboardPage() {
           <div className="absolute -left-8 top-10 h-40 w-40 rounded-full bg-[rgba(45,91,255,0.3)] blur-3xl" />
           <div className="absolute right-0 top-0 h-full w-[38%] bg-[linear-gradient(135deg,rgba(215,255,100,0.18),transparent_55%)]" />
           <div className="relative max-w-2xl">
-            <div className="dds-kicker text-[var(--color-accent)]">ダッシュボード</div>
+            <div className="dds-kicker text-[var(--color-brand)]">ダッシュボード</div>
             <h1 className="mt-4 font-display text-4xl font-extrabold leading-[0.95] tracking-[-0.08em] text-slate-950 md:text-5xl">
               会員運営の流れを
               <br />
@@ -106,7 +106,7 @@ export default async function AdminDashboardPage() {
           </div>
         </Card>
         <Card className="bg-[linear-gradient(180deg,#edf3ff,#f5efe2)] text-slate-950">
-          <div className="dds-kicker text-[var(--color-accent)]">運営サマリー</div>
+          <div className="dds-kicker text-[var(--color-brand)]">運営サマリー</div>
           <div className="mt-4 grid gap-4">
             <div className="rounded-[26px] border border-black/8 bg-white/72 p-5">
               <div className="text-sm text-slate-600">会員数の伸び</div>
