@@ -17,30 +17,34 @@ export function Modal({
   children: React.ReactNode;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/48 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(7,17,31,0.56)] p-4 backdrop-blur-md">
       <div
         className={cn(
-          "relative max-h-[90vh] w-full overflow-hidden rounded-[32px] border border-black/8 bg-[#f8f6f1] shadow-[0_40px_120px_rgba(15,23,42,0.22)]",
+          "relative max-h-[92vh] w-full overflow-hidden rounded-[36px] border border-black/8 bg-[linear-gradient(180deg,#f6f1e5,#f0eadf)] shadow-[0_50px_140px_rgba(7,17,31,0.26)]",
           size === "md" && "max-w-3xl",
           size === "lg" && "max-w-5xl",
           size === "xl" && "max-w-6xl",
         )}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-black/6 px-6 py-5 md:px-8">
+        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[rgba(215,255,100,0.16)] blur-3xl" />
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-black/6 bg-[rgba(246,241,229,0.92)] px-6 py-5 backdrop-blur md:px-8">
           <div>
-            <h2 className="font-display text-3xl font-bold text-slate-950">{title}</h2>
+            <div className="dds-kicker text-[var(--color-primary)]">editor</div>
+            <h2 className="mt-3 font-display text-3xl font-extrabold tracking-[-0.08em] text-slate-950">
+              {title}
+            </h2>
             {description ? (
               <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-600">{description}</p>
             ) : null}
           </div>
           <Link
             href={closeHref}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white text-slate-600 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/82 text-slate-600 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
           >
             <X className="h-5 w-5" />
           </Link>
         </div>
-        <div className="max-h-[calc(90vh-104px)] overflow-y-auto px-6 py-6 md:px-8">
+        <div className="max-h-[calc(92vh-118px)] overflow-y-auto px-6 py-6 md:px-8">
           {children}
         </div>
       </div>

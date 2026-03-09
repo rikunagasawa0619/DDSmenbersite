@@ -176,3 +176,142 @@ a {
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
+
+.dds-admin-input,
+.dds-admin-select,
+.dds-admin-textarea {
+  width: 100%;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(7, 17, 31, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 243, 234, 0.92));
+  padding: 0.9rem 1rem;
+  color: #07111f;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.dds-admin-input:focus,
+.dds-admin-select:focus,
+.dds-admin-textarea:focus {
+  outline: none;
+  border-color: rgba(45, 91, 255, 0.38);
+  box-shadow:
+    0 0 0 4px rgba(45, 91, 255, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.7) inset;
+}
+
+.dds-admin-textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.dds-admin-label {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.dds-admin-label > span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(22, 35, 56, 0.72);
+}
+
+.dds-admin-section {
+  display: grid;
+  gap: 1.25rem;
+  border: 1px solid rgba(7, 17, 31, 0.08);
+  border-radius: 1.75rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.dds-admin-toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(7, 17, 31, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  padding: 0.6rem 0.85rem;
+  font-family: var(--font-display), monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #162338;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.dds-admin-toolbar-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(45, 91, 255, 0.24);
+  color: var(--color-primary);
+}
+
+.dds-admin-toolbar-button[data-active="true"] {
+  border-color: rgba(45, 91, 255, 0.18);
+  background: var(--color-primary);
+  color: white;
+}
+
+.dds-admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dds-admin-table thead th {
+  background: rgba(7, 17, 31, 0.04);
+  padding: 1rem 1.5rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(22, 35, 56, 0.6);
+}
+
+.dds-admin-table tbody td {
+  padding: 1.1rem 1.5rem;
+  border-top: 1px solid rgba(7, 17, 31, 0.06);
+}
+
+.dds-admin-table tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.dds-admin-table tbody tr:nth-child(even) {
+  background: rgba(249, 246, 238, 0.84);
+}
+
+.dds-admin-table tbody tr:hover {
+  background: rgba(45, 91, 255, 0.05);
+}
+
+.dds-admin-form label {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.dds-admin-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.dds-admin-form select,
+.dds-admin-form textarea {
+  width: 100%;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(7, 17, 31, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 243, 234, 0.92));
+  padding: 0.9rem 1rem;
+  color: #07111f;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+}
+
+.dds-admin-form textarea {
+  resize: vertical;
+}

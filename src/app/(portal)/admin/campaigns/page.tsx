@@ -45,25 +45,25 @@ function CampaignModal({ closeHref }: { closeHref: string }) {
       closeHref={closeHref}
       size="xl"
     >
-      <form action={createCampaignAction} className="grid gap-5">
+      <form action={createCampaignAction} className="dds-admin-form grid gap-5">
         <div className="grid gap-4 md:grid-cols-2">
-          <input name="title" placeholder="管理用タイトル" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
-          <input name="subject" placeholder="メール件名" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          <input name="title" placeholder="管理用タイトル" className="dds-admin-input" />
+          <input name="subject" placeholder="メール件名" className="dds-admin-input" />
         </div>
-        <textarea name="previewText" placeholder="受信一覧で見える短い案内文" className="min-h-24 rounded-2xl border border-black/10 bg-white px-4 py-3" />
+        <textarea name="previewText" placeholder="受信一覧で見える短い案内文" className="dds-admin-textarea min-h-24" />
         <div className="grid gap-2">
           <span className="text-sm font-semibold text-slate-500">本文</span>
           <RichTextEditor name="bodyHtml" placeholder="箇条書きや見出しを使って、読みやすい告知メールを作成します。" />
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <select name="minimumPlanCode" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+          <select name="minimumPlanCode" className="dds-admin-select">
             {minimumPlanOptions.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">予約配信日時（任意）</span>
-            <input name="scheduledAt" type="datetime-local" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+            <input name="scheduledAt" type="datetime-local" className="dds-admin-input" />
           </label>
         </div>
         <div className="flex justify-end">
@@ -84,14 +84,12 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
     <div className="space-y-8">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
-            配信管理
-          </div>
-          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">配信</h1>
+          <div className="dds-kicker text-[var(--color-primary)]">配信管理</div>
+          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-slate-950">配信</h1>
         </div>
         <Link
           href="/admin/campaigns?create=campaign"
-          className="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
+          className="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
         >
           新しい配信を作成
         </Link>
@@ -109,8 +107,8 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
               </div>
               <p className="mt-2 text-sm leading-7 text-slate-600">
                 {emailReady
-                  ? "今すぐ送信ボタンで配信できます。予約日時を設定したものは cron が自動配信します。"
-                  : "Resend の API キーと送信元メールアドレスが入っていないため、保存はできますが送信は行えません。"}
+                  ? "即時送信と予約配信が使えます。"
+                  : "保存はできますが、送信はまだ行われません。"}
               </p>
             </div>
           </div>
@@ -118,20 +116,20 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
 
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
-            <div className="text-sm font-semibold text-slate-500">下書き</div>
-            <div className="mt-3 font-display text-4xl font-bold text-slate-950">
+            <div className="dds-kicker text-slate-500">下書き</div>
+            <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-slate-950">
               {campaigns.filter((campaign) => campaign.status === "draft").length}
             </div>
           </Card>
           <Card>
-            <div className="text-sm font-semibold text-slate-500">予約済み</div>
-            <div className="mt-3 font-display text-4xl font-bold text-[var(--color-primary)]">
+            <div className="dds-kicker text-slate-500">予約済み</div>
+            <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-[var(--color-primary)]">
               {campaigns.filter((campaign) => campaign.status === "scheduled").length}
             </div>
           </Card>
           <Card>
-            <div className="text-sm font-semibold text-slate-500">送信済み</div>
-            <div className="mt-3 font-display text-4xl font-bold text-emerald-600">
+            <div className="dds-kicker text-slate-500">送信済み</div>
+            <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-emerald-600">
               {campaigns.filter((campaign) => campaign.status === "sent").length}
             </div>
           </Card>

@@ -64,8 +64,8 @@ function CreateLink({
       href={href}
       className={
         tone === "primary"
-          ? "inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
-          : "inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+          ? "inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
+          : "inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
       }
     >
       {label}
@@ -86,8 +86,8 @@ function SummaryCard({
     <Card>
       <div className="flex items-center justify-between gap-4">
         <div>
-          <div className="text-sm font-semibold text-slate-500">{label}</div>
-          <div className="mt-3 font-display text-4xl font-bold text-slate-950">{value}</div>
+          <div className="dds-kicker text-slate-500">{label}</div>
+          <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-slate-950">{value}</div>
         </div>
         <div className="inline-flex h-14 w-14 items-center justify-center rounded-[22px] bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
           <Icon className="h-6 w-6" />
@@ -109,7 +109,7 @@ function SectionHeader({
   return (
     <div className="flex flex-col gap-4 border-b border-black/6 pb-5 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <h2 className="font-display text-2xl font-bold text-slate-950">{title}</h2>
+        <h2 className="font-display text-2xl font-extrabold tracking-[-0.08em] text-slate-950">{title}</h2>
         {description ? <p className="mt-2 text-sm leading-7 text-slate-600">{description}</p> : null}
       </div>
       {action}
@@ -129,13 +129,13 @@ function ItemCard({
   imageUrl?: string;
 }) {
   return (
-    <div className="rounded-[26px] border border-black/8 bg-white p-4 shadow-[0_16px_36px_rgba(15,23,42,0.04)]">
+    <div className="rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,244,236,0.88))] p-4 shadow-[0_16px_36px_rgba(15,23,42,0.04)]">
       {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={imageUrl} alt={title} className="mb-4 h-40 w-full rounded-[20px] object-cover" />
       ) : null}
       {badge ? <Badge tone="accent">{badge}</Badge> : null}
-      <div className="mt-3 font-display text-xl font-bold text-slate-950">{title}</div>
+      <div className="mt-3 font-display text-xl font-extrabold tracking-[-0.06em] text-slate-950">{title}</div>
       <p className="mt-2 text-sm leading-7 text-slate-600">{body}</p>
     </div>
   );
@@ -167,7 +167,7 @@ function ContentModal({
         closeHref={closeHref}
         size="lg"
       >
-        <form action={createBannerAction} className="grid gap-5" encType="multipart/form-data">
+        <form action={createBannerAction} className="dds-admin-form grid gap-5" encType="multipart/form-data">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-sm font-semibold text-slate-500">帯見出し</span>
@@ -224,7 +224,7 @@ function ContentModal({
         closeHref={closeHref}
         size="xl"
       >
-        <form action={createAnnouncementAction} className="grid gap-5">
+        <form action={createAnnouncementAction} className="dds-admin-form grid gap-5">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-sm font-semibold text-slate-500">タイトル</span>
@@ -266,7 +266,7 @@ function ContentModal({
   if (create === "deal") {
     return (
       <Modal title="お得情報を追加" closeHref={closeHref} size="xl">
-        <form action={createDealAction} className="grid gap-5">
+        <form action={createDealAction} className="dds-admin-form grid gap-5">
           <div className="grid gap-4 md:grid-cols-2">
             <input name="title" placeholder="タイトル" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
             <input name="badge" placeholder="例: 会員限定" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
@@ -304,7 +304,7 @@ function ContentModal({
   if (create === "tool") {
     return (
       <Modal title="ツールを追加" closeHref={closeHref} size="xl">
-        <form action={createToolItemAction} className="grid gap-5">
+        <form action={createToolItemAction} className="dds-admin-form grid gap-5">
           <input name="title" placeholder="ツール名" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
           <textarea name="summary" placeholder="一覧用の短い概要" className="min-h-24 rounded-2xl border border-black/10 bg-white px-4 py-3" />
           <div className="grid gap-2">
@@ -330,7 +330,7 @@ function ContentModal({
   if (create === "faq") {
     return (
       <Modal title="FAQ を追加" closeHref={closeHref} size="xl">
-        <form action={createFaqAction} className="grid gap-5">
+        <form action={createFaqAction} className="dds-admin-form grid gap-5">
           <div className="grid gap-4 md:grid-cols-2">
             <input name="category" placeholder="カテゴリ" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
             <input name="question" placeholder="質問" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
@@ -362,7 +362,7 @@ function ContentModal({
   if (create === "course") {
     return (
       <Modal title="コースを追加" closeHref={closeHref} size="lg">
-        <form action={createCourseAction} className="grid gap-5" encType="multipart/form-data">
+        <form action={createCourseAction} className="dds-admin-form grid gap-5" encType="multipart/form-data">
           <div className="grid gap-4 md:grid-cols-2">
             <input name="title" placeholder="コース名" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
             <input name="slug" placeholder="URL スラッグ（空欄で自動生成）" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
@@ -396,7 +396,7 @@ function ContentModal({
   if (create === "module") {
     return (
       <Modal title="章を追加" closeHref={closeHref} size="md">
-        <form action={createCourseModuleAction} className="grid gap-5">
+        <form action={createCourseModuleAction} className="dds-admin-form grid gap-5">
           <select
             name="courseId"
             defaultValue={selectedCourseId ?? ""}
@@ -420,7 +420,7 @@ function ContentModal({
   if (create === "lesson") {
     return (
       <Modal title="講義を追加" closeHref={closeHref} size="xl">
-        <form action={createCourseLessonAction} className="grid gap-5">
+        <form action={createCourseLessonAction} className="dds-admin-form grid gap-5">
           <select
             name="moduleId"
             defaultValue={selectedModuleId ?? ""}
@@ -490,10 +490,8 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
     <div className="space-y-8">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
-            コンテンツ管理
-          </div>
-          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">コンテンツ</h1>
+          <div className="dds-kicker text-[var(--color-primary)]">コンテンツ管理</div>
+          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-slate-950">コンテンツ</h1>
         </div>
         <div className="flex flex-wrap gap-3">
           <CreateLink href="/admin/content?create=course" label="新しいコース" />
@@ -527,22 +525,22 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
               <Link href="/admin/content?create=banner" className="rounded-[26px] border border-black/8 bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]">
                 <PanelsTopLeft className="h-6 w-6 text-[var(--color-primary)]" />
                 <div className="mt-4 font-display text-xl font-bold text-slate-950">バナーを追加</div>
-                <p className="mt-2 text-sm leading-7 text-slate-600">画像付きの告知カードをホームに表示します。</p>
+                <p className="mt-2 text-sm leading-7 text-slate-600">ホーム上部の訴求カード</p>
               </Link>
               <Link href="/admin/content?create=announcement" className="rounded-[26px] border border-black/8 bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]">
                 <Megaphone className="h-6 w-6 text-[var(--color-primary)]" />
                 <div className="mt-4 font-display text-xl font-bold text-slate-950">お知らせを作成</div>
-                <p className="mt-2 text-sm leading-7 text-slate-600">記事のように読みやすい本文で会員へ共有できます。</p>
+                <p className="mt-2 text-sm leading-7 text-slate-600">記事形式のお知らせ</p>
               </Link>
               <Link href="/admin/content?create=deal" className="rounded-[26px] border border-black/8 bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]">
                 <Sparkles className="h-6 w-6 text-[var(--color-primary)]" />
                 <div className="mt-4 font-display text-xl font-bold text-slate-950">お得情報を追加</div>
-                <p className="mt-2 text-sm leading-7 text-slate-600">会員特典やキャンペーンを訴求できます。</p>
+                <p className="mt-2 text-sm leading-7 text-slate-600">特典やキャンペーン</p>
               </Link>
               <Link href="/admin/content?create=tool" className="rounded-[26px] border border-black/8 bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]">
                 <Wrench className="h-6 w-6 text-[var(--color-primary)]" />
                 <div className="mt-4 font-display text-xl font-bold text-slate-950">ツールを追加</div>
-                <p className="mt-2 text-sm leading-7 text-slate-600">外部サービスやテンプレートへの導線を整えます。</p>
+                <p className="mt-2 text-sm leading-7 text-slate-600">外部リンクと配布物</p>
               </Link>
             </div>
           </Card>

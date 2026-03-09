@@ -70,77 +70,77 @@ function CreateOfferingModal({
       closeHref={closeHref}
       size="xl"
     >
-      <form action={createOfferingAction} className="grid gap-5" encType="multipart/form-data">
+      <form action={createOfferingAction} className="dds-admin-form grid gap-5" encType="multipart/form-data">
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">募集枠タイトル</span>
-            <input name="title" placeholder="例: 3月グループコンサル" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+            <input name="title" placeholder="例: 3月グループコンサル" className="dds-admin-input" />
           </label>
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">種別</span>
-            <select name="offeringType" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+            <select name="offeringType" className="dds-admin-select">
               <option value="BOOKING">講義予約</option>
               <option value="EVENT">イベント</option>
             </select>
           </label>
         </div>
 
-        <label className="grid gap-2">
+        <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">一覧用の要約</span>
-          <textarea name="summary" placeholder="カレンダーや一覧カードに表示する短い説明" className="min-h-24 rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          <textarea name="summary" placeholder="カレンダーや一覧カードに表示する短い説明" className="dds-admin-textarea min-h-24" />
         </label>
 
-        <label className="grid gap-2">
+        <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">詳細説明</span>
-          <textarea name="description" placeholder="参加対象、内容、持ち物、注意事項などを記載" className="min-h-32 rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          <textarea name="description" placeholder="参加対象、内容、持ち物、注意事項などを記載" className="dds-admin-textarea min-h-32" />
         </label>
 
         <ImageUploadField name="thumbnailFile" label="募集枠サムネイル" hint="カード表示用。Cloudflare R2 に保存します。" />
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">開始日時</span>
-            <input name="startsAt" type="datetime-local" defaultValue={defaultStart} className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+            <input name="startsAt" type="datetime-local" defaultValue={defaultStart} className="dds-admin-input" />
           </label>
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">終了日時</span>
-            <input name="endsAt" type="datetime-local" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+            <input name="endsAt" type="datetime-local" className="dds-admin-input" />
           </label>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">開催場所</span>
-            <input name="locationLabel" placeholder="Zoom / 渋谷 / 大阪" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+            <input name="locationLabel" placeholder="Zoom / 渋谷 / 大阪" className="dds-admin-input" />
           </label>
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">講師 / 主催</span>
-            <input name="host" placeholder="講師名" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+            <input name="host" placeholder="講師名" className="dds-admin-input" />
           </label>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">定員</span>
-            <input name="capacity" type="number" defaultValue={20} className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+            <input name="capacity" type="number" defaultValue={20} className="dds-admin-input" />
           </label>
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">必要クレジット</span>
-            <input name="creditRequired" type="number" defaultValue={1} className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+            <input name="creditRequired" type="number" defaultValue={1} className="dds-admin-input" />
           </label>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">クレジット消費タイミング</span>
-            <select name="consumptionMode" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+            <select name="consumptionMode" className="dds-admin-select">
               <option value="ON_CONFIRM">予約確定時に消費</option>
               <option value="ON_ATTEND">参加済みにしたときに消費</option>
             </select>
           </label>
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">対象プラン</span>
-            <select name="minimumPlanCode" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+            <select name="minimumPlanCode" className="dds-admin-select">
               {minimumPlanOptions.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
@@ -149,19 +149,19 @@ function CreateOfferingModal({
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">返却期限</span>
-            <input name="refundDeadline" type="datetime-local" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+            <input name="refundDeadline" type="datetime-local" className="dds-admin-input" />
           </label>
-          <label className="grid gap-2">
+          <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">表示ラベル</span>
-            <input name="priceLabel" placeholder="例: 1クレジット / 無料" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+            <input name="priceLabel" placeholder="例: 1クレジット / 無料" className="dds-admin-input" />
           </label>
         </div>
 
-        <label className="grid gap-2">
+        <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">参加URL（任意）</span>
-          <input name="externalJoinUrl" placeholder="Zoom URL など" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          <input name="externalJoinUrl" placeholder="Zoom URL など" className="dds-admin-input" />
         </label>
 
         <div className="grid gap-3 rounded-[24px] bg-black/[0.03] p-4 text-sm text-slate-700 md:grid-cols-2">
@@ -209,27 +209,25 @@ export default async function AdminOfferingsPage({
     <div className="space-y-8">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
-            募集枠管理
-          </div>
-          <h1 className="mt-3 font-display text-4xl font-bold text-slate-950">募集枠</h1>
+          <div className="dds-kicker text-[var(--color-primary)]">募集枠管理</div>
+          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-slate-950">募集枠</h1>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link
             href={`/admin/offerings?month=${shiftCalendarMonth(currentMonth, -1)}`}
-            className="inline-flex rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+            className="inline-flex rounded-full border border-black/10 bg-white px-4 py-2 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
           >
             前月
           </Link>
           <Link
             href={`/admin/offerings?month=${shiftCalendarMonth(currentMonth, 1)}`}
-            className="inline-flex rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+            className="inline-flex rounded-full border border-black/10 bg-white px-4 py-2 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
           >
             次月
           </Link>
           <Link
             href={`/admin/offerings?month=${params.month ?? shiftCalendarMonth(currentMonth, 0)}&create=offering`}
-            className="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
+            className="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
           >
             新しい募集枠
           </Link>
@@ -240,10 +238,10 @@ export default async function AdminOfferingsPage({
         <Card className="overflow-hidden">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <div className="text-sm font-semibold text-slate-500">月間カレンダー</div>
-              <h2 className="mt-2 font-display text-2xl font-bold text-slate-950">カレンダー</h2>
+              <div className="dds-kicker text-slate-500">月間カレンダー</div>
+              <h2 className="mt-2 font-display text-2xl font-extrabold tracking-[-0.08em] text-slate-950">カレンダー</h2>
             </div>
-            <div className="rounded-full bg-[var(--color-primary)]/8 px-4 py-2 text-sm font-semibold text-[var(--color-primary)]">
+            <div className="rounded-full bg-[var(--color-primary)]/8 px-4 py-2 font-display text-[11px] font-extrabold uppercase tracking-[0.16em] text-[var(--color-primary)]">
               {offerings.length} 件の募集枠
             </div>
           </div>

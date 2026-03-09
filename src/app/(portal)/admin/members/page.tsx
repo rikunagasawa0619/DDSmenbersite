@@ -36,34 +36,34 @@ function NewMemberModal({
 }) {
   return (
     <Modal title="新規会員を追加" closeHref={closeHref} size="lg">
-      <form action={createMemberAction} className="grid gap-4 xl:grid-cols-2">
-        <label className="grid gap-2">
+      <form action={createMemberAction} className="dds-admin-form grid gap-4 xl:grid-cols-2">
+        <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">氏名</span>
-          <input name="name" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          <input name="name" className="dds-admin-input" />
         </label>
-        <label className="grid gap-2">
+        <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">メールアドレス</span>
-          <input name="email" type="email" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          <input name="email" type="email" className="dds-admin-input" />
         </label>
-        <label className="grid gap-2">
+        <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">肩書き</span>
-          <input name="title" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          <input name="title" className="dds-admin-input" />
         </label>
-        <label className="grid gap-2">
+        <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">会社名</span>
-          <input name="company" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          <input name="company" className="dds-admin-input" />
         </label>
-        <label className="grid gap-2">
+        <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">ロール</span>
-          <select name="role" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+          <select name="role" className="dds-admin-select">
             <option value="STUDENT">受講生</option>
             <option value="STAFF">運営スタッフ</option>
             <option value="SUPER_ADMIN">管理者</option>
           </select>
         </label>
-        <label className="grid gap-2">
+        <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">ステータス</span>
-          <select name="status" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+          <select name="status" className="dds-admin-select">
             <option value="INVITED">招待中</option>
             <option value="ACTIVE">利用中</option>
             <option value="PAUSED">休会中</option>
@@ -71,9 +71,9 @@ function NewMemberModal({
             <option value="SUSPENDED">利用停止</option>
           </select>
         </label>
-        <label className="grid gap-2">
+        <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">プラン</span>
-          <select name="planCode" className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+          <select name="planCode" className="dds-admin-select">
             {planOptions.map((plan) => (
               <option key={plan.code} value={plan.code}>
                 {plan.name}
@@ -81,15 +81,15 @@ function NewMemberModal({
             ))}
           </select>
         </label>
-        <label className="grid gap-2">
+        <label className="dds-admin-label">
           <span className="text-sm font-semibold text-slate-500">自動付与の基準日</span>
-          <input name="creditGrantBaseDate" type="date" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
+          <input name="creditGrantBaseDate" type="date" className="dds-admin-input" />
         </label>
-        <label className="grid gap-2 xl:col-span-2">
+        <label className="dds-admin-label xl:col-span-2">
           <span className="text-sm font-semibold text-slate-500">追加セグメント</span>
           <input
             name="segmentSlugs"
-            className="rounded-2xl border border-black/10 bg-white px-4 py-3"
+            className="dds-admin-input"
             placeholder="ai-foundation, sales-lab"
           />
         </label>
@@ -110,6 +110,12 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
   const sort = params.sort ?? "recent";
 
   const [members, plans] = await Promise.all([listMembers(), listMembershipPlans()]);
+  const statusCounts = {
+    active: members.filter((member) => member.status === "active").length,
+    invited: members.filter((member) => member.status === "invited").length,
+    paused: members.filter((member) => member.status === "paused").length,
+    withdrawn: members.filter((member) => member.status === "withdrawn").length,
+  };
 
   const filteredMembers = members
     .filter((member) => {
@@ -131,39 +137,58 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
     });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
-          <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
-            会員管理
-          </div>
-          <h1 className="mt-2 font-display text-4xl font-bold text-slate-950">会員一覧</h1>
+          <div className="dds-kicker text-[var(--color-primary)]">会員管理</div>
+          <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-slate-950">
+            会員一覧
+          </h1>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link
             href="/admin/exports"
-            className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+            className="inline-flex rounded-full border border-black/10 px-4 py-2 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
           >
             CSV 出力
           </Link>
           <Link
             href="/admin/members?create=member"
-            className="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
+            className="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
           >
             新規会員
           </Link>
         </div>
       </div>
 
+      <section className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <div className="dds-kicker text-slate-500">利用中</div>
+          <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-slate-950">{statusCounts.active}</div>
+        </Card>
+        <Card>
+          <div className="dds-kicker text-slate-500">招待中</div>
+          <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-[var(--color-primary)]">{statusCounts.invited}</div>
+        </Card>
+        <Card>
+          <div className="dds-kicker text-slate-500">休会中</div>
+          <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-amber-600">{statusCounts.paused}</div>
+        </Card>
+        <Card>
+          <div className="dds-kicker text-slate-500">退会済み</div>
+          <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-slate-500">{statusCounts.withdrawn}</div>
+        </Card>
+      </section>
+
       <Card>
-        <form className="grid gap-4 xl:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_auto]">
+        <form className="grid gap-4 xl:grid-cols-[1.6fr_0.85fr_0.85fr_0.85fr_auto]">
           <input
             name="q"
             defaultValue={params.q}
             placeholder="氏名・メール・会社名で検索"
-            className="rounded-2xl border border-black/10 bg-white px-4 py-3"
+            className="dds-admin-input"
           />
-          <select name="plan" defaultValue={selectedPlan} className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+          <select name="plan" defaultValue={selectedPlan} className="dds-admin-select">
             <option value="ALL">全プラン</option>
             {plans.map((plan) => (
               <option key={plan.code} value={plan.code}>
@@ -171,7 +196,7 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
               </option>
             ))}
           </select>
-          <select name="status" defaultValue={selectedStatus} className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+          <select name="status" defaultValue={selectedStatus} className="dds-admin-select">
             <option value="ALL">全ステータス</option>
             <option value="active">利用中</option>
             <option value="invited">招待中</option>
@@ -179,7 +204,7 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
             <option value="withdrawn">退会済み</option>
             <option value="suspended">利用停止</option>
           </select>
-          <select name="sort" defaultValue={sort} className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+          <select name="sort" defaultValue={sort} className="dds-admin-select">
             <option value="recent">新しい順</option>
             <option value="oldest">古い順</option>
             <option value="name">氏名順</option>
@@ -188,7 +213,7 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
           </select>
           <button
             type="submit"
-            className="inline-flex items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+            className="inline-flex items-center justify-center rounded-full bg-slate-950 px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white transition hover:opacity-90"
           >
             検索
           </button>
@@ -202,8 +227,8 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
           <div className="p-6 text-sm text-slate-500">条件に一致する会員が見つかりませんでした。</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-black/6">
-              <thead className="bg-black/[0.03]">
+            <table className="dds-admin-table min-w-full">
+              <thead>
                 <tr className="text-left text-sm font-semibold text-slate-500">
                   <th className="px-6 py-4">メールアドレス</th>
                   <th className="px-6 py-4">名前</th>
@@ -212,7 +237,7 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
                   <th className="px-6 py-4 text-right">操作</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-black/6 bg-white">
+              <tbody>
                 {filteredMembers.map((member) => (
                   <tr key={member.id} className="text-sm text-slate-700">
                     <td className="px-6 py-4">{member.email}</td>
@@ -224,7 +249,7 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
                     <td className="px-6 py-4 text-right">
                       <Link
                         href={`/admin/members/${member.id}`}
-                        className="inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                        className="inline-flex rounded-full border border-black/10 px-4 py-2 font-display text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                       >
                         詳細表示
                       </Link>
