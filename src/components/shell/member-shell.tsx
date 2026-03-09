@@ -78,7 +78,7 @@ export function MemberShell({
                   className={cn(
                     "inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition",
                     active
-                      ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white shadow-[0_18px_45px_rgba(18,56,198,0.24)]"
+                      ? "border-[var(--color-primary)]/20 bg-[rgba(45,91,255,0.12)] text-slate-950 shadow-[0_18px_45px_rgba(18,56,198,0.08)]"
                       : "border-transparent bg-black/4 text-slate-600 hover:border-black/8 hover:bg-black/8 hover:text-slate-900",
                   )}
                 >

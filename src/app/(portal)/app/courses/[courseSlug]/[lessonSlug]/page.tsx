@@ -53,7 +53,7 @@ export default async function LessonDetailPage({
                     href={`/app/courses/${course.slug}/${item.slug}`}
                     className={`block rounded-2xl px-4 py-3 text-sm ${
                       item.slug === lesson.slug
-                        ? "bg-[var(--color-primary)] text-white"
+                        ? "border border-[var(--color-primary)]/18 bg-[rgba(45,91,255,0.12)] font-semibold text-slate-950"
                         : "bg-black/[0.03] text-slate-600"
                     }`}
                   >

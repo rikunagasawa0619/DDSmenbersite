@@ -25,33 +25,33 @@ export default async function AdminPlansPage() {
 
       <section className="grid gap-5 xl:grid-cols-3">
         {plans.map((plan) => (
-          <Card key={plan.code} className={plan.code === "PRO" ? "bg-[#10182b] text-white" : ""}>
-            <div className={plan.code === "PRO" ? "text-sm font-semibold text-slate-300" : "text-sm font-semibold text-slate-600"}>
+          <Card key={plan.code} className={plan.code === "PRO" ? "border-[var(--color-primary)]/12 bg-[linear-gradient(180deg,#edf3ff,#f5efe2)] text-slate-950" : ""}>
+            <div className="text-sm font-semibold text-slate-600">
               {labelPlan(plan.code)}
             </div>
             <h2 className="mt-3 font-display text-3xl font-bold">{plan.name}</h2>
-            <p className={plan.code === "PRO" ? "mt-3 text-sm leading-7 text-slate-100" : "mt-3 text-sm leading-7 text-slate-600"}>
+            <p className="mt-3 text-sm leading-7 text-slate-600">
               {plan.description}
             </p>
             <div className="mt-6 grid gap-3">
-              <div className={plan.code === "PRO" ? "rounded-[22px] bg-white/8 p-4" : "rounded-[22px] bg-black/[0.05] p-4"}>
-                <div className={plan.code === "PRO" ? "text-xs tracking-[0.18em] text-slate-300" : "text-xs tracking-[0.18em] text-slate-500"}>
+              <div className={plan.code === "PRO" ? "rounded-[22px] border border-black/8 bg-white/76 p-4" : "rounded-[22px] bg-black/[0.05] p-4"}>
+                <div className="text-xs tracking-[0.18em] text-slate-500">
                   月次付与
                 </div>
                 <div className="mt-2 text-2xl font-bold">
                   {plan.unlimitedCredits ? "無制限" : `${plan.monthlyCreditGrant}回`}
                 </div>
               </div>
-              <div className={plan.code === "PRO" ? "rounded-[22px] bg-white/8 p-4" : "rounded-[22px] bg-black/[0.05] p-4"}>
-                <div className={plan.code === "PRO" ? "text-xs tracking-[0.18em] text-slate-300" : "text-xs tracking-[0.18em] text-slate-500"}>
+              <div className={plan.code === "PRO" ? "rounded-[22px] border border-black/8 bg-white/76 p-4" : "rounded-[22px] bg-black/[0.05] p-4"}>
+                <div className="text-xs tracking-[0.18em] text-slate-500">
                   繰越上限
                 </div>
                 <div className="mt-2 text-2xl font-bold">
                   {plan.unlimitedCredits ? "∞" : `${plan.rolloverCap}回`}
                 </div>
               </div>
-              <div className={plan.code === "PRO" ? "rounded-[22px] bg-white/8 p-4" : "rounded-[22px] bg-black/[0.05] p-4"}>
-                <div className={plan.code === "PRO" ? "text-xs tracking-[0.18em] text-slate-300" : "text-xs tracking-[0.18em] text-slate-500"}>
+              <div className={plan.code === "PRO" ? "rounded-[22px] border border-black/8 bg-white/76 p-4" : "rounded-[22px] bg-black/[0.05] p-4"}>
+                <div className="text-xs tracking-[0.18em] text-slate-500">
                   付与ルール
                 </div>
                 <div className="mt-2 text-lg font-bold">{labelCycleBasis(plan.cycleBasis)}</div>

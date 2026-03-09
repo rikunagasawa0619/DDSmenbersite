@@ -164,9 +164,9 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
                   ) : null}
                 </div>
 
-                <div className="grid min-w-[320px] gap-4 rounded-[28px] bg-[#10182b] p-5 text-white">
-                  <div className="text-sm font-semibold text-slate-300">配信情報</div>
-                  <div className="rounded-[22px] bg-white/8 p-4 text-sm text-slate-100">
+                <div className="grid min-w-[320px] gap-4 rounded-[28px] border border-black/8 bg-[linear-gradient(180deg,#edf3ff,#f5efe2)] p-5 text-slate-950">
+                  <div className="text-sm font-semibold text-slate-600">配信情報</div>
+                  <div className="rounded-[22px] bg-white/74 p-4 text-sm text-slate-700">
                     {campaign.scheduledAt ? `配信予定: ${formatDate(campaign.scheduledAt)}` : "即時送信待ち"}
                   </div>
                   <div className="flex flex-wrap gap-3">
@@ -185,14 +185,14 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
                         </SubmitButton>
                       </form>
                     ) : (
-                      <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/18 px-4 py-2 text-sm font-semibold text-emerald-200">
+                      <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
                         <MailCheck className="h-4 w-4" />
                         送信完了
                       </div>
                     )}
                     <Link
                       href="/admin/campaigns?create=campaign"
-                      className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:border-white/40 hover:text-white"
+                      className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/72 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)]/20 hover:text-slate-950"
                     >
                       <MailPlus className="h-4 w-4" />
                       新規作成

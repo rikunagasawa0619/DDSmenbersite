@@ -14,10 +14,10 @@ export function LessonBlocks({ blocks }: { blocks: LessonBlock[] }) {
         switch (block.type) {
           case "hero":
             return (
-              <Card key={block.id} className="bg-[linear-gradient(135deg,#1238c6,#4163e7)] text-white">
+              <Card key={block.id} className="border-[var(--color-primary)]/14 bg-[linear-gradient(135deg,#eef3ff,#dfe8ff_52%,#f5efe3)] text-slate-950">
                 <Badge tone="accent">{block.eyebrow ?? "Lesson"}</Badge>
                 <h2 className="mt-4 text-3xl font-bold">{block.title}</h2>
-                <p className="mt-3 max-w-3xl text-white/85">{block.body}</p>
+                <p className="mt-3 max-w-3xl text-slate-700">{block.body}</p>
               </Card>
             );
           case "rich_text":

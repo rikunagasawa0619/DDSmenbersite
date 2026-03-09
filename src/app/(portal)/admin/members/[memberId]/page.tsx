@@ -132,24 +132,24 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
   return (
     <div className="space-y-8">
       <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-        <Card className="relative overflow-hidden bg-[#091426] text-white">
+        <Card className="relative overflow-hidden bg-[linear-gradient(135deg,#eef3ff,#dfe8ff_52%,#f5efe3)] text-slate-950">
           <div className="absolute left-[-30px] top-10 h-40 w-40 rounded-full bg-[rgba(45,91,255,0.28)] blur-3xl" />
           <div className="absolute bottom-0 right-0 h-48 w-48 rounded-full bg-[rgba(215,255,100,0.14)] blur-3xl" />
           <div className="relative">
             <Link
               href="/admin/members"
-              className="inline-flex items-center gap-2 font-display text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-200 transition hover:text-white"
+              className="inline-flex items-center gap-2 font-display text-[11px] font-extrabold uppercase tracking-[0.16em] text-slate-600 transition hover:text-slate-950"
             >
               <ArrowLeft className="h-4 w-4" />
               会員一覧へ戻る
             </Link>
             <div className="mt-8 flex flex-col gap-5 md:flex-row md:items-start">
-              <div className="flex h-24 w-24 items-center justify-center rounded-[28px] border border-white/12 bg-white/8 font-display text-3xl font-extrabold tracking-[-0.08em] text-white">
+              <div className="flex h-24 w-24 items-center justify-center rounded-[28px] border border-black/8 bg-white/76 font-display text-3xl font-extrabold tracking-[-0.08em] text-slate-950">
                 {member.avatarLabel}
               </div>
               <div className="flex-1">
                 <div className="dds-kicker text-[var(--color-accent)]">会員プロフィール</div>
-                <h1 className="mt-4 font-display text-4xl font-extrabold tracking-[-0.08em] text-white md:text-5xl">
+                <h1 className="mt-4 font-display text-4xl font-extrabold tracking-[-0.08em] text-slate-950 md:text-5xl">
                   {member.name}
                 </h1>
                 <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -157,7 +157,7 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
                   <Badge tone="accent">{labelPlan(member.planCode)}</Badge>
                   <Badge tone={getStatusTone(member.status)}>{labelMemberStatus(member.status)}</Badge>
                 </div>
-                <div className="mt-6 grid gap-3 text-sm text-slate-100 md:grid-cols-2">
+                <div className="mt-6 grid gap-3 text-sm text-slate-700 md:grid-cols-2">
                   <div className="inline-flex items-center gap-2">
                     <Mail className="h-4 w-4 text-[var(--color-accent)]" />
                     {member.email}
@@ -245,34 +245,34 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
           </div>
         </Card>
 
-        <Card className="bg-[#0f182b] text-white">
+        <Card className="bg-[linear-gradient(180deg,#edf3ff,#f5efe2)] text-slate-950">
           <div className="flex items-center gap-3">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-[20px] bg-white/10 text-[var(--color-accent)]">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-[20px] bg-[rgba(45,91,255,0.08)] text-[var(--color-primary)]">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <div className="dds-kicker text-slate-300">運用サマリー</div>
-              <div className="mt-1 font-display text-2xl font-extrabold tracking-[-0.08em] text-white">
+              <div className="dds-kicker text-slate-500">運用サマリー</div>
+              <div className="mt-1 font-display text-2xl font-extrabold tracking-[-0.08em] text-slate-950">
                 行動履歴
               </div>
             </div>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <div className="rounded-[24px] bg-white/8 p-4">
-              <div className="dds-kicker text-slate-300">予約数</div>
-              <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-white">
+            <div className="rounded-[24px] border border-black/8 bg-white/72 p-4">
+              <div className="dds-kicker text-slate-500">予約数</div>
+              <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-slate-950">
                 {reservations.length}
               </div>
             </div>
-            <div className="rounded-[24px] bg-white/8 p-4">
-              <div className="dds-kicker text-slate-300">待機数</div>
-              <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-white">
+            <div className="rounded-[24px] border border-black/8 bg-white/72 p-4">
+              <div className="dds-kicker text-slate-500">待機数</div>
+              <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-slate-950">
                 {waitlistForMember.length}
               </div>
             </div>
-            <div className="rounded-[24px] bg-white/8 p-4">
-              <div className="dds-kicker text-slate-300">操作履歴</div>
-              <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-white">
+            <div className="rounded-[24px] border border-black/8 bg-white/72 p-4">
+              <div className="dds-kicker text-slate-500">操作履歴</div>
+              <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-slate-950">
                 {relatedLogs.length}
               </div>
             </div>

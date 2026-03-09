@@ -39,22 +39,22 @@ export default async function BookingsPage({
   return (
     <div className="space-y-6">
       <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="bg-[#111b2f] text-white">
-          <div className="text-sm font-semibold text-slate-300">予約クレジット</div>
+        <Card className="bg-[linear-gradient(180deg,#eef3ff,#f6efe2)] text-slate-950">
+          <div className="text-sm font-semibold text-slate-500">予約クレジット</div>
           <h1 className="mt-4 font-display text-3xl font-bold">
             {snapshot.plan.unlimitedCredits ? "クレジット無制限" : `残り ${snapshot.wallet.currentBalance} 回`}
           </h1>
           <div className="mt-5 grid gap-3">
-            <div className="rounded-[24px] bg-white/8 p-4">
-              <div className="text-sm text-slate-300">今月付与</div>
+            <div className="rounded-[24px] border border-black/8 bg-white/72 p-4">
+              <div className="text-sm text-slate-500">今月付与</div>
               <div className="mt-1 text-2xl font-bold">{snapshot.wallet.thisCycleGranted}</div>
             </div>
-            <div className="rounded-[24px] bg-white/8 p-4">
-              <div className="text-sm text-slate-300">今月消費</div>
+            <div className="rounded-[24px] border border-black/8 bg-white/72 p-4">
+              <div className="text-sm text-slate-500">今月消費</div>
               <div className="mt-1 text-2xl font-bold">{snapshot.wallet.thisCycleConsumed}</div>
             </div>
-            <div className="rounded-[24px] bg-white/8 p-4">
-              <div className="text-sm text-slate-300">次回付与日</div>
+            <div className="rounded-[24px] border border-black/8 bg-white/72 p-4">
+              <div className="text-sm text-slate-500">次回付与日</div>
               <div className="mt-1 text-2xl font-bold">
                 {snapshot.plan.unlimitedCredits ? "常時" : formatDateOnly(snapshot.wallet.nextGrantAt)}
               </div>

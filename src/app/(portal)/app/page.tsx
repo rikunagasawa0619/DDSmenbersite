@@ -45,28 +45,28 @@ export default async function AppHomePage() {
           </div>
         </Card>
 
-        <Card className="bg-[#111b2f] text-white">
-          <div className="flex items-center gap-2 text-sm text-slate-300">
+        <Card className="bg-[linear-gradient(180deg,#eef3ff,#f6efe2)] text-slate-950">
+          <div className="flex items-center gap-2 text-sm text-slate-500">
             <TrendingUp className="h-4 w-4" />
             学習進捗
           </div>
           {primaryCourse ? (
             <>
               <h2 className="mt-4 font-display text-2xl font-bold">{primaryCourse.title}</h2>
-              <p className="mt-3 text-slate-100">{primaryCourse.summary}</p>
+              <p className="mt-3 text-slate-700">{primaryCourse.summary}</p>
               <ProgressBar
                 value={snapshot.courseProgress[primaryCourse.id] ?? 0}
-                className="mt-6 bg-white/10"
+                className="mt-6 bg-black/8"
               />
-              <div className="mt-3 text-sm text-slate-200">
+              <div className="mt-3 text-sm text-slate-600">
                 {snapshot.courseProgress[primaryCourse.id] ?? 0}% 完了
               </div>
               <Link href={`/app/courses/${primaryCourse.slug}`} className="mt-6 inline-flex">
-                <Button className="bg-white text-[#111b2f] hover:bg-white/90">続きを見る</Button>
+                <Button variant="secondary">続きを見る</Button>
               </Link>
             </>
           ) : (
-            <div className="mt-4 rounded-[24px] bg-white/8 p-5 text-sm leading-7 text-slate-100">
+            <div className="mt-4 rounded-[24px] border border-black/8 bg-white/72 p-5 text-sm leading-7 text-slate-700">
               まだ公開中の教材がありません。運営がコースを追加すると、ここに学習進捗が表示されます。
             </div>
           )}
