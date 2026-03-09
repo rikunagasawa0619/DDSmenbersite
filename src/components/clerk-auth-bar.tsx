@@ -29,15 +29,15 @@ export function ClerkAuthBar() {
 
   return (
     <div className="pointer-events-none fixed right-4 top-4 z-50">
-      <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-black/10 bg-white/90 px-3 py-2 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+      <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-black/10 bg-[rgba(243,239,228,0.92)] px-3 py-2 shadow-[0_18px_40px_rgba(7,17,31,0.12)] backdrop-blur">
         <Show when="signed-out">
           <SignInButton mode="modal">
-            <button className="rounded-full px-3 py-2 text-sm font-semibold text-slate-700 transition hover:text-[var(--color-primary)]">
+            <button className="rounded-full px-3 py-2 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-slate-700 transition hover:text-[var(--color-primary)]">
               Sign in
             </button>
           </SignInButton>
           <SignUpButton mode="modal">
-            <button className="rounded-full bg-[var(--color-primary)] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#0f2ca0]">
+            <button className="rounded-full bg-[var(--color-primary)] px-3 py-2 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white transition hover:bg-[#2147d7]">
               Sign up
             </button>
           </SignUpButton>

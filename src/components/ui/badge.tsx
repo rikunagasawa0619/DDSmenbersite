@@ -10,12 +10,12 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
-        tone === "neutral" && "bg-black/5 text-slate-700",
-        tone === "brand" && "bg-[color:rgba(18,56,198,0.12)] text-[var(--color-primary)]",
-        tone === "accent" && "bg-[color:rgba(246,196,83,0.22)] text-[#8f6211]",
-        tone === "success" && "bg-emerald-100 text-emerald-700",
-        tone === "warning" && "bg-amber-100 text-amber-700",
+        "inline-flex rounded-full border px-3 py-1 font-display text-[11px] font-extrabold uppercase tracking-[0.18em]",
+        tone === "neutral" && "border-black/8 bg-black/4 text-slate-700",
+        tone === "brand" && "border-[rgba(45,91,255,0.18)] bg-[rgba(45,91,255,0.12)] text-[var(--color-primary)]",
+        tone === "accent" && "border-[rgba(215,255,100,0.42)] bg-[rgba(215,255,100,0.38)] text-[#304200]",
+        tone === "success" && "border-emerald-200 bg-emerald-100 text-emerald-700",
+        tone === "warning" && "border-amber-200 bg-amber-100 text-amber-700",
       )}
     >
       {children}

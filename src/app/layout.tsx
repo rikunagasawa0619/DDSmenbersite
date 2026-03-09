@@ -2,23 +2,23 @@ import type { Metadata } from "next";
 import {
   ClerkProvider,
 } from "@clerk/nextjs";
-import { Noto_Sans_JP, Sora } from "next/font/google";
+import { IBM_Plex_Sans_JP, JetBrains_Mono } from "next/font/google";
 
 import { ClerkAuthBar } from "@/components/clerk-auth-bar";
 import { Providers } from "@/components/providers";
 import { env, getAppUrl } from "@/lib/env";
 import "./globals.css";
 
-const bodyFont = Noto_Sans_JP({
+const bodyFont = IBM_Plex_Sans_JP({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["300", "400", "700"],
 });
 
-const displayFont = Sora({
+const displayFont = JetBrains_Mono({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["100", "400", "800"],
 });
 
 export const metadata: Metadata = {
@@ -57,9 +57,9 @@ export default function RootLayout({
           afterSignOutUrl="/login"
           appearance={{
             variables: {
-              colorPrimary: "#1238c6",
-              colorText: "#0f172a",
-              colorBackground: "#f7f5ef",
+              colorPrimary: "#2d5bff",
+              colorText: "#07111f",
+              colorBackground: "#f3efe4",
             },
           }}
         >

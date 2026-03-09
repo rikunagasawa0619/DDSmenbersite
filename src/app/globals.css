@@ -1,11 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --color-background: #f7f5ef;
-  --color-foreground: #0f172a;
-  --color-primary: #1238c6;
-  --color-accent: #f6c453;
-  --color-surface: #f2ede2;
+  --color-background: #f3efe4;
+  --color-foreground: #07111f;
+  --color-primary: #2d5bff;
+  --color-accent: #d7ff64;
+  --color-surface: #ebe4d6;
+  --color-ink-soft: #162338;
 }
 
 @theme inline {
@@ -26,11 +27,33 @@ html {
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(18, 56, 198, 0.08), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(246, 196, 83, 0.15), transparent 28%),
+    radial-gradient(circle at 10% 10%, rgba(45, 91, 255, 0.2), transparent 22%),
+    radial-gradient(circle at 85% 12%, rgba(215, 255, 100, 0.16), transparent 16%),
+    linear-gradient(135deg, rgba(7, 17, 31, 0.02) 25%, transparent 25%) 0 0 / 28px 28px,
+    linear-gradient(315deg, rgba(7, 17, 31, 0.03) 25%, transparent 25%) 0 0 / 28px 28px,
     var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-body), sans-serif;
+}
+
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.18;
+  background-image:
+    radial-gradient(rgba(7, 17, 31, 0.12) 0.6px, transparent 0.6px),
+    radial-gradient(rgba(255, 255, 255, 0.18) 0.6px, transparent 0.6px);
+  background-position: 0 0, 12px 12px;
+  background-size: 24px 24px;
+  mix-blend-mode: multiply;
+  z-index: -1;
+}
+
+::selection {
+  background: rgba(215, 255, 100, 0.75);
+  color: #07111f;
 }
 
 a {
@@ -45,8 +68,10 @@ a {
 .dds-editor h2,
 .dds-editor h3 {
   margin: 1.5rem 0 0.75rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-family: var(--font-display), monospace;
+  font-weight: 800;
+  color: #07111f;
+  letter-spacing: -0.04em;
 }
 
 .dds-editor h2 {
@@ -65,7 +90,7 @@ a {
 
 .dds-editor blockquote {
   margin: 1.25rem 0;
-  border-left: 4px solid rgba(18, 56, 198, 0.24);
+  border-left: 4px solid rgba(45, 91, 255, 0.4);
   padding-left: 1rem;
   color: #475569;
 }
@@ -99,8 +124,10 @@ a {
 .dds-prose h3,
 .dds-prose h4 {
   margin: 1.5rem 0 0.75rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-family: var(--font-display), monospace;
+  font-weight: 800;
+  color: #07111f;
+  letter-spacing: -0.04em;
 }
 
 .dds-prose h2 {
@@ -123,7 +150,7 @@ a {
 
 .dds-prose blockquote {
   margin: 1.25rem 0;
-  border-left: 4px solid rgba(18, 56, 198, 0.24);
+  border-left: 4px solid rgba(45, 91, 255, 0.4);
   padding-left: 1rem;
   color: #475569;
 }
@@ -131,4 +158,21 @@ a {
 .dds-prose a {
   color: var(--color-primary);
   text-decoration: underline;
+}
+
+.dds-panel {
+  border: 1px solid rgba(7, 17, 31, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 239, 229, 0.88));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 22px 60px rgba(7, 17, 31, 0.08);
+}
+
+.dds-kicker {
+  font-family: var(--font-display), monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
