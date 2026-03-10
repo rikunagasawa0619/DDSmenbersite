@@ -8,11 +8,15 @@ import { listAuditLogs } from "@/lib/repository";
 export default async function AdminDashboardPage() {
   await requireAdmin();
   const [snapshot, initialLogs] = await Promise.all([getAdminSnapshot(), listAuditLogs(6)]);
+  const insetPanelStyle = {
+    background: "color-mix(in srgb, var(--color-surface-raised) 84%, transparent)",
+    borderColor: "var(--color-outline)",
+  } as const;
 
   return (
     <div className="space-y-8">
       <section className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
-        <Card className="relative overflow-hidden bg-[linear-gradient(135deg,#eef3ff,#dfe9ff_55%,#f5efe3)] text-slate-950">
+        <Card className="relative overflow-hidden text-[var(--color-foreground)]" style={{ background: "var(--color-panel-highlight)" }}>
           <div className="absolute -left-8 top-10 h-40 w-40 rounded-full bg-[rgba(45,91,255,0.3)] blur-3xl" />
           <div className="absolute right-0 top-0 h-full w-[38%] bg-[linear-gradient(135deg,rgba(215,255,100,0.18),transparent_55%)]" />
           <div className="relative max-w-2xl">
@@ -24,7 +28,7 @@ export default async function AdminDashboardPage() {
             </h1>
           </div>
         </Card>
-        <Card className="bg-[linear-gradient(180deg,#e9e2d3,#f5efe2)]">
+        <Card style={{ background: "var(--color-panel-highlight)" }}>
           <div className="dds-kicker text-[var(--color-primary)]">テーマ状況</div>
           <div className="mt-5 flex items-end justify-between gap-4">
             <div>
@@ -36,7 +40,7 @@ export default async function AdminDashboardPage() {
             <Badge tone="accent">公開中</Badge>
           </div>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[24px] border border-black/8 bg-white/58 p-4">
+            <div className="rounded-[24px] border p-4" style={insetPanelStyle}>
               <div className="dds-kicker text-slate-500">メイン</div>
               <div className="mt-3 flex items-center gap-3">
                 <div
@@ -48,7 +52,7 @@ export default async function AdminDashboardPage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-[24px] border border-black/8 bg-white/58 p-4">
+            <div className="rounded-[24px] border p-4" style={insetPanelStyle}>
               <div className="dds-kicker text-slate-500">アクセント</div>
               <div className="mt-3 flex items-center gap-3">
                 <div
@@ -107,16 +111,16 @@ export default async function AdminDashboardPage() {
             ))}
           </div>
         </Card>
-        <Card className="bg-[linear-gradient(180deg,#edf3ff,#f5efe2)] text-slate-950">
+        <Card style={{ background: "var(--color-panel-highlight)" }}>
           <div className="dds-kicker text-[var(--color-brand)]">運営サマリー</div>
           <div className="mt-4 grid gap-4">
-            <div className="rounded-[26px] border border-black/8 bg-white/72 p-5">
+            <div className="rounded-[26px] border p-5" style={insetPanelStyle}>
               <div className="text-sm text-slate-600">会員数の伸び</div>
               <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em]">
                 {snapshot.stats[0]?.value ?? "-"}
               </div>
             </div>
-            <div className="rounded-[26px] border border-black/8 bg-white/72 p-5">
+            <div className="rounded-[26px] border p-5" style={insetPanelStyle}>
               <div className="text-sm text-slate-600">公開中のお知らせ</div>
               <div className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em]">
                 {snapshot.announcements.length}

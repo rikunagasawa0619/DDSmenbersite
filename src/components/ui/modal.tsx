@@ -117,15 +117,22 @@ export function Modal({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          "relative max-h-[92vh] w-full overflow-hidden rounded-[36px] border border-black/8 bg-[linear-gradient(180deg,#f6f1e5,#f0eadf)] shadow-[0_50px_140px_rgba(7,17,31,0.26)] outline-none",
+          "relative max-h-[92vh] w-full overflow-hidden rounded-[36px] border border-[var(--color-outline)] shadow-[0_50px_140px_rgba(7,17,31,0.26)] outline-none",
           size === "md" && "max-w-3xl",
           size === "lg" && "max-w-5xl",
           size === "xl" && "max-w-6xl",
         )}
+        style={{ background: "var(--color-shell-main)" }}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[rgba(215,255,100,0.16)] blur-3xl" />
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-black/6 bg-[rgba(246,241,229,0.92)] px-6 py-5 backdrop-blur md:px-8">
+        <div
+          className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b px-6 py-5 backdrop-blur md:px-8"
+          style={{
+            borderColor: "var(--color-outline)",
+            background: "color-mix(in srgb, var(--color-surface-raised) 88%, transparent)",
+          }}
+        >
           <div>
             <div className="dds-kicker text-[var(--color-primary)]">editor</div>
             <h2
@@ -144,7 +151,7 @@ export function Modal({
             type="button"
             onClick={closeModal}
             aria-label="ダイアログを閉じる"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/82 text-slate-600 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+            className="dds-shell-action inline-flex h-11 w-11 items-center justify-center rounded-full transition"
           >
             <X className="h-5 w-5" />
           </button>

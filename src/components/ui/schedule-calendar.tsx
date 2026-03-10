@@ -66,14 +66,14 @@ export function ScheduleCalendar({
   }
 
   return (
-    <div className="overflow-hidden rounded-[32px] border border-black/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,240,230,0.88))]">
-      <div className="flex items-center justify-between border-b border-black/6 px-4 py-4">
+    <div className="overflow-hidden rounded-[32px] border border-[var(--color-outline)]" style={{ background: "var(--color-panel-highlight)" }}>
+      <div className="flex items-center justify-between border-b border-[var(--color-outline)] px-4 py-4">
         <div className="dds-kicker text-[var(--color-primary)]">calendar</div>
         <div className="font-display text-xl font-extrabold tracking-[-0.06em] text-slate-950">
           {formatMonthLabel(month)}
         </div>
       </div>
-      <div className="grid grid-cols-7 border-b border-black/6 bg-black/[0.03]">
+      <div className="grid grid-cols-7 border-b border-[var(--color-outline)] bg-[var(--color-surface-inset)]">
         {["日", "月", "火", "水", "木", "金", "土"].map((day) => (
           <div key={day} className="px-3 py-3 text-center text-xs font-semibold tracking-[0.18em] text-slate-500">
             {day}
@@ -89,7 +89,8 @@ export function ScheduleCalendar({
               key={key}
               className={cn(
                 "group relative min-h-36 border-b border-r border-black/6 p-3 align-top",
-                !isSameMonth(day, month) && "bg-black/[0.015] text-slate-400",
+                "border-[var(--color-outline)]",
+                !isSameMonth(day, month) && "bg-[var(--color-surface-inset)] text-slate-400",
               )}
             >
               <div className="font-display text-sm font-extrabold tracking-[-0.06em]">
@@ -101,7 +102,7 @@ export function ScheduleCalendar({
                     <Link
                       href={dayHrefBuilder(key) ?? "#"}
                       aria-label={`${key} に予定を作成`}
-                      className="flex min-h-24 items-end rounded-2xl border border-transparent px-3 py-3 text-[11px] leading-5 text-slate-300/0 transition group-hover:border-black/6 group-hover:text-slate-400 hover:border-[var(--color-primary)]/24 hover:bg-[rgba(45,91,255,0.04)] hover:text-[var(--color-primary)]"
+                      className="flex min-h-24 items-end rounded-2xl border border-transparent px-3 py-3 text-[11px] leading-5 text-transparent transition group-hover:border-[var(--color-outline)] group-hover:text-[var(--color-muted)] hover:border-[var(--color-primary)]/24 hover:bg-[rgba(45,91,255,0.04)] hover:text-[var(--color-primary)]"
                     >
                       <span className="font-display text-[11px] font-extrabold uppercase tracking-[0.16em]">
                         +
@@ -118,12 +119,12 @@ export function ScheduleCalendar({
                       <Link
                         key={entry.id}
                         href={entry.href}
-                        className="block rounded-2xl border border-[var(--color-primary)]/14 bg-[rgba(45,91,255,0.07)] px-3 py-2 text-xs leading-5 text-slate-700 transition hover:-translate-y-[1px] hover:border-[var(--color-primary)]/25 hover:bg-[rgba(45,91,255,0.11)]"
+                        className="block rounded-2xl border border-[var(--color-primary)]/14 bg-[rgba(45,91,255,0.07)] px-3 py-2 text-xs leading-5 text-[var(--color-ink-soft)] transition hover:-translate-y-[1px] hover:border-[var(--color-primary)]/25 hover:bg-[rgba(45,91,255,0.11)]"
                       >
                         <div className="font-display text-[11px] font-extrabold uppercase tracking-[0.16em] text-[var(--color-primary)]">
                           {formatInTimeZone(entry.startsAt, appTimeZone, "HH:mm")}
                         </div>
-                        <div className="mt-1 font-medium text-slate-900">{entry.title}</div>
+                        <div className="mt-1 font-medium text-[var(--color-foreground)]">{entry.title}</div>
                         {entry.badge ? (
                           <div className="mt-1 text-[10px] font-semibold tracking-[0.12em] text-slate-500">
                             {entry.badge}
@@ -133,12 +134,12 @@ export function ScheduleCalendar({
                     ) : (
                       <div
                         key={entry.id}
-                        className="rounded-2xl border border-[var(--color-primary)]/12 bg-[rgba(45,91,255,0.07)] px-3 py-2 text-xs leading-5 text-slate-700"
+                        className="rounded-2xl border border-[var(--color-primary)]/12 bg-[rgba(45,91,255,0.07)] px-3 py-2 text-xs leading-5 text-[var(--color-ink-soft)]"
                       >
                         <div className="font-display text-[11px] font-extrabold uppercase tracking-[0.16em] text-[var(--color-primary)]">
                           {formatInTimeZone(entry.startsAt, appTimeZone, "HH:mm")}
                         </div>
-                        <div className="mt-1 font-medium text-slate-900">{entry.title}</div>
+                        <div className="mt-1 font-medium text-[var(--color-foreground)]">{entry.title}</div>
                         {entry.badge ? (
                           <div className="mt-1 text-[10px] font-semibold tracking-[0.12em] text-slate-500">
                             {entry.badge}

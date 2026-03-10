@@ -55,8 +55,21 @@ export function LiveActivityFeed({ initialLogs }: LiveActivityFeedProps) {
         <div
           className={
             connected
-              ? "inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-2 text-xs font-semibold text-emerald-700"
-              : "inline-flex items-center gap-2 rounded-full bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-600"
+              ? "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold"
+              : "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold"
+          }
+          style={
+            connected
+              ? {
+                  borderColor: "color-mix(in srgb, var(--color-success) 34%, var(--color-outline))",
+                  background: "color-mix(in srgb, var(--color-success) 18%, var(--color-surface-raised))",
+                  color: "color-mix(in srgb, var(--color-success) 76%, var(--color-foreground))",
+                }
+              : {
+                  borderColor: "var(--color-outline)",
+                  background: "var(--color-surface-inset)",
+                  color: "var(--color-muted-strong)",
+                }
           }
         >
           {connected ? <Activity className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}

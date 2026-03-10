@@ -34,13 +34,13 @@ export function MemberShell({
   return (
     <div className="min-h-screen bg-[var(--color-surface)]">
       <div className="mx-auto max-w-7xl px-4 py-6 md:px-8">
-        <div className="rounded-[32px] border border-white/60 bg-white/70 p-4 shadow-[0_40px_90px_rgba(15,23,42,0.08)] backdrop-blur md:p-6">
-          <header className="flex flex-col gap-5 border-b border-black/5 pb-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="dds-shell-frame rounded-[32px] p-4 backdrop-blur md:p-6">
+          <header className="flex flex-col gap-5 border-b border-[var(--color-outline)] pb-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-4">
               <BrandMark href="/app" />
               <div className="space-y-1">
-                <div className="text-sm text-slate-500">DDS 会員サイト</div>
-                <div className="font-display text-xl font-bold text-slate-950">{user.name}</div>
+                <div className="text-sm text-[var(--color-muted)]">DDS 会員サイト</div>
+                <div className="font-display text-xl font-bold text-[var(--color-foreground)]">{user.name}</div>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -49,7 +49,7 @@ export function MemberShell({
               {["super_admin", "staff"].includes(user.role) ? (
                 <Link
                   href="/admin"
-                  className="inline-flex items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                  className="dds-shell-action inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
                 >
                   <ExternalLink className="h-4 w-4" />
                   管理画面へ
@@ -57,7 +57,7 @@ export function MemberShell({
               ) : null}
               <Link
                 href="/app/profile"
-                className="inline-flex items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+                className="dds-shell-action inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
               >
                 <Settings className="h-4 w-4" />
                 プロフィール
@@ -78,11 +78,9 @@ export function MemberShell({
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
+                  data-active={active ? "true" : "false"}
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-full border px-4 py-3 text-sm font-semibold transition",
-                    active
-                      ? "border-[var(--color-primary)]/20 bg-[rgba(45,91,255,0.12)] text-slate-950 shadow-[0_18px_45px_rgba(18,56,198,0.08)]"
-                      : "border-transparent bg-black/4 text-slate-600 hover:border-black/8 hover:bg-black/8 hover:text-slate-900",
+                    "dds-shell-nav-link inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition",
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -92,7 +90,7 @@ export function MemberShell({
             })}
           </nav>
           <main id="main-content" className="mt-8">{children}</main>
-          <nav className="fixed inset-x-4 bottom-4 z-40 grid grid-cols-4 gap-2 rounded-[28px] border border-black/8 bg-[rgba(255,255,255,0.92)] p-2 shadow-[0_20px_60px_rgba(15,23,42,0.15)] backdrop-blur md:hidden">
+          <nav className="dds-shell-mobile-dock fixed inset-x-4 bottom-4 z-40 grid grid-cols-4 gap-2 rounded-[28px] p-2 shadow-[0_20px_60px_rgba(15,23,42,0.15)] backdrop-blur md:hidden">
             {navigation.slice(0, 4).map((item) => {
               const Icon = item.icon;
               const active =
@@ -102,11 +100,9 @@ export function MemberShell({
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
+                  data-active={active ? "true" : "false"}
                   className={cn(
-                    "flex min-h-14 flex-col items-center justify-center gap-1 rounded-[20px] text-[11px] font-semibold transition",
-                    active
-                      ? "bg-[rgba(45,91,255,0.12)] text-slate-950"
-                      : "text-slate-500",
+                    "dds-shell-nav-link flex min-h-14 flex-col items-center justify-center gap-1 rounded-[20px] border px-2 text-[11px] font-semibold transition",
                   )}
                 >
                   <Icon className="h-4 w-4" />

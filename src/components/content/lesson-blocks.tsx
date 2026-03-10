@@ -14,7 +14,11 @@ export function LessonBlocks({ blocks }: { blocks: LessonBlock[] }) {
         switch (block.type) {
           case "hero":
             return (
-              <Card key={block.id} className="border-[var(--color-primary)]/14 bg-[linear-gradient(135deg,#eef3ff,#dfe8ff_52%,#f5efe3)] text-slate-950">
+              <Card
+                key={block.id}
+                className="border-[var(--color-primary)]/14 text-[var(--color-foreground)]"
+                style={{ background: "var(--color-panel-highlight)" }}
+              >
                 <Badge tone="accent">{block.eyebrow ?? "Lesson"}</Badge>
                 <h2 className="mt-4 text-3xl font-bold">{block.title}</h2>
                 <p className="mt-3 max-w-3xl text-slate-700">{block.body}</p>
@@ -104,7 +108,11 @@ export function LessonBlocks({ blocks }: { blocks: LessonBlock[] }) {
             );
           case "cta":
             return (
-              <Card key={block.id} className="border-[var(--color-primary)]/20 bg-[color:rgba(18,56,198,0.05)]">
+              <Card
+                key={block.id}
+                className="border-[var(--color-primary)]/20"
+                style={{ background: "color-mix(in srgb, var(--color-primary) 10%, var(--color-surface-raised))" }}
+              >
                 <h3 className="font-display text-xl font-bold text-slate-950">{block.title}</h3>
                 <p className="mt-3 text-slate-600">{block.body}</p>
                 <a href={block.href} className="mt-5 inline-flex">

@@ -15,11 +15,15 @@ export default async function AppHomePage() {
   const user = await requireUser();
   const snapshot = await getPortalSnapshot(user);
   const primaryCourse = snapshot.courses[0];
+  const insetPanelStyle = {
+    background: "color-mix(in srgb, var(--color-surface-raised) 84%, transparent)",
+    borderColor: "var(--color-outline)",
+  } as const;
 
   return (
     <div className="space-y-8">
       <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-        <Card className="overflow-hidden bg-[linear-gradient(135deg,#ffffff,#d7e1ff)]">
+        <Card className="overflow-hidden" style={{ background: "var(--color-panel-highlight)" }}>
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
               <Badge tone="brand">{snapshot.plan.name}</Badge>
@@ -31,7 +35,7 @@ export default async function AppHomePage() {
                 の予約余力があります。教材、予約、イベント、お知らせをここから辿れます。
               </p>
             </div>
-            <div className="grid gap-3 rounded-[28px] bg-white/85 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+            <div className="grid gap-3 rounded-[28px] p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)]" style={insetPanelStyle}>
               <div className="text-sm font-semibold text-slate-500">クレジット残高</div>
               <div className="font-display text-5xl font-bold text-[var(--color-primary)]">
                 {snapshot.plan.unlimitedCredits ? "∞" : snapshot.wallet.currentBalance}
@@ -46,7 +50,7 @@ export default async function AppHomePage() {
           </div>
         </Card>
 
-        <Card className="bg-[linear-gradient(180deg,#eef3ff,#f6efe2)] text-slate-950">
+        <Card style={{ background: "var(--color-panel-highlight)" }}>
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <TrendingUp className="h-4 w-4" />
             学習進捗
