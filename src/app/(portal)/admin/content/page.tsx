@@ -1,5 +1,4 @@
-import Link from "next/link";
-import type { ComponentType } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { BookOpenText, HelpCircle, Megaphone, PanelsTopLeft, Sparkles, Wrench } from "lucide-react";
 
 import {
@@ -17,7 +16,7 @@ import { bannerAccentOptions } from "@/lib/banner-accent";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ImageUploadField } from "@/components/ui/image-upload-field";
-import { Modal } from "@/components/ui/modal";
+import { ModalTrigger } from "@/components/ui/modal-trigger";
 import { PortalImage } from "@/components/ui/portal-image";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -33,14 +32,6 @@ import {
   listTools,
 } from "@/lib/repository";
 
-type ContentPageProps = {
-  searchParams: Promise<{
-    create?: string;
-    courseId?: string;
-    moduleId?: string;
-  }>;
-};
-
 const publishStatusOptions = [
   { value: "PUBLISHED", label: "公開" },
   { value: "DRAFT", label: "下書き" },
@@ -53,26 +44,66 @@ const minimumPlanOptions = [
   { value: "PRO", label: "DDS Pro のみ" },
 ];
 
+type ContentCreateKind =
+  | "banner"
+  | "announcement"
+  | "deal"
+  | "tool"
+  | "faq"
+  | "course"
+  | "module"
+  | "lesson";
+
 function CreateLink({
-  href,
+  create,
   label,
   tone = "primary",
+  courses,
+  modules,
+  selectedCourseId,
+  selectedModuleId,
+  className,
 }: {
-  href: string;
-  label: string;
+  create: ContentCreateKind;
+  label: ReactNode;
   tone?: "primary" | "secondary";
+  courses: Array<{ id: string; title: string }>;
+  modules: Array<{ id: string; title: string; courseTitle: string }>;
+  selectedCourseId?: string;
+  selectedModuleId?: string;
+  className?: string;
 }) {
+  const modalMeta = {
+    banner: { title: "バナーを追加", size: "lg" as const },
+    announcement: { title: "お知らせを追加", size: "xl" as const },
+    deal: { title: "お得情報を追加", size: "xl" as const },
+    tool: { title: "ツールを追加", size: "xl" as const },
+    faq: { title: "FAQ を追加", size: "xl" as const },
+    course: { title: "コースを追加", size: "lg" as const },
+    module: { title: "章を追加", size: "md" as const },
+    lesson: { title: "講義を追加", size: "xl" as const },
+  }[create];
+
   return (
-    <Link
-      href={href}
-      className={
-        tone === "primary"
+    <ModalTrigger
+      title={modalMeta.title}
+      size={modalMeta.size}
+      triggerClassName={
+        className ??
+        (tone === "primary"
           ? "inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
-          : "inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+          : "inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-slate-700 transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]")
       }
+      triggerContent={label}
     >
-      {label}
-    </Link>
+      <ContentCreateForm
+        create={create}
+        courses={courses}
+        modules={modules}
+        selectedCourseId={selectedCourseId}
+        selectedModuleId={selectedModuleId}
+      />
+    </ModalTrigger>
   );
 }
 
@@ -107,7 +138,7 @@ function SectionHeader({
 }: {
   title: string;
   description?: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-4 border-b border-black/6 pb-5 lg:flex-row lg:items-end lg:justify-between">
@@ -143,33 +174,22 @@ function ItemCard({
   );
 }
 
-function ContentModal({
+function ContentCreateForm({
   create,
-  closeHref,
   courses,
   modules,
   selectedCourseId,
   selectedModuleId,
 }: {
-  create?: string;
-  closeHref: string;
+  create: ContentCreateKind;
   courses: Array<{ id: string; title: string }>;
   modules: Array<{ id: string; title: string; courseTitle: string }>;
   selectedCourseId?: string;
   selectedModuleId?: string;
 }) {
-  if (!create) {
-    return null;
-  }
-
   if (create === "banner") {
     return (
-      <Modal
-        title="バナーを追加"
-        closeHref={closeHref}
-        size="lg"
-      >
-        <form action={createBannerAction} className="dds-admin-form grid gap-5" encType="multipart/form-data">
+      <form action={createBannerAction} className="dds-admin-form grid gap-5" encType="multipart/form-data">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-sm font-semibold text-slate-500">帯見出し</span>
@@ -219,18 +239,12 @@ function ContentModal({
             <SubmitButton pendingLabel="保存中...">バナーを保存</SubmitButton>
           </div>
         </form>
-      </Modal>
     );
   }
 
   if (create === "announcement") {
     return (
-      <Modal
-        title="お知らせを追加"
-        closeHref={closeHref}
-        size="xl"
-      >
-        <form action={createAnnouncementAction} className="dds-admin-form grid gap-5">
+      <form action={createAnnouncementAction} className="dds-admin-form grid gap-5">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-sm font-semibold text-slate-500">タイトル</span>
@@ -265,14 +279,12 @@ function ContentModal({
             <SubmitButton pendingLabel="保存中...">お知らせを保存</SubmitButton>
           </div>
         </form>
-      </Modal>
     );
   }
 
   if (create === "deal") {
     return (
-      <Modal title="お得情報を追加" closeHref={closeHref} size="xl">
-        <form action={createDealAction} className="dds-admin-form grid gap-5">
+      <form action={createDealAction} className="dds-admin-form grid gap-5">
           <div className="grid gap-4 md:grid-cols-2">
             <input name="title" placeholder="タイトル" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
             <input name="badge" placeholder="例: 会員限定" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
@@ -303,14 +315,12 @@ function ContentModal({
             <SubmitButton pendingLabel="保存中...">お得情報を保存</SubmitButton>
           </div>
         </form>
-      </Modal>
     );
   }
 
   if (create === "tool") {
     return (
-      <Modal title="ツールを追加" closeHref={closeHref} size="xl">
-        <form action={createToolItemAction} className="dds-admin-form grid gap-5">
+      <form action={createToolItemAction} className="dds-admin-form grid gap-5">
           <input name="title" placeholder="ツール名" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
           <textarea name="summary" placeholder="一覧用の短い概要" className="min-h-24 rounded-2xl border border-black/10 bg-white px-4 py-3" />
           <div className="grid gap-2">
@@ -329,14 +339,12 @@ function ContentModal({
             <SubmitButton pendingLabel="保存中...">ツールを保存</SubmitButton>
           </div>
         </form>
-      </Modal>
     );
   }
 
   if (create === "faq") {
     return (
-      <Modal title="FAQ を追加" closeHref={closeHref} size="xl">
-        <form action={createFaqAction} className="dds-admin-form grid gap-5">
+      <form action={createFaqAction} className="dds-admin-form grid gap-5">
           <div className="grid gap-4 md:grid-cols-2">
             <input name="category" placeholder="カテゴリ" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
             <input name="question" placeholder="質問" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
@@ -361,14 +369,12 @@ function ContentModal({
             <SubmitButton pendingLabel="保存中...">FAQ を保存</SubmitButton>
           </div>
         </form>
-      </Modal>
     );
   }
 
   if (create === "course") {
     return (
-      <Modal title="コースを追加" closeHref={closeHref} size="lg">
-        <form action={createCourseAction} className="dds-admin-form grid gap-5" encType="multipart/form-data">
+      <form action={createCourseAction} className="dds-admin-form grid gap-5" encType="multipart/form-data">
           <div className="grid gap-4 md:grid-cols-2">
             <input name="title" placeholder="コース名" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
             <input name="slug" placeholder="URL スラッグ（空欄で自動生成）" className="rounded-2xl border border-black/10 bg-white px-4 py-3" />
@@ -395,14 +401,12 @@ function ContentModal({
             <SubmitButton pendingLabel="保存中...">コースを保存</SubmitButton>
           </div>
         </form>
-      </Modal>
     );
   }
 
   if (create === "module") {
     return (
-      <Modal title="章を追加" closeHref={closeHref} size="md">
-        <form action={createCourseModuleAction} className="dds-admin-form grid gap-5">
+      <form action={createCourseModuleAction} className="dds-admin-form grid gap-5">
           <select
             name="courseId"
             defaultValue={selectedCourseId ?? ""}
@@ -419,14 +423,12 @@ function ContentModal({
             <SubmitButton pendingLabel="保存中...">章を保存</SubmitButton>
           </div>
         </form>
-      </Modal>
     );
   }
 
   if (create === "lesson") {
     return (
-      <Modal title="講義を追加" closeHref={closeHref} size="xl">
-        <form action={createCourseLessonAction} className="dds-admin-form grid gap-5">
+      <form action={createCourseLessonAction} className="dds-admin-form grid gap-5">
           <select
             name="moduleId"
             defaultValue={selectedModuleId ?? ""}
@@ -466,16 +468,14 @@ function ContentModal({
             <SubmitButton pendingLabel="保存中...">講義を保存</SubmitButton>
           </div>
         </form>
-      </Modal>
     );
   }
 
   return null;
 }
 
-export default async function AdminContentPage({ searchParams }: ContentPageProps) {
+export default async function AdminContentPage() {
   await requireAdmin();
-  const params = await searchParams;
   const [banners, announcements, deals, tools, faqs, courses, versions] = await Promise.all([
     listBanners(true),
     listAnnouncements(true),
@@ -492,6 +492,7 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
       courseTitle: course.title,
     })),
   );
+  const courseOptions = courses.map((course) => ({ id: course.id, title: course.title }));
 
   return (
     <div className="space-y-8">
@@ -501,9 +502,9 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
           <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-slate-950">コンテンツ</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          <CreateLink href="/admin/content?create=course" label="新しいコース" />
-          <CreateLink href="/admin/content?create=banner" label="新しいバナー" tone="secondary" />
-          <CreateLink href="/admin/content?create=announcement" label="お知らせを作成" tone="secondary" />
+          <CreateLink create="course" label="新しいコース" courses={courseOptions} modules={modules} />
+          <CreateLink create="banner" label="新しいバナー" tone="secondary" courses={courseOptions} modules={modules} />
+          <CreateLink create="announcement" label="お知らせを作成" tone="secondary" courses={courseOptions} modules={modules} />
         </div>
       </div>
 
@@ -527,33 +528,66 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
           <Card className="space-y-6">
             <SectionHeader
               title="クイック作成"
+              description="追加したい内容をその場で開いて、一覧を離れずに作成できます。"
             />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <Link href="/admin/content?create=banner" className="rounded-[26px] border border-black/8 bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]">
-                <PanelsTopLeft className="h-6 w-6 text-[var(--color-primary)]" />
-                <div className="mt-4 font-display text-xl font-bold text-slate-950">バナーを追加</div>
-                <p className="mt-2 text-sm leading-7 text-slate-600">ホーム上部の訴求カード</p>
-              </Link>
-              <Link href="/admin/content?create=announcement" className="rounded-[26px] border border-black/8 bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]">
-                <Megaphone className="h-6 w-6 text-[var(--color-primary)]" />
-                <div className="mt-4 font-display text-xl font-bold text-slate-950">お知らせを作成</div>
-                <p className="mt-2 text-sm leading-7 text-slate-600">記事形式のお知らせ</p>
-              </Link>
-              <Link href="/admin/content?create=deal" className="rounded-[26px] border border-black/8 bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]">
-                <Sparkles className="h-6 w-6 text-[var(--color-primary)]" />
-                <div className="mt-4 font-display text-xl font-bold text-slate-950">お得情報を追加</div>
-                <p className="mt-2 text-sm leading-7 text-slate-600">特典やキャンペーン</p>
-              </Link>
-              <Link href="/admin/content?create=tool" className="rounded-[26px] border border-black/8 bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]">
-                <Wrench className="h-6 w-6 text-[var(--color-primary)]" />
-                <div className="mt-4 font-display text-xl font-bold text-slate-950">ツールを追加</div>
-                <p className="mt-2 text-sm leading-7 text-slate-600">外部リンクと配布物</p>
-              </Link>
+              <CreateLink
+                create="banner"
+                courses={courseOptions}
+                modules={modules}
+                className="rounded-[26px] border border-black/8 bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]"
+                label={
+                  <>
+                    <PanelsTopLeft className="h-6 w-6 text-[var(--color-primary)]" />
+                    <div className="mt-4 font-display text-xl font-bold text-slate-950">バナーを追加</div>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">ホーム上部の訴求カード</p>
+                  </>
+                }
+              />
+              <CreateLink
+                create="announcement"
+                courses={courseOptions}
+                modules={modules}
+                className="rounded-[26px] border border-black/8 bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]"
+                label={
+                  <>
+                    <Megaphone className="h-6 w-6 text-[var(--color-primary)]" />
+                    <div className="mt-4 font-display text-xl font-bold text-slate-950">お知らせを作成</div>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">記事形式のお知らせ</p>
+                  </>
+                }
+              />
+              <CreateLink
+                create="deal"
+                courses={courseOptions}
+                modules={modules}
+                className="rounded-[26px] border border-black/8 bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]"
+                label={
+                  <>
+                    <Sparkles className="h-6 w-6 text-[var(--color-primary)]" />
+                    <div className="mt-4 font-display text-xl font-bold text-slate-950">お得情報を追加</div>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">特典やキャンペーン</p>
+                  </>
+                }
+              />
+              <CreateLink
+                create="tool"
+                courses={courseOptions}
+                modules={modules}
+                className="rounded-[26px] border border-black/8 bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_40px_rgba(18,56,198,0.08)]"
+                label={
+                  <>
+                    <Wrench className="h-6 w-6 text-[var(--color-primary)]" />
+                    <div className="mt-4 font-display text-xl font-bold text-slate-950">ツールを追加</div>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">外部リンクと配布物</p>
+                  </>
+                }
+              />
             </div>
           </Card>
 
           <Card className="space-y-6">
-            <SectionHeader title="版履歴" />
+            <SectionHeader title="版履歴" description="直近の公開・作成履歴を確認できます。" />
             <div className="grid gap-3">
               {versions.length === 0 ? (
                 <div className="rounded-[24px] border border-dashed border-black/10 p-5 text-sm text-slate-500">
@@ -582,7 +616,7 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
             <Card className="space-y-6">
               <SectionHeader
                 title="ホームに出るコンテンツ"
-                action={<CreateLink href="/admin/content?create=banner" label="バナー追加" tone="secondary" />}
+                action={<CreateLink create="banner" label="バナー追加" tone="secondary" courses={courseOptions} modules={modules} />}
               />
               <div className="grid gap-4 md:grid-cols-2">
                 {banners.length === 0 ? (
@@ -604,7 +638,7 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-4">
                   <div className="font-semibold text-slate-900">お知らせ一覧</div>
-                  <CreateLink href="/admin/content?create=announcement" label="お知らせ追加" tone="secondary" />
+                  <CreateLink create="announcement" label="お知らせ追加" tone="secondary" courses={courseOptions} modules={modules} />
                 </div>
                 {announcements.length === 0 ? (
                   <div className="rounded-[24px] border border-dashed border-black/10 p-5 text-sm text-slate-500">
@@ -627,13 +661,13 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
             <Card className="space-y-6">
               <SectionHeader
                 title="特典・ツール・FAQ"
-                action={<CreateLink href="/admin/content?create=faq" label="FAQ追加" tone="secondary" />}
+                action={<CreateLink create="faq" label="FAQ追加" tone="secondary" courses={courseOptions} modules={modules} />}
               />
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="font-semibold text-slate-900">お得情報</div>
-                    <CreateLink href="/admin/content?create=deal" label="追加" tone="secondary" />
+                    <CreateLink create="deal" label="追加" tone="secondary" courses={courseOptions} modules={modules} />
                   </div>
                   {deals.slice(0, 3).map((deal) => (
                     <ItemCard key={deal.id} title={deal.title} body={deal.summary} badge={deal.badge} />
@@ -642,7 +676,7 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="font-semibold text-slate-900">ツール</div>
-                    <CreateLink href="/admin/content?create=tool" label="追加" tone="secondary" />
+                    <CreateLink create="tool" label="追加" tone="secondary" courses={courseOptions} modules={modules} />
                   </div>
                   {tools.slice(0, 3).map((tool) => (
                     <ItemCard key={tool.id} title={tool.title} body={tool.summary} />
@@ -672,9 +706,9 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
               title="教材の階層構造"
               action={
                 <div className="flex flex-wrap gap-3">
-                  <CreateLink href="/admin/content?create=course" label="コース追加" tone="secondary" />
-                  <CreateLink href="/admin/content?create=module" label="章追加" tone="secondary" />
-                  <CreateLink href="/admin/content?create=lesson" label="講義追加" tone="secondary" />
+                  <CreateLink create="course" label="コース追加" tone="secondary" courses={courseOptions} modules={modules} />
+                  <CreateLink create="module" label="章追加" tone="secondary" courses={courseOptions} modules={modules} />
+                  <CreateLink create="lesson" label="講義追加" tone="secondary" courses={courseOptions} modules={modules} />
                 </div>
               }
             />
@@ -706,7 +740,7 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-3">
-                        <CreateLink href={`/admin/content?create=module&courseId=${course.id}`} label="このコースに章を追加" tone="secondary" />
+                        <CreateLink create="module" label="このコースに章を追加" tone="secondary" courses={courseOptions} modules={modules} selectedCourseId={course.id} />
                       </div>
                     </div>
                     <div className="mt-5 grid gap-4 xl:grid-cols-2">
@@ -719,7 +753,7 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
                           <div key={module.id} className="rounded-[24px] bg-black/[0.03] p-4">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                               <div className="font-semibold text-slate-950">{module.title}</div>
-                              <CreateLink href={`/admin/content?create=lesson&moduleId=${module.id}`} label="講義追加" tone="secondary" />
+                              <CreateLink create="lesson" label="講義追加" tone="secondary" courses={courseOptions} modules={modules} selectedModuleId={module.id} />
                             </div>
                             <div className="mt-3 flex flex-wrap gap-2">
                               {module.lessons.length === 0 ? (
@@ -743,15 +777,6 @@ export default async function AdminContentPage({ searchParams }: ContentPageProp
           </Card>
         </>
       )}
-
-      <ContentModal
-        create={params.create}
-        closeHref="/admin/content"
-        courses={courses.map((course) => ({ id: course.id, title: course.title }))}
-        modules={modules}
-        selectedCourseId={params.courseId}
-        selectedModuleId={params.moduleId}
-      />
     </div>
   );
 }
