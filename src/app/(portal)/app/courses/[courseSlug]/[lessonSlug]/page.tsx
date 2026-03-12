@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireUser } from "@/lib/auth";
 import { isDatabaseConfigured } from "@/lib/prisma";
-import { getPortalSnapshot } from "@/lib/portal";
+import { getPortalCourseDetailSnapshot } from "@/lib/portal";
 
 export default async function LessonDetailPage({
   params,
@@ -18,8 +18,8 @@ export default async function LessonDetailPage({
 }) {
   const { courseSlug, lessonSlug } = await params;
   const user = await requireUser();
-  const snapshot = await getPortalSnapshot(user);
-  const course = snapshot.courses.find((item) => item.slug === courseSlug);
+  const snapshot = await getPortalCourseDetailSnapshot(user, courseSlug);
+  const course = snapshot.course;
 
   if (!course) {
     notFound();

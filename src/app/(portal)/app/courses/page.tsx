@@ -8,11 +8,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PortalImage } from "@/components/ui/portal-image";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { requireUser } from "@/lib/auth";
-import { getPortalSnapshot } from "@/lib/portal";
+import { getPortalCoursesSnapshot } from "@/lib/portal";
 
 export default async function CoursesPage() {
   const user = await requireUser();
-  const snapshot = await getPortalSnapshot(user);
+  const snapshot = await getPortalCoursesSnapshot(user);
 
   return (
     <div className="space-y-6">

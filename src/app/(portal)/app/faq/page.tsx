@@ -1,11 +1,11 @@
 import { RichHtml } from "@/components/content/rich-html";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
-import { getPortalSnapshot } from "@/lib/portal";
+import { getPortalFaqSnapshot } from "@/lib/portal";
 
 export default async function FaqPage() {
   const user = await requireUser();
-  const snapshot = await getPortalSnapshot(user);
+  const snapshot = await getPortalFaqSnapshot(user);
 
   return (
     <div className="space-y-6">

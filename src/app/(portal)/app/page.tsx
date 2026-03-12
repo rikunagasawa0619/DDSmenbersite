@@ -8,12 +8,12 @@ import { PortalImage } from "@/components/ui/portal-image";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { requireUser } from "@/lib/auth";
 import { getBannerAccentStyle } from "@/lib/banner-accent";
-import { getPortalSnapshot } from "@/lib/portal";
+import { getPortalHomeSnapshot } from "@/lib/portal";
 import { formatDate, formatDateOnly } from "@/lib/utils";
 
 export default async function AppHomePage() {
   const user = await requireUser();
-  const snapshot = await getPortalSnapshot(user);
+  const snapshot = await getPortalHomeSnapshot(user);
   const primaryCourse = snapshot.courses[0];
   const insetPanelStyle = {
     background: "color-mix(in srgb, var(--color-surface-raised) 84%, transparent)",
@@ -23,7 +23,7 @@ export default async function AppHomePage() {
   return (
     <div className="space-y-8">
       <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-        <Card className="overflow-hidden" style={{ background: "var(--color-panel-highlight)" }}>
+        <Card className="dds-reveal dds-tile overflow-hidden" style={{ background: "var(--color-panel-highlight)" }}>
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
               <Badge tone="brand">{snapshot.plan.name}</Badge>
@@ -50,7 +50,7 @@ export default async function AppHomePage() {
           </div>
         </Card>
 
-        <Card style={{ background: "var(--color-panel-highlight)" }}>
+        <Card className="dds-reveal" data-delay="1" style={{ background: "var(--color-panel-highlight)" }}>
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <TrendingUp className="h-4 w-4" />
             学習進捗
@@ -88,7 +88,8 @@ export default async function AppHomePage() {
         ) : snapshot.banners.map((banner) => (
           <Card
             key={banner.id}
-            className="overflow-hidden"
+            className="dds-reveal overflow-hidden"
+            data-delay="1"
             style={{ backgroundImage: getBannerAccentStyle(banner.accent).backgroundImage }}
           >
             {banner.imageUrl ? (
@@ -105,7 +106,7 @@ export default async function AppHomePage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <Card>
+        <Card className="dds-reveal" data-delay="2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
               <Bell className="h-4 w-4" />
@@ -128,7 +129,7 @@ export default async function AppHomePage() {
           </div>
         </Card>
 
-        <Card>
+        <Card className="dds-reveal" data-delay="2">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
             <CalendarDays className="h-4 w-4" />
             直近のイベントと予約
@@ -161,7 +162,7 @@ export default async function AppHomePage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <Card>
+        <Card className="dds-reveal" data-delay="3">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
             <Ticket className="h-4 w-4" />
             自分の予約状況
@@ -186,7 +187,7 @@ export default async function AppHomePage() {
           </div>
         </Card>
 
-        <Card>
+        <Card className="dds-reveal" data-delay="3">
           <div className="text-sm font-semibold text-slate-500">利用規約メモ</div>
           <h2 className="mt-3 font-display text-2xl font-bold text-slate-950">クレジット運用ポリシー</h2>
           <ul className="mt-5 space-y-3 text-sm leading-7 text-slate-600">

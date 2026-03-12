@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { MailCheck, MailPlus, Send, ShieldAlert } from "lucide-react";
 
 import { createCampaignAction, sendCampaignNowAction } from "@/actions/admin";
 import { RichHtml } from "@/components/content/rich-html";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Modal } from "@/components/ui/modal";
+import { ModalTrigger } from "@/components/ui/modal-trigger";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireAdmin } from "@/lib/auth";
@@ -15,9 +14,7 @@ import { listCampaigns } from "@/lib/repository";
 import { formatDate } from "@/lib/utils";
 
 type CampaignsPageProps = {
-  searchParams: Promise<{
-    create?: string;
-  }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 };
 
 const minimumPlanOptions = [
@@ -38,45 +35,39 @@ const statusToneMap = {
   sent: "success",
 } as const;
 
-function CampaignModal({ closeHref }: { closeHref: string }) {
+function CampaignForm() {
   return (
-    <Modal
-      title="告知メールを作成"
-      closeHref={closeHref}
-      size="xl"
-    >
-      <form action={createCampaignAction} className="dds-admin-form grid gap-5">
-        <div className="grid gap-4 md:grid-cols-2">
-          <input name="title" placeholder="管理用タイトル" className="dds-admin-input" required minLength={2} />
-          <input name="subject" placeholder="メール件名" className="dds-admin-input" required minLength={2} />
-        </div>
-        <textarea name="previewText" placeholder="受信一覧で見える短い案内文" className="dds-admin-textarea min-h-24" />
-        <div className="grid gap-2">
-          <span className="text-sm font-semibold text-slate-500">本文</span>
-          <RichTextEditor name="bodyHtml" placeholder="箇条書きや見出しを使って、読みやすい告知メールを作成します。" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <select name="minimumPlanCode" className="dds-admin-select">
-            {minimumPlanOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-          <label className="dds-admin-label">
-            <span className="text-sm font-semibold text-slate-500">予約配信日時（任意）</span>
-            <input name="scheduledAt" type="datetime-local" className="dds-admin-input" />
-          </label>
-        </div>
-        <div className="flex justify-end">
-          <SubmitButton pendingLabel="保存中...">配信設定を保存</SubmitButton>
-        </div>
-      </form>
-    </Modal>
+    <form action={createCampaignAction} className="dds-admin-form grid gap-5">
+      <div className="grid gap-4 md:grid-cols-2">
+        <input name="title" placeholder="管理用タイトル" className="dds-admin-input" required minLength={2} />
+        <input name="subject" placeholder="メール件名" className="dds-admin-input" required minLength={2} />
+      </div>
+      <textarea name="previewText" placeholder="受信一覧で見える短い案内文" className="dds-admin-textarea min-h-24" />
+      <div className="grid gap-2">
+        <span className="text-sm font-semibold text-slate-500">本文</span>
+        <RichTextEditor name="bodyHtml" placeholder="箇条書きや見出しを使って、読みやすい告知メールを作成します。" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <select name="minimumPlanCode" className="dds-admin-select">
+          {minimumPlanOptions.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+        <label className="dds-admin-label">
+          <span className="text-sm font-semibold text-slate-500">予約配信日時（任意）</span>
+          <input name="scheduledAt" type="datetime-local" className="dds-admin-input" />
+        </label>
+      </div>
+      <div className="flex justify-end">
+        <SubmitButton pendingLabel="保存中...">配信設定を保存</SubmitButton>
+      </div>
+    </form>
   );
 }
 
 export default async function AdminCampaignsPage({ searchParams }: CampaignsPageProps) {
   await requireAdmin();
-  const params = await searchParams;
+  await searchParams;
   const campaigns = await listCampaigns();
   const emailReady = isEmailConfigured();
 
@@ -87,12 +78,14 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
           <div className="dds-kicker text-[var(--color-primary)]">配信管理</div>
           <h1 className="mt-3 font-display text-4xl font-extrabold tracking-[-0.08em] text-slate-950">配信</h1>
         </div>
-        <Link
-          href="/admin/campaigns?create=campaign"
-          className="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
+        <ModalTrigger
+          title="告知メールを作成"
+          size="xl"
+          triggerClassName="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
+          triggerContent="新しい配信を作成"
         >
-          新しい配信を作成
-        </Link>
+          <CampaignForm />
+        </ModalTrigger>
       </div>
 
       <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
@@ -191,13 +184,19 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
                         送信完了
                       </div>
                     )}
-                    <Link
-                      href="/admin/campaigns?create=campaign"
-                      className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/72 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)]/20 hover:text-slate-950"
+                    <ModalTrigger
+                      title="告知メールを作成"
+                      size="xl"
+                      triggerClassName="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/72 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--color-primary)]/20 hover:text-slate-950"
+                      triggerContent={
+                        <>
+                          <MailPlus className="h-4 w-4" />
+                          新規作成
+                        </>
+                      }
                     >
-                      <MailPlus className="h-4 w-4" />
-                      新規作成
-                    </Link>
+                      <CampaignForm />
+                    </ModalTrigger>
                   </div>
                 </div>
               </div>
@@ -205,8 +204,6 @@ export default async function AdminCampaignsPage({ searchParams }: CampaignsPage
           ))
         )}
       </div>
-
-      {params.create === "campaign" ? <CampaignModal closeHref="/admin/campaigns" /> : null}
     </div>
   );
 }

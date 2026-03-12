@@ -2,11 +2,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
-import { getPortalSnapshot } from "@/lib/portal";
+import { getPortalDealsSnapshot } from "@/lib/portal";
 
 export default async function DealsPage() {
   const user = await requireUser();
-  const snapshot = await getPortalSnapshot(user);
+  const snapshot = await getPortalDealsSnapshot(user);
 
   return (
     <div className="space-y-6">

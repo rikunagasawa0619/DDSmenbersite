@@ -28,12 +28,14 @@ export function Modal({
   title,
   description,
   closeHref,
+  onClose,
   size = "lg",
   children,
 }: {
   title: string;
   description?: string;
-  closeHref: string;
+  closeHref?: string;
+  onClose?: () => void;
   size?: "md" | "lg" | "xl";
   children: React.ReactNode;
 }) {
@@ -43,8 +45,15 @@ export function Modal({
   const panelRef = useRef<HTMLDivElement>(null);
 
   const closeModal = useCallback(() => {
-    router.push(closeHref, { scroll: false });
-  }, [closeHref, router]);
+    if (onClose) {
+      onClose();
+      return;
+    }
+
+    if (closeHref) {
+      router.push(closeHref, { scroll: false });
+    }
+  }, [closeHref, onClose, router]);
 
   useEffect(() => {
     const panel = panelRef.current;

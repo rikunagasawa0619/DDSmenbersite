@@ -16,7 +16,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       <section className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
-        <Card className="relative overflow-hidden text-[var(--color-foreground)]" style={{ background: "var(--color-panel-highlight)" }}>
+        <Card className="dds-reveal dds-tile relative overflow-hidden text-[var(--color-foreground)]" style={{ background: "var(--color-panel-highlight)" }}>
           <div className="absolute -left-8 top-10 h-40 w-40 rounded-full bg-[rgba(45,91,255,0.3)] blur-3xl" />
           <div className="absolute right-0 top-0 h-full w-[38%] bg-[linear-gradient(135deg,rgba(215,255,100,0.18),transparent_55%)]" />
           <div className="relative max-w-2xl">
@@ -28,7 +28,7 @@ export default async function AdminDashboardPage() {
             </h1>
           </div>
         </Card>
-        <Card style={{ background: "var(--color-panel-highlight)" }}>
+        <Card className="dds-reveal" data-delay="1" style={{ background: "var(--color-panel-highlight)" }}>
           <div className="dds-kicker text-[var(--color-primary)]">テーマ状況</div>
           <div className="mt-5 flex items-end justify-between gap-4">
             <div>
@@ -72,7 +72,8 @@ export default async function AdminDashboardPage() {
         {snapshot.stats.map((stat, index) => (
           <Card
             key={stat.label}
-            className={index === 0 ? "bg-[linear-gradient(135deg,rgba(45,91,255,0.1),rgba(255,255,255,0.75))]" : ""}
+            className={`dds-reveal ${index === 0 ? "dds-tile bg-[linear-gradient(135deg,rgba(45,91,255,0.1),rgba(255,255,255,0.75))]" : ""}`}
+            data-delay={String(Math.min(index, 3))}
           >
             <div className="dds-kicker text-slate-500">{stat.label}</div>
             <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-slate-950">
@@ -84,7 +85,7 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-        <Card>
+        <Card className="dds-reveal" data-delay="1">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="dds-kicker text-slate-500">お知らせ</div>
@@ -111,7 +112,7 @@ export default async function AdminDashboardPage() {
             ))}
           </div>
         </Card>
-        <Card style={{ background: "var(--color-panel-highlight)" }}>
+        <Card className="dds-reveal" data-delay="2" style={{ background: "var(--color-panel-highlight)" }}>
           <div className="dds-kicker text-[var(--color-brand)]">運営サマリー</div>
           <div className="mt-4 grid gap-4">
             <div className="rounded-[26px] border p-5" style={insetPanelStyle}>

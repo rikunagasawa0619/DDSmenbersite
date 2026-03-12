@@ -5,14 +5,14 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PortalImage } from "@/components/ui/portal-image";
 import { requireUser } from "@/lib/auth";
-import { getPortalSnapshot } from "@/lib/portal";
+import { getPortalEventsSnapshot } from "@/lib/portal";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
 export default async function EventsPage() {
   const user = await requireUser();
-  const snapshot = await getPortalSnapshot(user);
-  const events = snapshot.offerings.filter((offering) => offering.offeringType === "event");
+  const snapshot = await getPortalEventsSnapshot(user);
+  const events = snapshot.events;
 
   return (
     <div className="space-y-6">

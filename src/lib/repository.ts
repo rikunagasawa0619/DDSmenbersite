@@ -339,6 +339,29 @@ function mapCourseRow(
   };
 }
 
+function mapCourseCatalogRow(row: {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  heroNote: string | null;
+  estimatedHours: string | null;
+  thumbnailUrl: string | null;
+  audience: Prisma.JsonValue | null;
+}): Course {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    summary: row.summary,
+    heroNote: row.heroNote ?? "",
+    estimatedHours: row.estimatedHours ?? "",
+    thumbnailUrl: row.thumbnailUrl ?? undefined,
+    audience: mapAudience(row.audience),
+    modules: [],
+  };
+}
+
 function mapOfferingRow(row: {
   id: string;
   slug: string;
@@ -863,6 +886,55 @@ export async function listCourses(includeAll = false): Promise<Course[]> {
         orderBy: { createdAt: "asc" },
       })).map(mapCourseRow),
     sampleCourses,
+  );
+}
+
+export async function listCourseCatalog(includeAll = false): Promise<Course[]> {
+  return safeQuery(
+    async () =>
+      (await prisma!.course.findMany({
+        where: includeAll ? undefined : { publishStatus: "PUBLISHED" },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          summary: true,
+          heroNote: true,
+          estimatedHours: true,
+          thumbnailUrl: true,
+          audience: true,
+        },
+        orderBy: { createdAt: "asc" },
+      })).map(mapCourseCatalogRow),
+    sampleCourses.map((course) => ({
+      ...course,
+      modules: [],
+    })),
+  );
+}
+
+export async function getCourseBySlug(
+  slug: string,
+  includeAll = false,
+): Promise<Course | null> {
+  return safeQuery(
+    async () => {
+      const row = await prisma!.course.findFirst({
+        where: {
+          slug,
+          ...(includeAll ? {} : { publishStatus: "PUBLISHED" }),
+        },
+        include: {
+          modules: {
+            include: { lessons: true },
+            orderBy: { sortOrder: "asc" },
+          },
+        },
+      });
+
+      return row ? mapCourseRow(row) : null;
+    },
+    sampleCourses.find((course) => course.slug === slug) ?? null,
   );
 }
 

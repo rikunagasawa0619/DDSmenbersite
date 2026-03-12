@@ -3,10 +3,12 @@ import { getPlanForUser, getWalletForUser } from "@/lib/auth";
 import {
   getAdminStats,
   getCourseProgressMap,
+  getCourseBySlug,
   getThemeSettings,
   listAnnouncements,
   listBanners,
   listCampaigns,
+  listCourseCatalog,
   listCourses,
   listDeals,
   listFaqs,
@@ -38,10 +40,59 @@ const demoCourseProgress: Record<string, Record<string, number>> = {
   },
 };
 
+async function getResolvedPlanWallet(user: MemberProfile) {
+  const plan = await getPlanForUser(user);
+  const wallet = await getWalletForUser(user, plan);
+  return { plan, wallet };
+}
+
+function resolveCourseProgress(
+  user: MemberProfile,
+  courseProgress: Record<string, number>,
+) {
+  return process.env.NODE_ENV !== "production" && Object.keys(courseProgress).length === 0
+    ? demoCourseProgress[user.id] ?? {}
+    : courseProgress;
+}
+
+async function getVisibleOfferingsData(user: MemberProfile) {
+  const [{ plan, wallet }, allOfferings, allReservations, allWaitlistEntries] = await Promise.all([
+    getResolvedPlanWallet(user),
+    listOfferings(),
+    listReservations(),
+    listWaitlistEntries(),
+  ]);
+
+  const visibleOfferings = filterVisibleItems(user, allOfferings).map((offering) => {
+    const counts = getOfferingCounts(offering, allReservations, allWaitlistEntries);
+    const eligibility = canUserApplyToOffering({
+      user,
+      plan,
+      wallet,
+      offering,
+      reservations: allReservations,
+      waitlistEntries: allWaitlistEntries,
+    });
+
+    return {
+      ...offering,
+      counts,
+      eligibility,
+    };
+  });
+
+  return {
+    plan,
+    wallet,
+    offerings: visibleOfferings,
+    reservations: allReservations.filter((reservation) => reservation.userId === user.id),
+  };
+}
+
 export async function getPortalSnapshot(user: MemberProfile) {
-  const [plan, theme, allCourses, allAnnouncements, allBanners, allDeals, allFaqs, allTools, allOfferings, allReservations, allWaitlistEntries, courseProgress] =
+  const [{ plan, wallet }, theme, allCourses, allAnnouncements, allBanners, allDeals, allFaqs, allTools, allOfferings, allReservations, allWaitlistEntries, courseProgress] =
     await Promise.all([
-      getPlanForUser(user),
+      getResolvedPlanWallet(user),
       getThemeSettings(),
       listCourses(),
       listAnnouncements(),
@@ -54,7 +105,6 @@ export async function getPortalSnapshot(user: MemberProfile) {
       listWaitlistEntries(),
       getCourseProgressMap(user.id),
     ]);
-  const wallet = await getWalletForUser(user, plan);
   const visibleCourses = filterVisibleItems(user, allCourses);
   const visibleAnnouncements = filterVisibleItems(user, allAnnouncements);
   const visibleBanners = filterVisibleItems(user, allBanners);
@@ -96,11 +146,112 @@ export async function getPortalSnapshot(user: MemberProfile) {
     courses: visibleCourses,
     offerings: visibleOfferings,
     reservations: myReservations,
-    courseProgress:
-      process.env.NODE_ENV !== "production" &&
-      Object.keys(courseProgress).length === 0
-        ? demoCourseProgress[user.id] ?? {}
-        : courseProgress,
+    courseProgress: resolveCourseProgress(user, courseProgress),
+  };
+}
+
+export async function getPortalHomeSnapshot(user: MemberProfile) {
+  const [{ plan, wallet }, theme, allCourses, allAnnouncements, allBanners, allOfferings, allReservations, allWaitlistEntries, courseProgress] =
+    await Promise.all([
+      getResolvedPlanWallet(user),
+      getThemeSettings(),
+      listCourseCatalog(),
+      listAnnouncements(),
+      listBanners(),
+      listOfferings(),
+      listReservations(),
+      listWaitlistEntries(),
+      getCourseProgressMap(user.id),
+    ]);
+
+  const offerings = filterVisibleItems(user, allOfferings).map((offering) => {
+    const counts = getOfferingCounts(offering, allReservations, allWaitlistEntries);
+    const eligibility = canUserApplyToOffering({
+      user,
+      plan,
+      wallet,
+      offering,
+      reservations: allReservations,
+      waitlistEntries: allWaitlistEntries,
+    });
+
+    return { ...offering, counts, eligibility };
+  });
+
+  return {
+    user,
+    plan,
+    wallet,
+    theme,
+    banners: filterVisibleItems(user, allBanners),
+    announcements: filterVisibleItems(user, allAnnouncements),
+    courses: filterVisibleItems(user, allCourses),
+    offerings,
+    reservations: allReservations.filter((reservation) => reservation.userId === user.id),
+    courseProgress: resolveCourseProgress(user, courseProgress),
+  };
+}
+
+export async function getPortalDealsSnapshot(user: MemberProfile) {
+  return {
+    deals: filterVisibleItems(user, await listDeals()),
+  };
+}
+
+export async function getPortalToolsSnapshot(user: MemberProfile) {
+  return {
+    tools: filterVisibleItems(user, await listTools()),
+  };
+}
+
+export async function getPortalFaqSnapshot(user: MemberProfile) {
+  return {
+    faqs: filterVisibleItems(user, await listFaqs()),
+  };
+}
+
+export async function getPortalCoursesSnapshot(user: MemberProfile) {
+  const [allCourses, courseProgress] = await Promise.all([
+    listCourseCatalog(),
+    getCourseProgressMap(user.id),
+  ]);
+
+  return {
+    courses: filterVisibleItems(user, allCourses),
+    courseProgress: resolveCourseProgress(user, courseProgress),
+  };
+}
+
+export async function getPortalCourseDetailSnapshot(user: MemberProfile, courseSlug: string) {
+  const [course, courseProgress] = await Promise.all([
+    getCourseBySlug(courseSlug),
+    getCourseProgressMap(user.id),
+  ]);
+
+  if (!course) {
+    return {
+      course: null,
+      courseProgress: resolveCourseProgress(user, courseProgress),
+    };
+  }
+
+  const visibleCourse = filterVisibleItems(user, [course])[0] ?? null;
+
+  return {
+    course: visibleCourse,
+    courseProgress: resolveCourseProgress(user, courseProgress),
+  };
+}
+
+export async function getPortalBookingsSnapshot(user: MemberProfile) {
+  return getVisibleOfferingsData(user);
+}
+
+export async function getPortalEventsSnapshot(user: MemberProfile) {
+  const snapshot = await getVisibleOfferingsData(user);
+  return {
+    ...snapshot,
+    events: snapshot.offerings.filter((offering) => offering.offeringType === "event"),
   };
 }
 

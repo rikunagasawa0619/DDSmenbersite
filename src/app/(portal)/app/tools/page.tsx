@@ -3,11 +3,11 @@ import { ExternalLink } from "lucide-react";
 import { RichHtml } from "@/components/content/rich-html";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
-import { getPortalSnapshot } from "@/lib/portal";
+import { getPortalToolsSnapshot } from "@/lib/portal";
 
 export default async function ToolsPage() {
   const user = await requireUser();
-  const snapshot = await getPortalSnapshot(user);
+  const snapshot = await getPortalToolsSnapshot(user);
 
   return (
     <div className="space-y-6">

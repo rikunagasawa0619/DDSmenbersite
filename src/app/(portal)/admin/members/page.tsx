@@ -6,7 +6,7 @@ import { labelMemberStatus, labelPlan } from "@/lib/admin-display";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Modal } from "@/components/ui/modal";
+import { ModalTrigger } from "@/components/ui/modal-trigger";
 import { PaginationNav } from "@/components/ui/pagination-nav";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireAdmin } from "@/lib/auth";
@@ -19,7 +19,6 @@ type MembersPageProps = {
     plan?: string;
     status?: string;
     sort?: string;
-    create?: string;
     page?: string;
   }>;
 };
@@ -31,77 +30,73 @@ function statusTone(status: string) {
   return "neutral" as const;
 }
 
-function NewMemberModal({
-  closeHref,
+function NewMemberForm({
   planOptions,
 }: {
-  closeHref: string;
   planOptions: Array<{ code: string; name: string }>;
 }) {
   return (
-    <Modal title="新規会員を追加" closeHref={closeHref} size="lg">
-      <form action={createMemberAction} className="dds-admin-form grid gap-4 xl:grid-cols-2">
-        <label className="dds-admin-label">
-          <span className="text-sm font-semibold text-slate-500">氏名</span>
-          <input name="name" className="dds-admin-input" required minLength={2} />
-        </label>
-        <label className="dds-admin-label">
-          <span className="text-sm font-semibold text-slate-500">メールアドレス</span>
-          <input name="email" type="email" className="dds-admin-input" required />
-        </label>
-        <label className="dds-admin-label">
-          <span className="text-sm font-semibold text-slate-500">肩書き</span>
-          <input name="title" className="dds-admin-input" required />
-        </label>
-        <label className="dds-admin-label">
-          <span className="text-sm font-semibold text-slate-500">会社名</span>
-          <input name="company" className="dds-admin-input" />
-        </label>
-        <label className="dds-admin-label">
-          <span className="text-sm font-semibold text-slate-500">ロール</span>
-          <select name="role" className="dds-admin-select">
-            <option value="STUDENT">受講生</option>
-            <option value="STAFF">運営スタッフ</option>
-            <option value="SUPER_ADMIN">管理者</option>
-          </select>
-        </label>
-        <label className="dds-admin-label">
-          <span className="text-sm font-semibold text-slate-500">ステータス</span>
-          <select name="status" className="dds-admin-select">
-            <option value="INVITED">招待中</option>
-            <option value="ACTIVE">利用中</option>
-            <option value="PAUSED">休会中</option>
-            <option value="WITHDRAWN">退会済み</option>
-            <option value="SUSPENDED">利用停止</option>
-          </select>
-        </label>
-        <label className="dds-admin-label">
-          <span className="text-sm font-semibold text-slate-500">プラン</span>
-          <select name="planCode" className="dds-admin-select">
-            {planOptions.map((plan) => (
-              <option key={plan.code} value={plan.code}>
-                {plan.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="dds-admin-label">
-          <span className="text-sm font-semibold text-slate-500">自動付与の基準日</span>
-          <input name="creditGrantBaseDate" type="date" className="dds-admin-input" />
-        </label>
-        <label className="dds-admin-label xl:col-span-2">
-          <span className="text-sm font-semibold text-slate-500">追加セグメント</span>
-          <input
-            name="segmentSlugs"
-            className="dds-admin-input"
-            placeholder="ai-foundation, sales-lab"
-          />
-        </label>
-        <div className="xl:col-span-2 flex justify-end">
-          <SubmitButton pendingLabel="追加中...">会員を追加</SubmitButton>
-        </div>
-      </form>
-    </Modal>
+    <form action={createMemberAction} className="dds-admin-form grid gap-4 xl:grid-cols-2">
+      <label className="dds-admin-label">
+        <span className="text-sm font-semibold text-slate-500">氏名</span>
+        <input name="name" className="dds-admin-input" required minLength={2} />
+      </label>
+      <label className="dds-admin-label">
+        <span className="text-sm font-semibold text-slate-500">メールアドレス</span>
+        <input name="email" type="email" className="dds-admin-input" required />
+      </label>
+      <label className="dds-admin-label">
+        <span className="text-sm font-semibold text-slate-500">肩書き</span>
+        <input name="title" className="dds-admin-input" required />
+      </label>
+      <label className="dds-admin-label">
+        <span className="text-sm font-semibold text-slate-500">会社名</span>
+        <input name="company" className="dds-admin-input" />
+      </label>
+      <label className="dds-admin-label">
+        <span className="text-sm font-semibold text-slate-500">ロール</span>
+        <select name="role" className="dds-admin-select">
+          <option value="STUDENT">受講生</option>
+          <option value="STAFF">運営スタッフ</option>
+          <option value="SUPER_ADMIN">管理者</option>
+        </select>
+      </label>
+      <label className="dds-admin-label">
+        <span className="text-sm font-semibold text-slate-500">ステータス</span>
+        <select name="status" className="dds-admin-select">
+          <option value="INVITED">招待中</option>
+          <option value="ACTIVE">利用中</option>
+          <option value="PAUSED">休会中</option>
+          <option value="WITHDRAWN">退会済み</option>
+          <option value="SUSPENDED">利用停止</option>
+        </select>
+      </label>
+      <label className="dds-admin-label">
+        <span className="text-sm font-semibold text-slate-500">プラン</span>
+        <select name="planCode" className="dds-admin-select">
+          {planOptions.map((plan) => (
+            <option key={plan.code} value={plan.code}>
+              {plan.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="dds-admin-label">
+        <span className="text-sm font-semibold text-slate-500">自動付与の基準日</span>
+        <input name="creditGrantBaseDate" type="date" className="dds-admin-input" />
+      </label>
+      <label className="dds-admin-label xl:col-span-2">
+        <span className="text-sm font-semibold text-slate-500">追加セグメント</span>
+        <input
+          name="segmentSlugs"
+          className="dds-admin-input"
+          placeholder="ai-foundation, sales-lab"
+        />
+      </label>
+      <div className="xl:col-span-2 flex justify-end">
+        <SubmitButton pendingLabel="追加中...">会員を追加</SubmitButton>
+      </div>
+    </form>
   );
 }
 
@@ -153,35 +148,37 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
           >
             CSV 出力
           </Link>
-          <Link
-            href="/admin/members?create=member"
-            className="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
+          <ModalTrigger
+            title="新規会員を追加"
+            size="lg"
+            triggerClassName="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
+            triggerContent="新規会員"
           >
-            新規会員
-          </Link>
+            <NewMemberForm planOptions={plans.map((plan) => ({ code: plan.code, name: plan.name }))} />
+          </ModalTrigger>
         </div>
       </div>
 
       <section className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="dds-reveal" data-delay="1">
           <div className="dds-kicker text-slate-500">利用中</div>
           <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-slate-950">{statusCounts.active}</div>
         </Card>
-        <Card>
+        <Card className="dds-reveal" data-delay="1">
           <div className="dds-kicker text-slate-500">招待中</div>
           <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-[var(--color-primary)]">{statusCounts.invited}</div>
         </Card>
-        <Card>
+        <Card className="dds-reveal" data-delay="2">
           <div className="dds-kicker text-slate-500">休会中</div>
           <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-amber-600">{statusCounts.paused}</div>
         </Card>
-        <Card>
+        <Card className="dds-reveal" data-delay="2">
           <div className="dds-kicker text-slate-500">退会済み</div>
           <div className="mt-4 font-display text-5xl font-extrabold tracking-[-0.08em] text-slate-500">{statusCounts.withdrawn}</div>
         </Card>
       </section>
 
-      <Card>
+      <Card className="dds-reveal" data-delay="2">
         <form className="grid gap-4 xl:grid-cols-[1.6fr_0.85fr_0.85fr_0.85fr_auto]">
           <input
             name="q"
@@ -221,7 +218,7 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
         </form>
       </Card>
 
-      <Card className="overflow-hidden p-0">
+      <Card className="dds-reveal overflow-hidden p-0" data-delay="3">
         {!isDatabaseConfigured ? (
           <div className="p-6 text-sm text-slate-500">データベース接続後に会員管理が有効になります。</div>
         ) : memberPage.items.length === 0 ? (
@@ -311,13 +308,6 @@ export default async function AdminMembersPage({ searchParams }: MembersPageProp
         totalPages={memberPage.totalPages}
         hrefBuilder={buildPageHref}
       />
-
-      {params.create === "member" ? (
-        <NewMemberModal
-          closeHref="/admin/members"
-          planOptions={plans.map((plan) => ({ code: plan.code, name: plan.name }))}
-        />
-      ) : null}
     </div>
   );
 }

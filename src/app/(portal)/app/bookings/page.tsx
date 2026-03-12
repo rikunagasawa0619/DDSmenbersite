@@ -12,7 +12,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { bookOfferingAction, cancelReservationAction } from "@/actions/member";
 import { requireUser } from "@/lib/auth";
 import { isDatabaseConfigured } from "@/lib/prisma";
-import { getPortalSnapshot } from "@/lib/portal";
+import { getPortalBookingsSnapshot } from "@/lib/portal";
 import { formatDate, formatDateOnly } from "@/lib/utils";
 import Link from "next/link";
 
@@ -28,7 +28,7 @@ export default async function BookingsPage({
   const user = await requireUser();
   const params = await searchParams;
   const currentMonth = getCalendarMonth(params.month);
-  const snapshot = await getPortalSnapshot(user);
+  const snapshot = await getPortalBookingsSnapshot(user);
 
   const calendarEntries = snapshot.offerings.map((offering) => ({
     id: offering.id,
@@ -41,7 +41,7 @@ export default async function BookingsPage({
   return (
     <div className="space-y-6">
       <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="bg-[linear-gradient(180deg,#eef3ff,#f6efe2)] text-slate-950">
+        <Card className="dds-reveal dds-tile bg-[linear-gradient(180deg,#eef3ff,#f6efe2)] text-slate-950">
           <div className="text-sm font-semibold text-slate-500">予約クレジット</div>
           <h1 className="mt-4 font-display text-3xl font-bold">
             {snapshot.plan.unlimitedCredits ? "クレジット無制限" : `残り ${snapshot.wallet.currentBalance} 回`}
@@ -64,7 +64,7 @@ export default async function BookingsPage({
           </div>
         </Card>
 
-        <Card>
+        <Card className="dds-reveal" data-delay="1">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="text-sm font-semibold text-slate-500">予約カレンダー</div>
@@ -93,7 +93,9 @@ export default async function BookingsPage({
         </Card>
       </section>
 
-      <ScheduleCalendar month={currentMonth} entries={calendarEntries} emptyLabel="予定なし" />
+      <div className="dds-reveal" data-delay="1">
+        <ScheduleCalendar month={currentMonth} entries={calendarEntries} emptyLabel="予定なし" />
+      </div>
 
       <div className="grid gap-5">
         {snapshot.offerings.length === 0 ? (
@@ -108,7 +110,7 @@ export default async function BookingsPage({
           );
 
           return (
-            <Card key={offering.id} id={`offering-${offering.id}`}>
+            <Card key={offering.id} id={`offering-${offering.id}`} className="dds-reveal" data-delay="2">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-3">

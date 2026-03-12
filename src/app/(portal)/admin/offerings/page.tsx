@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ImageUploadField } from "@/components/ui/image-upload-field";
 import { Modal } from "@/components/ui/modal";
+import { ModalTrigger } from "@/components/ui/modal-trigger";
 import { PortalImage } from "@/components/ui/portal-image";
 import {
   getCalendarMonth,
@@ -57,20 +58,13 @@ function getDefaultStartValue(value?: string) {
   return `${year}-${month}-${day}T20:00`;
 }
 
-function CreateOfferingModal({
-  closeHref,
+function CreateOfferingForm({
   defaultStart,
 }: {
-  closeHref: string;
   defaultStart: string;
 }) {
   return (
-    <Modal
-      title="募集枠を作成"
-      closeHref={closeHref}
-      size="xl"
-    >
-      <form action={createOfferingAction} className="dds-admin-form grid gap-5" encType="multipart/form-data">
+    <form action={createOfferingAction} className="dds-admin-form grid gap-5" encType="multipart/form-data">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="dds-admin-label">
             <span className="text-sm font-semibold text-slate-500">募集枠タイトル</span>
@@ -179,7 +173,6 @@ function CreateOfferingModal({
           <SubmitButton pendingLabel="作成中...">募集枠を保存</SubmitButton>
         </div>
       </form>
-    </Modal>
   );
 }
 
@@ -225,12 +218,14 @@ export default async function AdminOfferingsPage({
           >
             次月
           </Link>
-          <Link
-            href={`/admin/offerings?month=${params.month ?? shiftCalendarMonth(currentMonth, 0)}&create=offering`}
-            className="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
+          <ModalTrigger
+            title="募集枠を作成"
+            size="xl"
+            triggerClassName="inline-flex rounded-full bg-[var(--color-primary)] px-5 py-3 font-display text-xs font-extrabold uppercase tracking-[0.16em] text-white shadow-[0_18px_40px_rgba(18,56,198,0.22)] transition hover:opacity-90"
+            triggerContent="新しい募集枠"
           >
-            新しい募集枠
-          </Link>
+            <CreateOfferingForm defaultStart={getDefaultStartValue()} />
+          </ModalTrigger>
         </div>
       </div>
 
@@ -391,10 +386,13 @@ export default async function AdminOfferingsPage({
       </div>
 
       {params.create === "offering" ? (
-        <CreateOfferingModal
+        <Modal
+          title="募集枠を作成"
           closeHref={`/admin/offerings?month=${params.month ?? shiftCalendarMonth(currentMonth, 0)}`}
-          defaultStart={getDefaultStartValue(params.start)}
-        />
+          size="xl"
+        >
+          <CreateOfferingForm defaultStart={getDefaultStartValue(params.start)} />
+        </Modal>
       ) : null}
     </div>
   );

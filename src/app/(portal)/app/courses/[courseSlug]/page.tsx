@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PortalImage } from "@/components/ui/portal-image";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { requireUser } from "@/lib/auth";
-import { getPortalSnapshot } from "@/lib/portal";
+import { getPortalCourseDetailSnapshot } from "@/lib/portal";
 
 export default async function CourseDetailPage({
   params,
@@ -18,8 +18,8 @@ export default async function CourseDetailPage({
 }) {
   const { courseSlug } = await params;
   const user = await requireUser();
-  const snapshot = await getPortalSnapshot(user);
-  const course = snapshot.courses.find((item) => item.slug === courseSlug);
+  const snapshot = await getPortalCourseDetailSnapshot(user, courseSlug);
+  const course = snapshot.course;
 
   if (!course) {
     notFound();
