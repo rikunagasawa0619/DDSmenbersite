@@ -17,7 +17,7 @@ function formatMonthLabel(date: Date) {
   return formatInTimeZone(date, appTimeZone, "yyyy年M月");
 }
 
-function getDayKey(date: Date | string) {
+export function getDayKey(date: Date | string) {
   return formatInTimeZone(date, appTimeZone, "yyyy-MM-dd");
 }
 
@@ -42,11 +42,13 @@ export function ScheduleCalendar({
   entries,
   emptyLabel = "予定はありません",
   dayHrefBuilder,
+  onDaySelect,
 }: {
   month: Date;
   entries: ScheduleCalendarEntry[];
   emptyLabel?: string;
   dayHrefBuilder?: (dayKey: string) => string | undefined;
+  onDaySelect?: (dayKey: string) => void;
 }) {
   const monthStart = startOfMonth(month);
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -98,7 +100,18 @@ export function ScheduleCalendar({
               </div>
               <div className="mt-3 space-y-2">
                 {dayEntries.length === 0 ? (
-                  dayHrefBuilder ? (
+                  onDaySelect ? (
+                    <button
+                      type="button"
+                      onClick={() => onDaySelect(key)}
+                      aria-label={`${key} に予定を作成`}
+                      className="flex min-h-24 w-full items-end rounded-2xl border border-transparent px-3 py-3 text-[11px] leading-5 text-transparent transition group-hover:border-[var(--color-outline)] group-hover:text-[var(--color-muted)] hover:border-[var(--color-primary)]/24 hover:bg-[rgba(45,91,255,0.04)] hover:text-[var(--color-primary)]"
+                    >
+                      <span className="font-display text-[11px] font-extrabold uppercase tracking-[0.16em]">
+                        +
+                      </span>
+                    </button>
+                  ) : dayHrefBuilder ? (
                     <Link
                       href={dayHrefBuilder(key) ?? "#"}
                       aria-label={`${key} に予定を作成`}

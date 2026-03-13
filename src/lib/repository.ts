@@ -633,6 +633,22 @@ export async function listMembers(): Promise<MemberProfile[]> {
   );
 }
 
+export async function listMembersByIds(ids: string[]): Promise<MemberProfile[]> {
+  const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+  if (uniqueIds.length === 0) {
+    return [];
+  }
+
+  return safeQuery(
+    async () =>
+      (await prisma!.user.findMany({
+        where: { id: { in: uniqueIds } },
+        include: userInclude,
+      })).map(mapMemberRow),
+    sampleUsers.filter((member) => uniqueIds.includes(member.id)),
+  );
+}
+
 function sortMemberProfiles(
   members: MemberProfile[],
   sort: NonNullable<MemberListPageParams["sort"]>,
