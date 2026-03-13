@@ -39,8 +39,8 @@ export function MemberShell({
             <div className="flex flex-wrap items-center gap-4">
               <BrandMark href="/app" />
               <div className="space-y-1">
-                <div className="text-sm text-[var(--color-muted)]">DDS 会員サイト</div>
-                <div className="font-display text-xl font-bold text-[var(--color-foreground)]">{user.name}</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-muted)]">DDS Members</div>
+                <div className="font-display text-xl font-black tracking-[-0.05em] text-[var(--color-foreground)]">{user.name}</div>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">

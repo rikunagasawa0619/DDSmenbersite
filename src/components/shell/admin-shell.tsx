@@ -35,8 +35,6 @@ export function AdminShell({
     <div className="dds-shell-stage min-h-screen p-4 md:p-6">
       <div className="dds-shell-frame mx-auto grid min-h-[calc(100vh-2rem)] max-w-[1540px] gap-6 rounded-[40px] p-3 md:grid-cols-[320px_minmax(0,1fr)] md:p-4">
         <aside className="dds-shell-sidebar relative overflow-hidden rounded-[34px] p-5">
-          <div className="absolute right-[-44px] top-[-44px] h-32 w-32 rounded-full bg-[rgba(215,255,100,0.18)] blur-2xl" />
-          <div className="absolute bottom-8 left-[-30px] h-28 w-28 rounded-full bg-[rgba(45,91,255,0.2)] blur-2xl" />
           <BrandMark compact href="/admin" className="relative z-10" />
           <div className="relative z-10 mt-8 space-y-2">
             {adminNavigation.map((item) => {
@@ -70,11 +68,9 @@ export function AdminShell({
           </div>
         </aside>
         <div className="dds-shell-main relative overflow-hidden rounded-[34px] p-6 md:p-8">
-          <div className="absolute left-1/3 top-0 h-44 w-44 rounded-full bg-[rgba(215,255,100,0.16)] blur-3xl" />
-          <div className="absolute bottom-0 right-0 h-52 w-52 rounded-full bg-[rgba(45,91,255,0.1)] blur-3xl" />
           <header className="relative flex flex-col gap-4 border-b border-[var(--color-outline)] pb-6 md:flex-row md:items-end md:justify-between">
             <div className="max-w-2xl">
-              <div className="dds-kicker text-[var(--color-primary)]">dds 管理コンソール</div>
+              <div className="dds-kicker text-[var(--color-primary)]">dds operations</div>
               <div className="mt-3 font-display text-3xl font-extrabold tracking-[-0.08em] text-slate-950 md:text-4xl">
                 DDS 管理画面
               </div>

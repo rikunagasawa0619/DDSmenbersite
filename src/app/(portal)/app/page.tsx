@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Bell, CalendarDays, GraduationCap, Ticket, TrendingUp, Zap } from "lucide-react";
+import { ArrowRight, Bell, CalendarDays, GraduationCap, Sparkles, Ticket } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,95 +15,110 @@ const quickLinks = [
   { href: "/app/bookings", label: "講義予約", icon: CalendarDays },
   { href: "/app/courses", label: "教材一覧", icon: GraduationCap },
   { href: "/app/events", label: "イベント", icon: Ticket },
-  { href: "/app/faq", label: "FAQ", icon: Bell },
 ];
 
 export default async function AppHomePage() {
   const user = await requireUser();
   const snapshot = await getPortalHomeSnapshot(user);
-  const primaryCourse = snapshot.courses[0];
-  const nextOffering = snapshot.offerings[0];
-  const latestAnnouncement = snapshot.announcements[0];
+  const primaryCourse = snapshot.courses[0] ?? null;
+  const nextOffering = snapshot.offerings[0] ?? null;
+  const latestAnnouncement = snapshot.announcements[0] ?? null;
+  const primaryActionHref = nextOffering ? "/app/bookings" : primaryCourse ? `/app/courses/${primaryCourse.slug}` : "/app/courses";
+  const primaryActionLabel = nextOffering ? "予約枠を見る" : primaryCourse ? "教材を再開する" : "教材一覧へ";
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="dds-reveal dds-tile relative overflow-hidden bg-[linear-gradient(145deg,#141b30,#1d2a48_42%,#f6efe1_42%,#fffdf8)] text-slate-950">
-          <div className="absolute right-[-20px] top-[-20px] h-44 w-44 rounded-full bg-[rgba(45,91,255,0.2)] blur-3xl" />
-          <div className="relative grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-            <div className="pt-1">
-              <Badge tone="brand">{snapshot.plan.name}</Badge>
-              <h1 className="mt-5 font-display text-4xl font-extrabold tracking-[-0.09em] text-white md:text-5xl xl:text-slate-950">
-                今日の学習と予約を、
-                <br />
-                最短距離で進める。
+      <section className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
+        <Card className="dds-reveal overflow-hidden">
+          <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_280px]">
+            <div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Badge tone="brand">{snapshot.plan.name}</Badge>
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  次にやること
+                </span>
+              </div>
+              <h1 className="mt-5 max-w-4xl font-display text-[clamp(2.8rem,5vw,5.2rem)] font-black leading-[0.92] tracking-[-0.1em] text-slate-950">
+                {nextOffering ? "次の予約を押さえる。" : "学習を再開する。"}
               </h1>
-              <p className="mt-5 max-w-xl text-sm leading-7 text-white/80 xl:text-slate-600">
-                残クレジット、直近の募集枠、今見るべき教材、お知らせをまとめています。迷わず次の行動に進めるホームです。
+              <p className="mt-5 max-w-2xl text-sm leading-8 text-slate-600">
+                この画面では、今すぐ進めるべきことだけを前に出しています。迷ったら最初のアクションから進めれば十分です。
               </p>
+
+              <div className="mt-8 rounded-[1.8rem] border border-black/8 bg-black/[0.03] p-5">
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  {nextOffering ? "直近の募集枠" : primaryCourse ? "続きから見る教材" : "公開中の教材"}
+                </div>
+                <div className="mt-4 font-display text-[2rem] font-black leading-[0.98] tracking-[-0.08em] text-slate-950">
+                  {nextOffering?.title ?? primaryCourse?.title ?? "まだ教材がありません"}
+                </div>
+                <div className="mt-3 text-sm leading-7 text-slate-600">
+                  {nextOffering
+                    ? `${formatDate(nextOffering.startsAt)} / ${nextOffering.locationLabel}`
+                    : primaryCourse?.summary ?? "公開中の教材が追加されるとここに表示されます。"}
+                </div>
+              </div>
+
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link href="/app/bookings">
-                  <Button>予約を確認</Button>
+                <Link href={primaryActionHref}>
+                  <Button className="gap-2">
+                    {primaryActionLabel}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
                 </Link>
-                <Link href="/app/courses">
-                  <Button variant="secondary">教材を見る</Button>
+                <Link href="/app/faq">
+                  <Button variant="secondary">困ったときは FAQ</Button>
                 </Link>
               </div>
             </div>
 
-            <div className="grid gap-3">
-              <div className="rounded-[28px] border border-black/8 bg-white/86 p-5 shadow-[0_24px_56px_rgba(15,23,42,0.08)]">
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">予約残高</div>
-                <div className="mt-3 font-display text-5xl font-extrabold tracking-[-0.08em] text-[var(--color-primary)]">
+            <div className="grid gap-4">
+              <div className="rounded-[1.8rem] border border-black/8 bg-black/[0.03] p-5">
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">残クレジット</div>
+                <div className="mt-4 font-display text-6xl font-black tracking-[-0.1em] text-[var(--color-primary)]">
                   {snapshot.plan.unlimitedCredits ? "∞" : snapshot.wallet.currentBalance}
                 </div>
-                <div className="mt-2 text-sm text-slate-600">
+                <div className="mt-3 text-sm leading-7 text-slate-600">
                   次回付与: {snapshot.plan.unlimitedCredits ? "常時利用可能" : formatDateOnly(snapshot.wallet.nextGrantAt)}
                 </div>
               </div>
-              <div className="rounded-[28px] border border-black/8 bg-[#10182b] p-5 text-white shadow-[0_24px_56px_rgba(7,17,31,0.18)]">
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">次の予定</div>
-                <div className="mt-3 font-semibold">{nextOffering ? nextOffering.title : "現在受付中の募集枠はありません"}</div>
-                <div className="mt-2 text-sm text-white/70">
-                  {nextOffering ? formatDate(nextOffering.startsAt) : "新しい募集枠が公開されるとここに表示されます。"}
+
+              <div className="rounded-[1.8rem] border border-black/8 bg-black/[0.03] p-5">
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">最新のお知らせ</div>
+                <div className="mt-4 font-display text-[1.4rem] font-black leading-[1.05] tracking-[-0.07em] text-slate-950">
+                  {latestAnnouncement?.title ?? "まだお知らせはありません"}
+                </div>
+                <div className="mt-3 text-sm leading-7 text-slate-600">
+                  {latestAnnouncement?.summary ?? "新しい告知がここに表示されます。"}
                 </div>
               </div>
             </div>
           </div>
         </Card>
 
-        <Card className="dds-reveal grid gap-4 bg-[linear-gradient(180deg,#eef3ff,#f6efe2)]" data-delay="1">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
-            <Zap className="h-4 w-4 text-[var(--color-primary)]" />
-            今日のショートカット
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {quickLinks.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="group rounded-[24px] border border-black/8 bg-white/78 p-4 transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/24 hover:shadow-[0_18px_36px_rgba(15,23,42,0.06)]"
-                >
+        <div className="grid gap-4">
+          {quickLinks.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="dds-reveal rounded-[1.8rem] border border-black/8 bg-white/76 p-5 transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/20 hover:shadow-[0_18px_36px_rgba(15,23,42,0.06)]"
+                data-delay={String(index + 1)}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">shortcut</div>
+                    <div className="mt-3 font-display text-[1.55rem] font-black tracking-[-0.07em] text-slate-950">
+                      {item.label}
+                    </div>
+                  </div>
                   <Icon className="h-5 w-5 text-[var(--color-primary)]" />
-                  <div className="mt-4 font-display text-xl font-extrabold tracking-[-0.06em] text-slate-950">
-                    {item.label}
-                  </div>
-                  <div className="mt-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500 transition group-hover:text-[var(--color-primary)]">
-                    開く
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-          <div className="rounded-[24px] border border-black/8 bg-white/74 p-5">
-            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">最新のお知らせ</div>
-            <div className="mt-3 font-semibold text-slate-950">{latestAnnouncement?.title ?? "まだお知らせはありません"}</div>
-            <div className="mt-2 text-sm leading-7 text-slate-600">{latestAnnouncement?.summary ?? "新しい告知がここに表示されます。"}</div>
-          </div>
-        </Card>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-3">
@@ -139,16 +154,18 @@ export default async function AppHomePage() {
         )}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-        <Card className="dds-reveal" data-delay="2" style={{ background: "var(--color-panel-highlight)" }}>
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
-            <TrendingUp className="h-4 w-4 text-[var(--color-primary)]" />
-            学習進捗
+      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <Card className="dds-reveal" data-delay="2">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <GraduationCap className="h-4 w-4 text-[var(--color-primary)]" />
+            学習中の教材
           </div>
           {primaryCourse ? (
             <>
-              <h2 className="mt-4 font-display text-3xl font-extrabold tracking-[-0.08em] text-slate-950">{primaryCourse.title}</h2>
-              <p className="mt-3 text-sm leading-7 text-slate-600">{primaryCourse.summary}</p>
+              <div className="mt-4 font-display text-[2rem] font-black tracking-[-0.08em] text-slate-950">
+                {primaryCourse.title}
+              </div>
+              <div className="mt-3 text-sm leading-7 text-slate-600">{primaryCourse.summary}</div>
               <ProgressBar value={snapshot.courseProgress[primaryCourse.id] ?? 0} className="mt-6 bg-black/8" />
               <div className="mt-3 text-sm text-slate-600">
                 {snapshot.courseProgress[primaryCourse.id] ?? 0}% 完了
@@ -159,76 +176,18 @@ export default async function AppHomePage() {
             </>
           ) : (
             <div className="mt-4 rounded-[24px] border border-black/8 bg-white/72 p-5 text-sm leading-7 text-slate-700">
-              まだ公開中の教材がありません。運営がコースを追加すると、ここに学習進捗が表示されます。
+              まだ公開中の教材がありません。
             </div>
           )}
         </Card>
 
         <Card className="dds-reveal" data-delay="2">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
-              <CalendarDays className="h-4 w-4 text-[var(--color-primary)]" />
-              直近のイベントと予約
+          <div className="flex items-center justify-between gap-4 border-b border-black/6 pb-5">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <Bell className="h-4 w-4 text-[var(--color-primary)]" />
+              お知らせ
             </div>
-            <Link href="/app/bookings" className="text-sm font-semibold text-[var(--color-primary)]">
-              予約一覧へ
-            </Link>
-          </div>
-          <div className="mt-5 grid gap-4">
-            {snapshot.offerings.length === 0 ? (
-              <div className="rounded-[24px] border border-dashed border-black/10 p-6 text-sm text-slate-500">
-                現在受付中の募集枠はありません。
-              </div>
-            ) : (
-              snapshot.offerings.slice(0, 3).map((offering) => (
-                <div key={offering.id} className="rounded-[24px] border border-black/6 bg-black/[0.02] p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="font-semibold text-slate-950">{offering.title}</div>
-                      <div className="mt-1 text-sm text-slate-600">{formatDate(offering.startsAt)} / {offering.locationLabel}</div>
-                    </div>
-                    <Badge tone={offering.counts.isFull ? "warning" : "success"}>
-                      残{offering.counts.remaining}
-                    </Badge>
-                  </div>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{offering.summary}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <Card className="dds-reveal" data-delay="3">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
-            <Ticket className="h-4 w-4 text-[var(--color-primary)]" />
-            自分の予約状況
-          </div>
-          <div className="mt-4 space-y-3">
-            {snapshot.reservations.length === 0 ? (
-              <div className="rounded-[24px] border border-dashed border-black/10 p-6 text-sm text-slate-500">
-                現在の予約はありません。
-              </div>
-            ) : (
-              snapshot.reservations.map((reservation) => {
-                const offering = snapshot.offerings.find((item) => item.id === reservation.offeringId);
-                if (!offering) return null;
-                return (
-                  <div key={reservation.id} className="rounded-[24px] border border-black/6 p-4">
-                    <div className="font-semibold text-slate-950">{offering.title}</div>
-                    <div className="mt-1 text-sm text-slate-600">{formatDate(offering.startsAt)}</div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </Card>
-
-        <Card className="dds-reveal" data-delay="3">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-500">
-            <Bell className="h-4 w-4 text-[var(--color-primary)]" />
-            お知らせ
+            <Badge tone="neutral">{snapshot.announcements.length}件</Badge>
           </div>
           <div className="mt-5 divide-y divide-black/6">
             {snapshot.announcements.length === 0 ? (
@@ -236,11 +195,48 @@ export default async function AppHomePage() {
             ) : (
               snapshot.announcements.slice(0, 4).map((announcement) => (
                 <div key={announcement.id} className="py-4">
-                  <div className="text-xs uppercase tracking-[0.18em] text-slate-400">
+                  <div className="text-xs uppercase tracking-[0.16em] text-slate-400">
                     {formatDateOnly(announcement.publishedAt)}
                   </div>
-                  <div className="mt-2 font-semibold text-slate-950">{announcement.title}</div>
+                  <div className="mt-2 font-display text-[1.3rem] font-black tracking-[-0.05em] text-slate-950">
+                    {announcement.title}
+                  </div>
                   <div className="mt-2 text-sm leading-7 text-slate-600">{announcement.summary}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+      </section>
+
+      <section>
+        <Card className="dds-reveal" data-delay="3">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <Sparkles className="h-4 w-4 text-[var(--color-primary)]" />
+            受付中の募集枠
+          </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {snapshot.offerings.length === 0 ? (
+              <div className="rounded-[24px] border border-dashed border-black/10 p-6 text-sm text-slate-500">
+                現在受付中の募集枠はありません。
+              </div>
+            ) : (
+              snapshot.offerings.slice(0, 3).map((offering) => (
+                <div key={offering.id} className="rounded-[1.6rem] border border-black/8 bg-white/70 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="font-display text-[1.15rem] font-black tracking-[-0.05em] text-slate-950">
+                        {offering.title}
+                      </div>
+                      <div className="mt-2 text-sm text-slate-600">
+                        {formatDate(offering.startsAt)} / {offering.locationLabel}
+                      </div>
+                    </div>
+                    <Badge tone={offering.counts.isFull ? "warning" : "success"}>
+                      残{offering.counts.remaining}
+                    </Badge>
+                  </div>
+                  <div className="mt-3 text-sm leading-7 text-slate-600">{offering.summary}</div>
                 </div>
               ))
             )}
