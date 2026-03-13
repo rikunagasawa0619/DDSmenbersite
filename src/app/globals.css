@@ -337,6 +337,280 @@ a {
   text-transform: uppercase;
 }
 
+.dds-editor-shell {
+  border: 1px solid var(--color-outline);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-raised) 98%, transparent),
+      color-mix(in srgb, var(--color-surface-muted) 96%, transparent)
+    );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.64) inset,
+    0 26px 70px rgba(7, 17, 31, 0.08);
+}
+
+.dds-editor-toolbar {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-raised) 98%, transparent),
+      color-mix(in srgb, var(--color-surface-soft) 94%, transparent)
+    );
+}
+
+.dds-editor-footer {
+  background: color-mix(in srgb, var(--color-surface-inset) 76%, transparent);
+}
+
+.dds-lesson-shell {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1280px) {
+  .dds-lesson-shell {
+    grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.dds-lesson-rail {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 1280px) {
+  .dds-lesson-rail {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+.dds-lesson-stage {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-outline);
+  border-radius: 2.2rem;
+  padding: clamp(1.4rem, 2vw, 2rem);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-surface-raised) 98%, transparent),
+      color-mix(in srgb, var(--color-surface-muted) 98%, transparent)
+    );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.68) inset,
+    0 28px 80px rgba(7, 17, 31, 0.08);
+}
+
+.dds-lesson-stage::before {
+  content: "";
+  position: absolute;
+  right: -5rem;
+  top: -5rem;
+  width: 16rem;
+  height: 16rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-accent) 34%, transparent),
+      transparent 68%
+    );
+  pointer-events: none;
+}
+
+.dds-lesson-stage::after {
+  content: "";
+  position: absolute;
+  left: 2rem;
+  right: 2rem;
+  top: 0;
+  height: 1px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-primary) 28%, transparent),
+      transparent
+    );
+  pointer-events: none;
+}
+
+.dds-lesson-meta-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+@media (min-width: 768px) {
+  .dds-lesson-meta-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.dds-lesson-meta-card {
+  border: 1px solid var(--color-outline);
+  border-radius: 1.4rem;
+  padding: 1rem 1.05rem;
+  background: color-mix(in srgb, var(--color-surface-strong) 82%, transparent);
+}
+
+.dds-lesson-outline-link {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid var(--color-outline);
+  border-radius: 1.3rem;
+  padding: 0.95rem 1rem;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-raised) 96%, transparent),
+      color-mix(in srgb, var(--color-surface-muted) 94%, transparent)
+    );
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.dds-lesson-outline-link:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  box-shadow: 0 18px 34px rgba(7, 17, 31, 0.06);
+}
+
+.dds-lesson-outline-link[data-active="true"] {
+  border-color: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-accent) 64%, transparent),
+      color-mix(in srgb, var(--color-primary) 28%, transparent)
+    );
+  box-shadow: 0 22px 48px rgba(45, 91, 255, 0.18);
+}
+
+.dds-lesson-outline-link[data-active="true"] .dds-lesson-outline-link-kicker,
+.dds-lesson-outline-link[data-active="true"] .dds-lesson-outline-link-title,
+.dds-lesson-outline-link[data-active="true"] .dds-lesson-outline-link-meta {
+  color: #07111f;
+}
+
+.dds-lesson-outline-link-kicker {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.dds-lesson-outline-link-title {
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--color-foreground);
+}
+
+.dds-lesson-outline-link-meta {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+.dds-lesson-block-shell {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-outline);
+  border-radius: 2rem;
+  padding: clamp(1.2rem, 2vw, 1.6rem);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-raised) 98%, transparent),
+      color-mix(in srgb, var(--color-surface-muted) 96%, transparent)
+    );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.66) inset,
+    0 24px 56px rgba(7, 17, 31, 0.06);
+}
+
+.dds-lesson-block-shell[data-tone="accent"] {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-accent) 22%, var(--color-surface-raised)),
+      color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-muted))
+    );
+}
+
+.dds-lesson-block-shell[data-tone="ink"] {
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-brand) 10%, var(--color-surface-raised)),
+      color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-muted))
+    );
+}
+
+.dds-lesson-block-shell::after {
+  content: "";
+  position: absolute;
+  inset: auto -2rem -2rem auto;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-primary) 14%, transparent),
+      transparent 70%
+    );
+  pointer-events: none;
+}
+
+.dds-lesson-block-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-display), monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.dds-lesson-accordion-item {
+  border: 1px solid var(--color-outline);
+  border-radius: 1.4rem;
+  background: color-mix(in srgb, var(--color-surface-soft) 90%, transparent);
+  padding: 1rem 1rem 1rem 1.1rem;
+}
+
+.dds-lesson-flow-link {
+  display: grid;
+  gap: 0.45rem;
+  border: 1px solid var(--color-outline);
+  border-radius: 1.6rem;
+  padding: 1rem 1.1rem;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface-raised) 96%, transparent),
+      color-mix(in srgb, var(--color-surface-muted) 94%, transparent)
+    );
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.dds-lesson-flow-link:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  box-shadow: 0 18px 34px rgba(7, 17, 31, 0.06);
+}
+
 .dds-admin-input,
 .dds-admin-select,
 .dds-admin-textarea {

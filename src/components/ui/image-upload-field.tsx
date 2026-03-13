@@ -50,7 +50,7 @@ export function ImageUploadField({
               <ImagePlus className="h-7 w-7" />
             </div>
             <div className="mt-4 font-display text-sm font-extrabold uppercase tracking-[0.12em] text-slate-700">
-              Image upload
+              画像アップロード
             </div>
             <div className="mt-2 text-xs text-slate-500">JPG / PNG / WebP / GIF</div>
           </div>

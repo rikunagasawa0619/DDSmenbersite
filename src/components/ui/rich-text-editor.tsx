@@ -92,90 +92,104 @@ export function RichTextEditor({
   }, [defaultValue, editor]);
 
   return (
-    <div className="overflow-hidden rounded-[30px] border border-black/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(247,243,234,0.92))] shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
-      <div className="sticky top-0 z-[1] flex flex-wrap items-center gap-2 border-b border-black/8 bg-[rgba(243,239,228,0.92)] px-4 py-3 backdrop-blur">
-        <button
-          type="button"
-          onClick={() => editor?.chain().focus().undo().run()}
-          className="dds-admin-toolbar-button !h-10 !w-10 !justify-center !px-0"
-        >
-          <Undo2 className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          onClick={() => editor?.chain().focus().redo().run()}
-          className="dds-admin-toolbar-button !h-10 !w-10 !justify-center !px-0"
-        >
-          <Redo2 className="h-4 w-4" />
-        </button>
-        <div className="h-8 w-px bg-black/8" />
-        {toolbarButtons.map((item) => {
-          const Icon = item.icon;
-          const active =
-            item.key === "paragraph"
-              ? editor?.isActive("paragraph")
-              : item.key === "heading"
-                ? editor?.isActive("heading", { level: 2 })
-                : item.key === "bold"
-                  ? editor?.isActive("bold")
-                  : item.key === "italic"
-                    ? editor?.isActive("italic")
-                    : item.key === "underline"
-                      ? editor?.isActive("underline")
-                      : item.key === "bullet"
-                        ? editor?.isActive("bulletList")
-                        : item.key === "ordered"
-                          ? editor?.isActive("orderedList")
-                          : item.key === "quote"
-                            ? editor?.isActive("blockquote")
-                            : editor?.isActive("link");
+    <div className="dds-editor-shell overflow-hidden rounded-[32px]">
+      <div className="dds-editor-toolbar sticky top-0 z-[1] border-b px-4 py-4 backdrop-blur">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="dds-kicker text-[var(--color-primary)]">本文</div>
+            <div className="mt-2 font-display text-lg font-extrabold tracking-[-0.06em] text-slate-950">
+              本文エディター
+            </div>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-black/8 bg-white/70 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+            見出し / 箇条書き / リンク対応
+          </div>
+        </div>
 
-          const onClick = () => {
-            if (!editor) return;
-            if (item.key === "paragraph") {
-              editor.chain().focus().setParagraph().run();
-            } else if (item.key === "heading") {
-              editor.chain().focus().toggleHeading({ level: 2 }).run();
-            } else if (item.key === "bold") {
-              editor.chain().focus().toggleBold().run();
-            } else if (item.key === "italic") {
-              editor.chain().focus().toggleItalic().run();
-            } else if (item.key === "underline") {
-              editor.chain().focus().toggleUnderline().run();
-            } else if (item.key === "bullet") {
-              editor.chain().focus().toggleBulletList().run();
-            } else if (item.key === "ordered") {
-              editor.chain().focus().toggleOrderedList().run();
-            } else if (item.key === "quote") {
-              editor.chain().focus().toggleBlockquote().run();
-            } else if (item.key === "link") {
-              const previous = editor.getAttributes("link").href as string | undefined;
-              const href = window.prompt("リンク先 URL を入力してください", previous ?? "https://");
-              if (href === null) return;
-              if (!href.trim()) {
-                editor.chain().focus().unsetLink().run();
-                return;
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => editor?.chain().focus().undo().run()}
+            className="dds-admin-toolbar-button !h-10 !w-10 !justify-center !px-0"
+          >
+            <Undo2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => editor?.chain().focus().redo().run()}
+            className="dds-admin-toolbar-button !h-10 !w-10 !justify-center !px-0"
+          >
+            <Redo2 className="h-4 w-4" />
+          </button>
+          <div className="h-8 w-px bg-black/8" />
+          {toolbarButtons.map((item) => {
+            const Icon = item.icon;
+            const active =
+              item.key === "paragraph"
+                ? editor?.isActive("paragraph")
+                : item.key === "heading"
+                  ? editor?.isActive("heading", { level: 2 })
+                  : item.key === "bold"
+                    ? editor?.isActive("bold")
+                    : item.key === "italic"
+                      ? editor?.isActive("italic")
+                      : item.key === "underline"
+                        ? editor?.isActive("underline")
+                        : item.key === "bullet"
+                          ? editor?.isActive("bulletList")
+                          : item.key === "ordered"
+                            ? editor?.isActive("orderedList")
+                            : item.key === "quote"
+                              ? editor?.isActive("blockquote")
+                              : editor?.isActive("link");
+
+            const onClick = () => {
+              if (!editor) return;
+              if (item.key === "paragraph") {
+                editor.chain().focus().setParagraph().run();
+              } else if (item.key === "heading") {
+                editor.chain().focus().toggleHeading({ level: 2 }).run();
+              } else if (item.key === "bold") {
+                editor.chain().focus().toggleBold().run();
+              } else if (item.key === "italic") {
+                editor.chain().focus().toggleItalic().run();
+              } else if (item.key === "underline") {
+                editor.chain().focus().toggleUnderline().run();
+              } else if (item.key === "bullet") {
+                editor.chain().focus().toggleBulletList().run();
+              } else if (item.key === "ordered") {
+                editor.chain().focus().toggleOrderedList().run();
+              } else if (item.key === "quote") {
+                editor.chain().focus().toggleBlockquote().run();
+              } else if (item.key === "link") {
+                const previous = editor.getAttributes("link").href as string | undefined;
+                const href = window.prompt("リンク先 URL を入力してください", previous ?? "https://");
+                if (href === null) return;
+                if (!href.trim()) {
+                  editor.chain().focus().unsetLink().run();
+                  return;
+                }
+                editor.chain().focus().setLink({ href }).run();
               }
-              editor.chain().focus().setLink({ href }).run();
-            }
-          };
+            };
 
-          return (
-            <button
-              key={item.key}
-              type="button"
-              onClick={onClick}
-              data-active={active ? "true" : "false"}
-              className="dds-admin-toolbar-button"
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={onClick}
+                data-active={active ? "true" : "false"}
+                className="dds-admin-toolbar-button"
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
       <EditorContent editor={editor} />
-      <div className="border-t border-black/8 bg-white/65 px-5 py-3 text-xs text-slate-500">
+      <div className="dds-editor-footer border-t px-5 py-3 text-xs text-slate-500">
         Enterで段落、Shift+Enterで改行。見出し・箇条書き・リンクを組み合わせて整理できます。
       </div>
       <input type="hidden" name={name} value={value} />
