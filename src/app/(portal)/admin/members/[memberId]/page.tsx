@@ -118,12 +118,12 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
     getWalletByUserId(member.id, plan, member.contractStartAt, member.creditGrantDay),
     listMembershipPlans(),
     listReservations(member.id),
-    listWaitlistEntries(),
+    listWaitlistEntries(member.id),
     listOfferings(),
     listAuditLogs(200),
   ]);
 
-  const waitlistForMember = waitlistEntries.filter((entry) => entry.userId === member.id).slice(0, 6);
+  const waitlistForMember = waitlistEntries.slice(0, 6);
   const offeringMap = new Map(offerings.map((offering) => [offering.id, offering]));
   const relatedLogs = auditLogs
     .filter((entry) => entry.targetId === member.id || entry.userId === member.id)

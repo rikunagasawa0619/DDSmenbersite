@@ -4,6 +4,7 @@ import {
   getAdminStats,
   getCourseProgressMap,
   getCourseBySlug,
+  getOfferingCountMap,
   getThemeSettings,
   listAnnouncements,
   listBanners,
@@ -12,14 +13,15 @@ import {
   listCourses,
   listDeals,
   listFaqs,
-  listMembers,
   listOfferings,
   listReservations,
   listWaitlistEntries,
   listTools,
 } from "@/lib/repository";
-import { sampleUsers } from "@/lib/sample-data";
-import { canUserApplyToOffering, getOfferingCounts } from "@/lib/reservations";
+import {
+  canUserApplyToOfferingWithCounts,
+  getOfferingCountsFromSummary,
+} from "@/lib/reservations";
 import type { MemberProfile } from "@/lib/types";
 
 const demoCourseProgress: Record<string, Record<string, number>> = {
@@ -56,22 +58,24 @@ function resolveCourseProgress(
 }
 
 async function getVisibleOfferingsData(user: MemberProfile) {
-  const [{ plan, wallet }, allOfferings, allReservations, allWaitlistEntries] = await Promise.all([
+  const [{ plan, wallet }, allOfferings, offeringCountMap, userReservations, userWaitlistEntries] = await Promise.all([
     getResolvedPlanWallet(user),
     listOfferings(),
-    listReservations(),
-    listWaitlistEntries(),
+    getOfferingCountMap(),
+    listReservations(user.id),
+    listWaitlistEntries(user.id),
   ]);
 
   const visibleOfferings = filterVisibleItems(user, allOfferings).map((offering) => {
-    const counts = getOfferingCounts(offering, allReservations, allWaitlistEntries);
-    const eligibility = canUserApplyToOffering({
+    const counts = getOfferingCountsFromSummary(offering, offeringCountMap[offering.id]);
+    const eligibility = canUserApplyToOfferingWithCounts({
       user,
       plan,
       wallet,
       offering,
-      reservations: allReservations,
-      waitlistEntries: allWaitlistEntries,
+      counts,
+      reservations: userReservations,
+      waitlistEntries: userWaitlistEntries,
     });
 
     return {
@@ -85,12 +89,12 @@ async function getVisibleOfferingsData(user: MemberProfile) {
     plan,
     wallet,
     offerings: visibleOfferings,
-    reservations: allReservations.filter((reservation) => reservation.userId === user.id),
+    reservations: userReservations,
   };
 }
 
 export async function getPortalSnapshot(user: MemberProfile) {
-  const [{ plan, wallet }, theme, allCourses, allAnnouncements, allBanners, allDeals, allFaqs, allTools, allOfferings, allReservations, allWaitlistEntries, courseProgress] =
+  const [{ plan, wallet }, theme, allCourses, allAnnouncements, allBanners, allDeals, allFaqs, allTools, allOfferings, offeringCountMap, userReservations, userWaitlistEntries, courseProgress] =
     await Promise.all([
       getResolvedPlanWallet(user),
       getThemeSettings(),
@@ -101,8 +105,9 @@ export async function getPortalSnapshot(user: MemberProfile) {
       listFaqs(),
       listTools(),
       listOfferings(),
-      listReservations(),
-      listWaitlistEntries(),
+      getOfferingCountMap(),
+      listReservations(user.id),
+      listWaitlistEntries(user.id),
       getCourseProgressMap(user.id),
     ]);
   const visibleCourses = filterVisibleItems(user, allCourses);
@@ -112,14 +117,15 @@ export async function getPortalSnapshot(user: MemberProfile) {
   const visibleFaqs = filterVisibleItems(user, allFaqs);
   const visibleTools = filterVisibleItems(user, allTools);
   const visibleOfferings = filterVisibleItems(user, allOfferings).map((offering) => {
-    const counts = getOfferingCounts(offering, allReservations, allWaitlistEntries);
-    const eligibility = canUserApplyToOffering({
+    const counts = getOfferingCountsFromSummary(offering, offeringCountMap[offering.id]);
+    const eligibility = canUserApplyToOfferingWithCounts({
       user,
       plan,
       wallet,
       offering,
-      reservations: allReservations,
-      waitlistEntries: allWaitlistEntries,
+      counts,
+      reservations: userReservations,
+      waitlistEntries: userWaitlistEntries,
     });
 
     return {
@@ -128,10 +134,6 @@ export async function getPortalSnapshot(user: MemberProfile) {
       eligibility,
     };
   });
-
-  const myReservations = allReservations.filter(
-    (reservation) => reservation.userId === user.id,
-  );
 
   return {
     user,
@@ -145,13 +147,13 @@ export async function getPortalSnapshot(user: MemberProfile) {
     faqs: visibleFaqs,
     courses: visibleCourses,
     offerings: visibleOfferings,
-    reservations: myReservations,
+    reservations: userReservations,
     courseProgress: resolveCourseProgress(user, courseProgress),
   };
 }
 
 export async function getPortalHomeSnapshot(user: MemberProfile) {
-  const [{ plan, wallet }, theme, allCourses, allAnnouncements, allBanners, allOfferings, allReservations, allWaitlistEntries, courseProgress] =
+  const [{ plan, wallet }, theme, allCourses, allAnnouncements, allBanners, allOfferings, offeringCountMap, userReservations, userWaitlistEntries, courseProgress] =
     await Promise.all([
       getResolvedPlanWallet(user),
       getThemeSettings(),
@@ -159,20 +161,22 @@ export async function getPortalHomeSnapshot(user: MemberProfile) {
       listAnnouncements(),
       listBanners(),
       listOfferings(),
-      listReservations(),
-      listWaitlistEntries(),
+      getOfferingCountMap(),
+      listReservations(user.id),
+      listWaitlistEntries(user.id),
       getCourseProgressMap(user.id),
     ]);
 
   const offerings = filterVisibleItems(user, allOfferings).map((offering) => {
-    const counts = getOfferingCounts(offering, allReservations, allWaitlistEntries);
-    const eligibility = canUserApplyToOffering({
+    const counts = getOfferingCountsFromSummary(offering, offeringCountMap[offering.id]);
+    const eligibility = canUserApplyToOfferingWithCounts({
       user,
       plan,
       wallet,
       offering,
-      reservations: allReservations,
-      waitlistEntries: allWaitlistEntries,
+      counts,
+      reservations: userReservations,
+      waitlistEntries: userWaitlistEntries,
     });
 
     return { ...offering, counts, eligibility };
@@ -187,7 +191,7 @@ export async function getPortalHomeSnapshot(user: MemberProfile) {
     announcements: filterVisibleItems(user, allAnnouncements),
     courses: filterVisibleItems(user, allCourses),
     offerings,
-    reservations: allReservations.filter((reservation) => reservation.userId === user.id),
+    reservations: userReservations,
     courseProgress: resolveCourseProgress(user, courseProgress),
   };
 }
@@ -256,9 +260,8 @@ export async function getPortalEventsSnapshot(user: MemberProfile) {
 }
 
 export async function getAdminSnapshot() {
-  const [stats, members, campaigns, announcements, offerings, theme] = await Promise.all([
+  const [stats, campaigns, announcements, offerings, theme] = await Promise.all([
     getAdminStats(),
-    listMembers(),
     listCampaigns(),
     listAnnouncements(true),
     listOfferings(),
@@ -267,10 +270,6 @@ export async function getAdminSnapshot() {
 
   return {
     stats,
-    members:
-      process.env.NODE_ENV !== "production" && members.length === 0
-        ? sampleUsers
-        : members,
     campaigns,
     announcements,
     offerings,

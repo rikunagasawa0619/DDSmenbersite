@@ -69,6 +69,11 @@ type PaginatedResult<T> = {
   totalPages: number;
 };
 
+export type OfferingCountSummary = {
+  confirmed: number;
+  waitlist: number;
+};
+
 function mapAudience(value: Prisma.JsonValue | null | undefined): AudienceRule | undefined {
   if (!value || typeof value !== "object") {
     return undefined;
@@ -359,6 +364,53 @@ function mapCourseCatalogRow(row: {
     thumbnailUrl: row.thumbnailUrl ?? undefined,
     audience: mapAudience(row.audience),
     modules: [],
+  };
+}
+
+function mapCourseStructureRow(row: {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  heroNote: string | null;
+  estimatedHours: string | null;
+  thumbnailUrl: string | null;
+  audience: Prisma.JsonValue | null;
+  modules: Array<{
+    id: string;
+    title: string;
+    lessons: Array<{
+      id: string;
+      slug: string;
+      title: string;
+      summary: string;
+      lessonType: string;
+      duration: string | null;
+    }>;
+  }>;
+}): Course {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    summary: row.summary,
+    heroNote: row.heroNote ?? "",
+    estimatedHours: row.estimatedHours ?? "",
+    thumbnailUrl: row.thumbnailUrl ?? undefined,
+    audience: mapAudience(row.audience),
+    modules: row.modules.map((module) => ({
+      id: module.id,
+      title: module.title,
+      lessons: module.lessons.map((lesson) => ({
+        id: lesson.id,
+        slug: lesson.slug,
+        title: lesson.title,
+        summary: lesson.summary,
+        type: toLessonType(lesson.lessonType),
+        duration: lesson.duration ?? "",
+        blocks: [],
+      })),
+    })),
   };
 }
 
@@ -889,6 +941,54 @@ export async function listCourses(includeAll = false): Promise<Course[]> {
   );
 }
 
+export async function listCourseStructure(includeAll = false): Promise<Course[]> {
+  return safeQuery(
+    async () =>
+      (await prisma!.course.findMany({
+        where: includeAll ? undefined : { publishStatus: "PUBLISHED" },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          summary: true,
+          heroNote: true,
+          estimatedHours: true,
+          thumbnailUrl: true,
+          audience: true,
+          modules: {
+            select: {
+              id: true,
+              title: true,
+              lessons: {
+                select: {
+                  id: true,
+                  slug: true,
+                  title: true,
+                  summary: true,
+                  lessonType: true,
+                  duration: true,
+                },
+                orderBy: { sortOrder: "asc" },
+              },
+            },
+            orderBy: { sortOrder: "asc" },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      })).map(mapCourseStructureRow),
+    sampleCourses.map((course) => ({
+      ...course,
+      modules: course.modules.map((module) => ({
+        ...module,
+        lessons: module.lessons.map((lesson) => ({
+          ...lesson,
+          blocks: [],
+        })),
+      })),
+    })),
+  );
+}
+
 export async function listCourseCatalog(includeAll = false): Promise<Course[]> {
   return safeQuery(
     async () =>
@@ -961,14 +1061,66 @@ export async function listReservations(userId?: string): Promise<Reservation[]> 
   );
 }
 
-export async function listWaitlistEntries(): Promise<WaitlistEntry[]> {
+export async function listWaitlistEntries(userId?: string): Promise<WaitlistEntry[]> {
   return safeQuery(
     async () =>
       (await prisma!.waitlistEntry.findMany({
+        where: userId ? { userId } : undefined,
         orderBy: { createdAt: "desc" },
       })).map(mapWaitlistRow),
-    sampleWaitlistEntries,
+    userId
+      ? sampleWaitlistEntries.filter((entry) => entry.userId === userId)
+      : sampleWaitlistEntries,
   );
+}
+
+export async function getOfferingCountMap(): Promise<Record<string, OfferingCountSummary>> {
+  if (!isDatabaseConfigured || !prisma) {
+    const counts: Record<string, OfferingCountSummary> = {};
+
+    for (const reservation of sampleReservations) {
+      if (!["confirmed", "attended"].includes(reservation.status)) continue;
+      counts[reservation.offeringId] ??= { confirmed: 0, waitlist: 0 };
+      counts[reservation.offeringId].confirmed += 1;
+    }
+
+    for (const entry of sampleWaitlistEntries) {
+      counts[entry.offeringId] ??= { confirmed: 0, waitlist: 0 };
+      counts[entry.offeringId].waitlist += 1;
+    }
+
+    return counts;
+  }
+
+  const [confirmedRows, waitlistRows] = await Promise.all([
+    prisma.reservation.groupBy({
+      by: ["offeringId"],
+      where: {
+        status: {
+          in: [ReservationStatus.CONFIRMED, ReservationStatus.ATTENDED],
+        },
+      },
+      _count: { _all: true },
+    }),
+    prisma.waitlistEntry.groupBy({
+      by: ["offeringId"],
+      _count: { _all: true },
+    }),
+  ]);
+
+  const counts: Record<string, OfferingCountSummary> = {};
+
+  for (const row of confirmedRows) {
+    counts[row.offeringId] ??= { confirmed: 0, waitlist: 0 };
+    counts[row.offeringId].confirmed = row._count._all;
+  }
+
+  for (const row of waitlistRows) {
+    counts[row.offeringId] ??= { confirmed: 0, waitlist: 0 };
+    counts[row.offeringId].waitlist = row._count._all;
+  }
+
+  return counts;
 }
 
 export async function listCampaigns(): Promise<EmailCampaign[]> {

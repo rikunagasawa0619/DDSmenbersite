@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import { BookOpenText, HelpCircle, Megaphone, PanelsTopLeft, Sparkles, Wrench } from "lucide-react";
+import Link from "next/link";
 
 import {
   createAnnouncementAction,
@@ -26,7 +27,7 @@ import {
   listAnnouncements,
   listBanners,
   listContentVersionFeed,
-  listCourses,
+  listCourseStructure,
   listDeals,
   listFaqs,
   listTools,
@@ -482,7 +483,7 @@ export default async function AdminContentPage() {
     listDeals(true),
     listTools(true),
     listFaqs(true),
-    listCourses(true),
+    listCourseStructure(true),
     listContentVersionFeed(10),
   ]);
   const modules = courses.flatMap((course) =>
@@ -517,6 +518,26 @@ export default async function AdminContentPage() {
         <SummaryCard label="教材コース" value={courses.length} icon={BookOpenText} />
       </section>
 
+      <div className="sticky top-4 z-20 overflow-x-auto rounded-full border border-black/8 bg-white/88 p-2 backdrop-blur">
+        <div className="flex min-w-max gap-2">
+          {[
+            { href: "#quick-create", label: "クイック作成" },
+            { href: "#version-feed", label: "版履歴" },
+            { href: "#home-content", label: "ホーム掲載" },
+            { href: "#member-utilities", label: "特典・FAQ" },
+            { href: "#course-structure", label: "教材階層" },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="inline-flex rounded-full px-4 py-2 font-display text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-600 transition hover:bg-[var(--color-primary)]/8 hover:text-[var(--color-primary)]"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {!isDatabaseConfigured ? (
         <Card>
           <div className="rounded-[24px] border border-dashed border-black/10 p-5 text-sm leading-7 text-slate-500">
@@ -525,7 +546,7 @@ export default async function AdminContentPage() {
         </Card>
       ) : (
         <>
-          <Card className="space-y-6">
+          <Card id="quick-create" className="space-y-6 scroll-mt-24">
             <SectionHeader
               title="クイック作成"
               description="追加したい内容をその場で開いて、一覧を離れずに作成できます。"
@@ -586,7 +607,7 @@ export default async function AdminContentPage() {
             </div>
           </Card>
 
-          <Card className="space-y-6">
+          <Card id="version-feed" className="space-y-6 scroll-mt-24">
             <SectionHeader title="版履歴" description="直近の公開・作成履歴を確認できます。" />
             <div className="grid gap-3">
               {versions.length === 0 ? (
@@ -613,7 +634,7 @@ export default async function AdminContentPage() {
           </Card>
 
           <section className="grid gap-5 xl:grid-cols-2">
-            <Card className="space-y-6">
+            <Card id="home-content" className="space-y-6 scroll-mt-24">
               <SectionHeader
                 title="ホームに出るコンテンツ"
                 action={<CreateLink create="banner" label="バナー追加" tone="secondary" courses={courseOptions} modules={modules} />}
@@ -658,7 +679,7 @@ export default async function AdminContentPage() {
               </div>
             </Card>
 
-            <Card className="space-y-6">
+            <Card id="member-utilities" className="space-y-6 scroll-mt-24">
               <SectionHeader
                 title="特典・ツール・FAQ"
                 action={<CreateLink create="faq" label="FAQ追加" tone="secondary" courses={courseOptions} modules={modules} />}
@@ -701,7 +722,7 @@ export default async function AdminContentPage() {
             </Card>
           </section>
 
-          <Card className="space-y-6">
+          <Card id="course-structure" className="space-y-6 scroll-mt-24">
             <SectionHeader
               title="教材の階層構造"
               action={

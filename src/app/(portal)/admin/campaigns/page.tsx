@@ -13,10 +13,6 @@ import { isEmailConfigured } from "@/lib/email";
 import { listCampaigns } from "@/lib/repository";
 import { formatDate } from "@/lib/utils";
 
-type CampaignsPageProps = {
-  searchParams: Promise<Record<string, string | undefined>>;
-};
-
 const minimumPlanOptions = [
   { value: "HOBBY", label: "DDS Hobby 以上" },
   { value: "BIZ", label: "DDS Biz 以上" },
@@ -65,9 +61,8 @@ function CampaignForm() {
   );
 }
 
-export default async function AdminCampaignsPage({ searchParams }: CampaignsPageProps) {
+export default async function AdminCampaignsPage() {
   await requireAdmin();
-  await searchParams;
   const campaigns = await listCampaigns();
   const emailReady = isEmailConfigured();
 
