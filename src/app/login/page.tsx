@@ -40,7 +40,8 @@ export default async function LoginPage() {
           <div className="mt-8">
             {isClerkConfigured ? (
               <SignIn
-                routing="hash"
+                routing="path"
+                path="/login"
                 forceRedirectUrl="/app"
                 signUpForceRedirectUrl="/app"
                 appearance={{
@@ -49,15 +50,23 @@ export default async function LoginPage() {
                     card: "w-full rounded-[28px] border border-black/8 bg-white/96 shadow-none",
                     headerTitle: "hidden",
                     headerSubtitle: "hidden",
-                    socialButtonsBlockButton: "hidden",
                     formButtonPrimary:
                       "rounded-2xl bg-[var(--color-primary)] text-white shadow-[0_18px_42px_rgba(18,56,198,0.18)] hover:opacity-92",
                     formFieldInput: "rounded-2xl border border-black/10 bg-white",
                     footerActionLink: "text-[var(--color-primary)]",
-                    dividerLine: "hidden",
-                    dividerText: "hidden",
-                    socialButtonsBlock: "hidden",
+                    socialButtonsBlockButton:
+                      "rounded-2xl border border-black/10 bg-white text-slate-900 hover:bg-slate-50",
+                    socialButtonsProviderIcon: "h-5 w-5",
+                    socialButtonsBlock: "grid gap-3",
                     formFieldLabel: "text-slate-600",
+                    formFieldInputShowPasswordButton:
+                      "text-slate-500 hover:text-slate-900",
+                    formResendCodeLink: "text-[var(--color-primary)]",
+                    identityPreviewText: "text-slate-600",
+                    identityPreviewEditButton: "text-[var(--color-primary)]",
+                    footerActionText: "text-slate-500",
+                    dividerText: "text-slate-400 text-xs",
+                    dividerLine: "bg-black/8",
                   },
                 }}
               />
