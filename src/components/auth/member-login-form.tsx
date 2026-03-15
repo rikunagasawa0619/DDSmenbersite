@@ -43,7 +43,7 @@ export function MemberLoginForm() {
   const [pending, setPending] = useState(false);
 
   const isResetMode = useMemo(() => mode !== "sign-in", [mode]);
-  const isBusy = pending || fetchStatus === "fetching" || !clerk.loaded;
+  const isBusy = pending || fetchStatus === "fetching";
 
   async function navigateToApp() {
     await signIn.finalize({
