@@ -1,34 +1,6 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { experimentCookieName, homeHeroVariants } from "@/lib/experiments";
-
-const isClerkEnabled = Boolean(
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
-);
-
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/login(.*)",
-  "/privacy(.*)",
-  "/terms(.*)",
-  "/tokushoho(.*)",
-  "/access-denied(.*)",
-  "/post-login",
-  "/sso-callback(.*)",
-  "/robots.txt",
-  "/api/webhooks(.*)",
-  "/api/health",
-  "/api/cron/monthly-credits",
-  "/api/cron/email-campaigns",
-  "/api/assets/(.*)",
-]);
-
-const protectedMiddleware = clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
-  }
-});
 
 function withExperimentCookie(
   request: NextRequest,
@@ -56,14 +28,8 @@ function withExperimentCookie(
   return nextResponse;
 }
 
-export default function proxy(request: NextRequest, event: Parameters<typeof protectedMiddleware>[1]) {
-  if (!isClerkEnabled) {
-    return withExperimentCookie(request, NextResponse.next());
-  }
-
-  return Promise.resolve(protectedMiddleware(request, event)).then((response) =>
-    withExperimentCookie(request, response),
-  );
+export default function proxy(request: NextRequest) {
+  return withExperimentCookie(request, NextResponse.next());
 }
 
 export const config = {

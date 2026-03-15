@@ -1,6 +1,5 @@
 "use server";
 
-import { clerkClient } from "@clerk/nextjs/server";
 import { Prisma, MemberStatus, MembershipPlanCode, PublishStatus, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -13,8 +12,9 @@ import { buildMonthlyGrantEntry, createBalanceAdjustment, createBonusGrant, crea
 import { processMonthlyCreditGrants } from "@/lib/credit-batch";
 import { requireAdmin } from "@/lib/auth";
 import { buildAbsoluteUrl } from "@/lib/env";
+import { isEmailConfigured, sendPasswordSetupEmail } from "@/lib/email";
 import { redirectWithFlash } from "@/lib/flash";
-import { isClerkServerReady } from "@/lib/config";
+import { createPasswordResetToken, hashPasswordResetToken } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { RateLimitError, assertRateLimit } from "@/lib/rate-limit";
 import { getMembershipPlanByCode } from "@/lib/repository";
@@ -32,6 +32,31 @@ function slugify(input: string) {
 function normalizeOptionalText(value: FormDataEntryValue | null) {
   const text = value?.toString().trim();
   return text ? text : undefined;
+}
+
+async function queuePasswordSetupEmail(userId: string, email: string, name: string) {
+  if (!prisma || !isEmailConfigured()) {
+    return false;
+  }
+
+  const token = createPasswordResetToken();
+  const tokenHash = hashPasswordResetToken(token);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      passwordResetTokenHash: tokenHash,
+      passwordResetExpiresAt: new Date(Date.now() + 1000 * 60 * 60),
+    },
+  });
+
+  await sendPasswordSetupEmail({
+    to: email,
+    name,
+    link: buildAbsoluteUrl(`/reset-password?token=${encodeURIComponent(token)}`),
+  });
+
+  return true;
 }
 
 function expandMinimumPlanCode(
@@ -634,116 +659,92 @@ export async function createMemberAction(formData: FormData) {
       ? new Date(values.creditGrantBaseDate).getDate()
       : null;
 
-  let invitationId: string | undefined;
-
-  if (isClerkServerReady) {
-    const clerk = await clerkClient();
-    const invitation = await clerk.invitations.createInvitation({
-      emailAddress: values.email,
-      notify: true,
-      ignoreExisting: true,
-      redirectUrl: buildAbsoluteUrl("/post-login"),
-      publicMetadata: {
-        role: values.role,
-        planCode: values.planCode,
+  const user = await db.$transaction(async (tx) => {
+    const createdUser = await tx.user.create({
+      data: {
+        name: values.name,
+        email: values.email,
+        title: values.title,
+        company: values.company || null,
+        role: values.role as UserRole,
+        status: values.status as MemberStatus,
+        avatarLabel: values.name.slice(0, 2).toUpperCase(),
+        creditGrantDay,
+        planAssignments: {
+          create: {
+            startedAt: new Date(),
+            isActive: true,
+            planId: plan.id,
+          },
+        },
+        wallet: {
+          create: {
+            currentBalance:
+              !plan.unlimitedCredits && ["ACTIVE", "INVITED"].includes(values.status)
+                ? plan.monthlyCreditGrant
+                : 0,
+          },
+        },
+        segments: {
+          create: segments.map((segment) => ({
+            segmentId: segment.id,
+          })),
+        },
       },
     });
-    invitationId = invitation.id;
-  }
 
-  try {
-    await db.$transaction(async (tx) => {
-      const user = await tx.user.create({
+    if (!plan.unlimitedCredits && ["ACTIVE", "INVITED"].includes(values.status)) {
+      const wallet = await tx.creditWallet.findUniqueOrThrow({
+        where: { userId: createdUser.id },
+      });
+      const grant = buildMonthlyGrantEntry({
+        userId: createdUser.id,
+        plan: await getMembershipPlanByCode(values.planCode),
+        currentBalance: 0,
+        now: new Date(),
+      });
+      await tx.creditLedger.create({
         data: {
-          name: values.name,
-          email: values.email,
-          title: values.title,
-          company: values.company || null,
-          role: values.role as UserRole,
-          status: values.status as MemberStatus,
-          avatarLabel: values.name.slice(0, 2).toUpperCase(),
-          creditGrantDay,
-          planAssignments: {
-            create: {
-              startedAt: new Date(),
-              isActive: true,
-              planId: plan.id,
-            },
-          },
-          wallet: {
-            create: {
-              currentBalance:
-                !plan.unlimitedCredits && ["ACTIVE", "INVITED"].includes(values.status)
-                  ? plan.monthlyCreditGrant
-                  : 0,
-            },
-          },
-          segments: {
-            create: segments.map((segment) => ({
-              segmentId: segment.id,
-            })),
-          },
+          walletId: wallet.id,
+          userId: createdUser.id,
+          type: "MONTHLY_GRANT",
+          amount: grant.amount,
+          note: "初回付与",
         },
       });
+    }
 
-      if (!plan.unlimitedCredits && ["ACTIVE", "INVITED"].includes(values.status)) {
-        const wallet = await tx.creditWallet.findUniqueOrThrow({
-          where: { userId: user.id },
-        });
-        const grant = buildMonthlyGrantEntry({
-          userId: user.id,
-          plan: await getMembershipPlanByCode(values.planCode),
-          currentBalance: 0,
-          now: new Date(),
-        });
-        await tx.creditLedger.create({
-          data: {
-            walletId: wallet.id,
-            userId: user.id,
-            type: "MONTHLY_GRANT",
-            amount: grant.amount,
-            note: "初回付与",
-          },
-        });
-      }
-
-      await tx.auditLog.create({
-        data: {
-          userId: actorId,
-          action: "member.create",
-          targetType: "User",
-          targetId: user.id,
-          metadata: {
-            planCode: values.planCode,
-            role: values.role,
-            clerkInvitationId: invitationId ?? null,
-          },
+    await tx.auditLog.create({
+      data: {
+        userId: actorId,
+        action: "member.create",
+        targetType: "User",
+        targetId: createdUser.id,
+        metadata: {
+          planCode: values.planCode,
+          role: values.role,
+          authProvider: "local",
         },
-      });
-
-      return user;
+      },
     });
 
-    revalidatePath("/admin/members");
+    return createdUser;
+  });
 
-    await redirectWithFlash(
-      isClerkServerReady
-        ? `会員を追加し、${values.email} に招待メールを送信しました。`
-        : `会員を追加しました。Clerk 未設定のため招待メールは送っていません。`,
-      "success",
-      "/admin/members",
-    );
-  } catch (error) {
-    if (invitationId && isClerkServerReady) {
-      try {
-        const clerk = await clerkClient();
-        await clerk.invitations.revokeInvitation(invitationId);
-      } catch (revokeError) {
-        console.error("Failed to revoke Clerk invitation after DB failure.", revokeError);
-      }
-    }
-    throw error;
-  }
+  const delivered = await queuePasswordSetupEmail(user.id, user.email, user.name).catch((error) => {
+    console.error("Failed to deliver password setup email.", error);
+    return false;
+  });
+
+  revalidatePath("/admin/members");
+
+  await redirectWithFlash(
+    delivered
+      ? `会員を追加し、${values.email} に初期設定メールを送信しました。`
+      : "会員を追加しました。メール設定未完了のため、管理画面からパスワード設定を案内してください。",
+    "success",
+    "/admin/members",
+  );
 }
 
 export async function updateMemberSettingsAction(formData: FormData) {

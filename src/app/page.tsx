@@ -167,7 +167,7 @@ export default async function HomePage() {
             <h2 className="mt-4 font-display text-3xl font-bold">初回から全部盛りの土台を構築</h2>
             <ul className="mt-6 space-y-4 text-sm text-slate-100">
               <li>管理画面で会員・クレジット・募集枠・教材・告知を一元管理</li>
-              <li>Clerk本番認証 + 未設定時のデモ認証 fallback</li>
+              <li>メールアドレスとパスワードで、そのまま会員画面へログイン</li>
               <li>Prisma schema / seed / unit tests まで同梱</li>
             </ul>
             <Link href="/login" className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-100">

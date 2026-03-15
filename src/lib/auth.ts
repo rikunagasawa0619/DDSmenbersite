@@ -1,11 +1,10 @@
-import { auth, clerkClient } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { demoAuthCookieName, isClerkServerReady, isDemoAuthEnabled } from "@/lib/config";
+import { demoAuthCookieName, isDemoAuthEnabled } from "@/lib/config";
+import { readMemberSessionUserId } from "@/lib/member-session";
 import { sampleUsers } from "@/lib/sample-data";
 import {
-  getMemberByEmail,
   getMemberById,
   getMembershipPlanByCode,
   getWalletByUserId,
@@ -18,33 +17,17 @@ export type CurrentUserContext = {
 };
 
 export async function getCurrentUserContext(): Promise<CurrentUserContext> {
-  if (isClerkServerReady) {
-    const session = await auth();
+  const localUserId = await readMemberSessionUserId();
 
-    if (!session.userId) {
+  if (localUserId) {
+    const member = await getMemberById(localUserId);
+
+    if (member) {
       return {
-        member: null,
-        hasAuthenticatedSession: false,
-      };
-    }
-
-    const clerk = await clerkClient();
-    const user = await clerk.users.getUser(session.userId);
-    const primaryEmail =
-      user.emailAddresses.find((item) => item.id === user.primaryEmailAddressId)?.emailAddress ??
-      user.emailAddresses[0]?.emailAddress;
-
-    if (!primaryEmail) {
-      return {
-        member: null,
+        member,
         hasAuthenticatedSession: true,
       };
     }
-
-    return {
-      member: await getMemberByEmail(primaryEmail),
-      hasAuthenticatedSession: true,
-    };
   }
 
   if (!isDemoAuthEnabled) {

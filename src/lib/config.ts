@@ -19,3 +19,5 @@ export const isClerkServerReady =
   );
 
 export const demoAuthCookieName = "dds_demo_session";
+export const memberAuthCookieName = "dds_member_session";
+export const memberSessionMaxAgeSeconds = 60 * 60 * 24 * 30;

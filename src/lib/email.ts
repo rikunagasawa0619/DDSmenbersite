@@ -110,3 +110,47 @@ export async function sendReservationCancelledEmail(params: {
     ),
   });
 }
+
+export async function sendPasswordSetupEmail(params: {
+  to: string;
+  name: string;
+  link: string;
+}) {
+  const name = escapeHtml(params.name);
+  const safeLink = sanitizeUrl(params.link);
+  return sendEmail({
+    to: params.to,
+    subject: "DDS 初期パスワード設定のご案内",
+    html: wrapEmail(
+      "パスワードを設定してください",
+      `
+        <p>${name} 様</p>
+        <p>DDS 会員サイトの利用を開始するため、下のボタンからパスワードを設定してください。</p>
+        <p><a href="${safeLink}" style="display:inline-flex;padding:12px 18px;border-radius:999px;background:#1238c6;color:#ffffff;font-weight:700;text-decoration:none;">パスワードを設定する</a></p>
+        <p>このリンクは1時間有効です。</p>
+      `,
+    ),
+  });
+}
+
+export async function sendPasswordResetEmail(params: {
+  to: string;
+  name: string;
+  link: string;
+}) {
+  const name = escapeHtml(params.name);
+  const safeLink = sanitizeUrl(params.link);
+  return sendEmail({
+    to: params.to,
+    subject: "DDS パスワード再設定のご案内",
+    html: wrapEmail(
+      "パスワードを再設定してください",
+      `
+        <p>${name} 様</p>
+        <p>パスワード再設定のリクエストを受け付けました。下のボタンから新しいパスワードを設定してください。</p>
+        <p><a href="${safeLink}" style="display:inline-flex;padding:12px 18px;border-radius:999px;background:#1238c6;color:#ffffff;font-weight:700;text-decoration:none;">新しいパスワードを設定する</a></p>
+        <p>このリンクは1時間有効です。</p>
+      `,
+    ),
+  });
+}

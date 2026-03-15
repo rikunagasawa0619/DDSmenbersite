@@ -19,6 +19,7 @@ const envSchema = z
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     NEXT_PUBLIC_APP_URL: optionalUrl,
     CRON_SECRET: optionalString,
+    MEMBER_SESSION_SECRET: optionalString,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: optionalString,
     CLERK_SECRET_KEY: optionalString,
     NEXT_PUBLIC_SENTRY_DSN: optionalString,

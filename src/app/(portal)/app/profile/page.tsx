@@ -1,4 +1,5 @@
 import { updateProfileAction } from "@/actions/member";
+import { PasswordChangeForm } from "@/components/auth/password-change-form";
 import { Card } from "@/components/ui/card";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { requireUser } from "@/lib/auth";
@@ -43,12 +44,24 @@ export default async function ProfilePage() {
             />
           </label>
           <div className="rounded-[24px] bg-black/[0.03] p-5 text-sm leading-7 text-slate-600 md:col-span-2">
-            メールアドレスの変更とパスワード再設定は認証基盤側で管理しています。必要な場合は運営へご連絡ください。
+            メールアドレスの変更は運営にご連絡ください。パスワードはこの画面から変更できます。
           </div>
           <div className="md:col-span-2">
             <SubmitButton pendingLabel="更新中...">保存する</SubmitButton>
           </div>
         </form>
+      </Card>
+
+      <Card>
+        <div className="text-sm font-semibold tracking-[0.18em] text-[var(--color-primary)]">
+          セキュリティ
+        </div>
+        <h2 className="mt-3 font-display text-3xl font-bold text-slate-950">
+          パスワード変更
+        </h2>
+        <div className="mt-6 max-w-xl">
+          <PasswordChangeForm />
+        </div>
       </Card>
     </div>
   );

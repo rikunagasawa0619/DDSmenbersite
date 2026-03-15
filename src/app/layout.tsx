@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
-import {
-  ClerkProvider,
-} from "@clerk/nextjs";
 import { IBM_Plex_Sans_JP, JetBrains_Mono } from "next/font/google";
 
-import { ClerkAuthBar } from "@/components/clerk-auth-bar";
 import { Providers } from "@/components/providers";
 import { ServiceWorkerRegister } from "@/components/providers/service-worker-register";
 import { ThemeScript } from "@/components/providers/theme-script";
@@ -56,25 +52,13 @@ export default function RootLayout({
     <html lang="ja">
       <body className={`${bodyFont.variable} ${displayFont.variable} antialiased`}>
         <ThemeScript />
-        <ClerkProvider
-          afterSignOutUrl="/login"
-          appearance={{
-            variables: {
-              colorPrimary: "#2d5bff",
-              colorText: "#07111f",
-              colorBackground: "#f3efe4",
-            },
-          }}
-        >
-          <a href="#main-content" className="dds-skip-link">
-            コンテンツへスキップ
-          </a>
-          <ClerkAuthBar />
-          <Providers>
-            <ServiceWorkerRegister />
-            {children}
-          </Providers>
-        </ClerkProvider>
+        <a href="#main-content" className="dds-skip-link">
+          コンテンツへスキップ
+        </a>
+        <Providers>
+          <ServiceWorkerRegister />
+          {children}
+        </Providers>
       </body>
     </html>
   );

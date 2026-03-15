@@ -8,6 +8,7 @@ import {
   updateMemberPlanAction,
   updateMemberSettingsAction,
 } from "@/actions/admin";
+import { sendPasswordSetupAction } from "@/actions/auth";
 import {
   getCreditGrantDay,
   labelCycleBasis,
@@ -242,6 +243,11 @@ export default async function AdminMemberDetailPage({ params }: MemberDetailPage
                 ))
               )}
             </div>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <form action={sendPasswordSetupAction.bind(null, member.id)}>
+              <SubmitButton pendingLabel="送信中...">初期設定メールを再送</SubmitButton>
+            </form>
           </div>
         </Card>
 

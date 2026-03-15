@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DemoLoginForm } from "@/components/auth/demo-login-form";
 import { MemberLoginForm } from "@/components/auth/member-login-form";
 import { BrandMark } from "@/components/brand-mark";
 import { Card } from "@/components/ui/card";
-import { isClerkConfigured, isDemoAuthEnabled } from "@/lib/config";
 import { getCurrentUserContext } from "@/lib/auth";
 
 export default async function LoginPage() {
@@ -38,15 +36,7 @@ export default async function LoginPage() {
           </div>
 
           <div className="mt-8">
-            {isClerkConfigured ? (
-              <MemberLoginForm />
-            ) : isDemoAuthEnabled ? (
-              <DemoLoginForm />
-            ) : (
-              <div className="rounded-[24px] border border-dashed border-amber-300 bg-amber-50 p-5 text-sm leading-7 text-amber-950">
-                現在、ログイン設定の最終確認中です。しばらくしてから再度お試しください。
-              </div>
-            )}
+            <MemberLoginForm />
           </div>
 
           <div className="mt-8 flex justify-center gap-4 text-xs text-slate-500">
