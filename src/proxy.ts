@@ -15,6 +15,7 @@ const isPublicRoute = createRouteMatcher([
   "/tokushoho(.*)",
   "/access-denied(.*)",
   "/post-login",
+  "/sso-callback(.*)",
   "/robots.txt",
   "/api/webhooks(.*)",
   "/api/health",
