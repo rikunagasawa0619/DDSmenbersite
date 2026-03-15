@@ -43,7 +43,22 @@ export function MemberLoginForm() {
   const [pending, setPending] = useState(false);
 
   const isResetMode = useMemo(() => mode !== "sign-in", [mode]);
-  const isBusy = pending || fetchStatus === "fetching";
+  const isBusy = pending || fetchStatus === "fetching" || !clerk.loaded;
+
+  async function waitForClerkReady() {
+    if (clerk.loaded) {
+      return;
+    }
+
+    for (let index = 0; index < 40; index += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (clerk.loaded) {
+        return;
+      }
+    }
+
+    throw new Error("認証の準備に失敗しました。ページを再読み込みしてお試しください。");
+  }
 
   async function navigateToApp() {
     await signIn.finalize({
@@ -66,14 +81,11 @@ export function MemberLoginForm() {
   async function handlePasswordSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!clerk.loaded) {
-      toast("認証の準備中です。少し待ってから再度お試しください。", "error");
-      return;
-    }
-
     setPending(true);
 
     try {
+      await waitForClerkReady();
+
       const result = await signIn.password({
         identifier: email.trim(),
         password,
@@ -98,14 +110,11 @@ export function MemberLoginForm() {
   }
 
   async function handleSocialSignIn(strategy: "oauth_google" | "oauth_x") {
-    if (!clerk.loaded) {
-      toast("認証の準備中です。少し待ってから再度お試しください。", "error");
-      return;
-    }
-
     setPending(true);
 
     try {
+      await waitForClerkReady();
+
       const result = await signIn.create({
         strategy,
         redirectUrl: `${window.location.origin}/sso-callback`,
@@ -125,14 +134,11 @@ export function MemberLoginForm() {
   async function handleResetRequest(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!clerk.loaded) {
-      toast("認証の準備中です。少し待ってから再度お試しください。", "error");
-      return;
-    }
-
     setPending(true);
 
     try {
+      await waitForClerkReady();
+
       await signIn.reset();
 
       const prepare = await signIn.create({
@@ -163,14 +169,11 @@ export function MemberLoginForm() {
   async function handleResetVerify(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!clerk.loaded) {
-      toast("認証の準備中です。少し待ってから再度お試しください。", "error");
-      return;
-    }
-
     setPending(true);
 
     try {
+      await waitForClerkReady();
+
       const verify = await signIn.resetPasswordEmailCode.verifyCode({
         code: resetCode.trim(),
       });
