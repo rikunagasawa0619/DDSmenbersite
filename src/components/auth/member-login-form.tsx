@@ -1,15 +1,32 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ClerkLoaded, ClerkLoading, SignIn } from "@clerk/nextjs";
 import { Loader2 } from "lucide-react";
 
 export function MemberLoginForm() {
+  const [showDelayedHelp, setShowDelayedHelp] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setShowDelayedHelp(true);
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <>
       <ClerkLoading>
-        <div className="flex items-center justify-center py-10">
-          <Loader2 className="h-5 w-5 animate-spin text-[var(--color-primary)]" />
-        </div>
+        {showDelayedHelp ? (
+          <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-7 text-amber-950">
+            認証システムを接続中です。しばらく待っても入力欄が出ない場合は、管理者側で DNS 設定の反映待ちです。
+          </div>
+        ) : (
+          <div className="flex items-center justify-center py-10">
+            <Loader2 className="h-5 w-5 animate-spin text-[var(--color-primary)]" />
+          </div>
+        )}
       </ClerkLoading>
 
       <ClerkLoaded>
