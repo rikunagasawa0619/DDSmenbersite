@@ -49,13 +49,14 @@ export default async function LoginPage() {
                     card: "w-full rounded-[28px] border border-black/8 bg-white/96 shadow-none",
                     headerTitle: "hidden",
                     headerSubtitle: "hidden",
-                    socialButtonsBlockButton: "rounded-2xl border border-black/10 bg-white text-slate-900",
+                    socialButtonsBlockButton: "hidden",
                     formButtonPrimary:
                       "rounded-2xl bg-[var(--color-primary)] text-white shadow-[0_18px_42px_rgba(18,56,198,0.18)] hover:opacity-92",
                     formFieldInput: "rounded-2xl border border-black/10 bg-white",
                     footerActionLink: "text-[var(--color-primary)]",
-                    dividerLine: "bg-black/8",
-                    dividerText: "text-slate-400",
+                    dividerLine: "hidden",
+                    dividerText: "hidden",
+                    socialButtonsBlock: "hidden",
                     formFieldLabel: "text-slate-600",
                   },
                 }}
